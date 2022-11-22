@@ -1,1 +1,145 @@
-This is a test
+<html>
+   <head>
+      <title>Jingle Jam Tracker</title>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js" integrity="sha512-aVKKRRi/Q/YV+4mjoKBsE4x3H+BkegoM/em46NNlCqNTmUYADjBbeNefNxYV7giUp0VxICtqdrbqU7iVaeZNXA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.js" integrity="sha512-kcjXjSNAMuKRYv8VAk/rMsHzGC/M/thh4QRZAE3SM2HPAQs77N0aOVh35IpJAtLxFpzfHeYzFHf9upgnNFfQUQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+      <script src="./script.js"></script>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.css" integrity="sha512-PwhgdrueUt7iVICnZMjYcbiLalCztrVfzUIYXekIK8hZu4DQP141GrKh6fUHmNERWi4bGdBXIZqtBZnsSzHEMg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+      <link rel="stylesheet" href="./style.css" />
+   </head>
+   <body>
+      <header id="header">
+        <img class="ui small image" src="./assets/logo.png">
+        <h1 class="ui header inverted">
+          The Jingle Jam Live Tracker
+        </h1>
+        <div class="ui buttons">
+          <button class="ui button purple" id="watchLive"><i class="icon twitch"></i>Watch Live</button>
+          <button class="ui button green" id="donate"><i class="icon money"></i>Donate</button>
+          <button class="ui button pink" id="learnMore"><i class="icon question circle"></i>Learn More</button>
+        </div>
+      </header>
+      <div class="ui inverted segment" id="loader">
+        <div class="ui active inverted loader large"></div>
+      </div>
+      <div id="content" style="display: none;">
+        <div class="ui compact inverted huge segment" id="currencySelectorObj">
+          <label style="margin-right: 11px;">$</label>
+          <div class="ui inverted toggle checkbox">
+            <input type="checkbox" id="currencyCheckbox">
+            <label>£</label>
+          </div>
+        </div>
+        <div class="ui huge statistics inverted green">
+          <div class="statistic dollarComponent">
+             <div class="value" id="raisedTotalDollars">
+                $0.00
+             </div>
+             <div class="label">
+                Total Amount Raised For 2022
+             </div>
+          </div>
+          <div class="statistic poundComponent">
+             <div class="value" id="raisedTotalPounds">
+               £0.00
+             </div>
+             <div class="label">
+              Total Amount Raised For 2022
+             </div>
+          </div>
+       </div>
+       <div class="ui statistics inverted custom-grid">
+         <div class="statistic green dollarComponent custom-grid-column-3">
+            <div class="value" id="raisedEntireDollars">
+               $0.00
+            </div>
+            <div class="label">
+               Total Raised Since 2011
+            </div>
+         </div>
+         <div class="statistic green poundComponent custom-grid-column-3">
+            <div class="value" id="raisedEntirePounds">
+              £0.00
+            </div>
+            <div class="label">
+              Total Raised Since 2011
+            </div>
+         </div>
+         <div class="statistic blue custom-grid-column-3">
+            <div class="value" id="bundlesSold">
+               0
+            </div>
+            <div class="label">
+               Bundles Sold
+            </div>
+         </div>
+         <div class="statistic blue custom-grid-column-3">
+            <div class="value" id="donationCount">
+               0
+            </div>
+            <div class="label">
+               Donation Count
+            </div>
+         </div>
+      </div>
+       <div class="ui divider"></div>
+       <div class="ui statistics inverted green custom-grid">
+          <div class="statistic dollarComponent custom-grid-column-2">
+             <div class="value" id="raisedYogscastDollars">
+                $0.00
+             </div>
+             <div class="label">
+                Amount Raised By The Yogscast
+             </div>
+          </div>
+          <div class="statistic dollarComponent custom-grid-column-2">
+             <div class="value" id="raisedFundraisersDollars">
+                $0.00
+             </div>
+             <div class="label">
+                Amount Raised From Fundraisers
+             </div>
+          </div>
+          <div class="statistic poundComponent custom-grid-column-2">
+             <div class="value" id="raisedYogscastPounds">
+              £0.00
+             </div>
+             <div class="label">
+                Amount Raised By The Yogscast
+             </div>
+          </div>
+          <div class="statistic poundComponent custom-grid-column-2">
+             <div class="value" id="raisedFundraisersPounds">
+              £0.00
+             </div>
+             <div class="label">
+                Amount Raised From Fundraisers
+             </div>
+          </div>
+       </div>
+       <div class="ui divider"></div>
+       <div class="section">
+         <table class="ui large celled striped table inverted black" id="charitiesTable">
+           <thead>
+             <tr>
+               <th rowspan="2">Charities</th>
+               <th colspan="3" style="width: 540px;" class="center aligned">Amount Raised</th>
+               <th colspan="2" style="width: 260px;" class="center aligned">Bundles</th>
+             </tr>
+             <tr>
+               <th class="center aligned" style="width: 180px; border-left: 1px solid rgba(255,255,255,.1);">The Yogscast</th>
+               <th class="center aligned" style="width: 180px;">Fundraisers</th>
+               <th class="center aligned" style="width: 180px;">Total</th>
+               <th class="center aligned" style="width: 130px;">Sold</th>
+               <th class="center aligned" style="width: 130px;">Remaining</th>
+             </tr>
+           <tbody>
+           </tbody>
+         </table>
+       </div>
+      </div>
+      <footer id="footer">
+        Developed by No1mann <i class="discord icon"></i>
+      </footer>
+   </body>
+</html>
