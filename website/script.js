@@ -88,7 +88,7 @@ async function getTiltify(){
     return await response.json();
 }
 
-function formatCurrency(total, currency = '$', decimals = 2) {
+function formatCurrency(total, currency = '$', decimals = 0) {
     var neg = false;
     if(total < 0) {
         neg = true;
@@ -138,9 +138,9 @@ function setTable(){
     for(let campaign of sortedCampaigns){
         table += '<tr>'
         table += `<td>${campaign.name}</td>`
-        table += `<td class="right aligned">${isPounds ? formatCurrency(campaign.raised.pounds, '£') : formatCurrency(campaign.raised.dollars)}</td>`
-        table += `<td class="right aligned">${isPounds ? formatCurrency(campaign.fundraisers.pounds, '£') : formatCurrency(campaign.fundraisers.dollars)}</td>`
-        table += `<td class="right aligned">${isPounds ? formatCurrency(campaign.total.pounds, '£') : formatCurrency(campaign.total.dollars)}</td>`
+        table += `<td class="right aligned">${isPounds ? formatCurrency(campaign.raised.pounds, '£', 2) : formatCurrency(campaign.raised.dollars, '$', 2)}</td>`
+        table += `<td class="right aligned">${isPounds ? formatCurrency(campaign.fundraisers.pounds, '£', 2) : formatCurrency(campaign.fundraisers.dollars, '$', 2)}</td>`
+        table += `<td class="right aligned">${isPounds ? formatCurrency(campaign.total.pounds, '£', 2) : formatCurrency(campaign.total.dollars, '$', 2)}</td>`
         table += `<td class="right aligned">${formatInt(campaign.bundles.sold)}</td>`
         table += `<td class="right aligned">${formatInt(campaign.bundles.remaining)}</td>`
         table += '</tr>'
@@ -155,13 +155,13 @@ function onUpdate(){
     animateCount('#raisedFundraisersPounds', JingleJam.model.fundraisers.pounds, (x) => formatCurrency(x, '£'));
     animateCount('#raisedTotalDollars', JingleJam.model.total.dollars, formatCurrency);
     animateCount('#raisedTotalPounds', JingleJam.model.total.pounds, (x) => formatCurrency(x, '£'));
-    animateCount('#raisedEntireDollars', JingleJam.model.total.dollars + JingleJam.model.previous.dollars, (x) => formatCurrency(x, '$', 0));
-    animateCount('#raisedEntirePounds', JingleJam.model.total.pounds + JingleJam.model.previous.pounds, (x) => formatCurrency(x, '£', 0));
+    animateCount('#raisedEntireDollars', JingleJam.model.total.dollars + JingleJam.model.previous.dollars, (x) => formatCurrency(x, '$'));
+    animateCount('#raisedEntirePounds', JingleJam.model.total.pounds + JingleJam.model.previous.pounds, (x) => formatCurrency(x, '£'));
     animateCount('#bundlesSold', JingleJam.model.bundles.sold, formatInt);
     animateCount('#bundlesSold', JingleJam.model.bundles.remaining, formatInt);
     animateCount('#donationCount', JingleJam.model.donations.count, (amount) => formatInt(amount) + "+");
-    animateCount('#averageDonationDollars', JingleJam.model.average.dollars, formatCurrency);
-    animateCount('#averageDonationPounds', JingleJam.model.average.pounds, (x) => formatCurrency(x, '£'));
+    animateCount('#averageDonationDollars', JingleJam.model.average.dollars, (x) => formatCurrency(x, '$', 2));
+    animateCount('#averageDonationPounds', JingleJam.model.average.pounds, (x) => formatCurrency(x, '£', 2));
 
     setTable();
 
