@@ -207,6 +207,7 @@
   
     var numberOfDonations = totalBundlesSold + env.DONATION_DIFFERENCE;
   
+    /*
     return new Response(
       JSON.stringify({
         year: env.YEAR,
@@ -249,7 +250,7 @@
         }
       }
     );
-    /*
+    */
     return new Response(
       JSON.stringify({
         year: env.YEAR,
@@ -293,7 +294,6 @@
         }
       }
     );
-    */
   }
   
   //Handle Requests

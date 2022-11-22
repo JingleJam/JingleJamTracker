@@ -3,3 +3,4 @@ jingle-jam-tracker/node_modules/*
 wrangler.toml
 .wrangler
 node_modules
+.dev.vars
