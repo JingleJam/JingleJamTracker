@@ -20,13 +20,19 @@ body{
     float: right;
 }
 
+#header #headerName{
+    position: absolute;
+    margin-top: 7px;
+    margin-left: 30px;
+}
+
 #currencySelectorObj{
-    display: inline;
+    position: absolute;
+    right: 0;
     font-weight: bold;
-    float: right;
     margin: 0;
     padding: 0;
-    margin-right: 20px;;
+    margin-right: 20px;
 }
 
 #loader{
@@ -54,8 +60,12 @@ body{
 .ui.statistics .statistic{
     margin-top: 35px;
     margin-bottom: 35px;
-    margin-left: 5px;
-    margin-right: 5px;
+    margin-left: 12px;
+    margin-right: 12px;
+}
+
+.ui.statistics .statistic .value {
+    white-space: nowrap;
 }
 
 .ui.divider {
@@ -76,4 +86,19 @@ body{
 .custom-grid .custom-grid-column-3{
     display: flex;
     flex-basis: 30% !important;
+}
+
+#charitiesTable{
+    max-width: 1500px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#labelDate {
+    color: #5a5a5a;
+    margin-left: 20px;
+}
+
+:root {
+  color-scheme: dark;
 }

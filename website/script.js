@@ -1,6 +1,7 @@
 let JingleJam = {
     model: {},
-    refreshTime: 15000
+    refreshTime: 15000,
+    update: true
 };
 
 let isPounds = localStorage.getItem('currency') !== 'false';
@@ -12,7 +13,7 @@ $(document).ready(async function(){
 
     toggleDollars(!isPounds);
     createEvents();
-    await callUpdates();
+    await eventLoop();
     show();
 });
 
@@ -39,6 +40,9 @@ function createEvents(){
     $('#donate').on('click', function(e) {
         window.open('https://jinglejam.tiltify.com/', "_blank");
     });
+    $('#previousYears').on('click', function(e) {
+        window.open('https://docs.google.com/spreadsheets/d/11Ua2EVlmLCtMKSwKDHnLI8jGvkgJV8BMMHZ1sWowRn0/edit#gid=161223743', "_blank");
+    });
     $('#learnMore').on('click', function(e) {
         window.open('https://www.jinglejam.co.uk/', "_blank");
     });
@@ -53,6 +57,29 @@ function createEvents(){
             setTable();
         }
     });
+
+    let hidden;
+    let visibilityChange;
+    if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and later support
+        hidden = "hidden";
+        visibilityChange = "visibilitychange";
+    } else if (typeof document.msHidden !== "undefined") {
+        hidden = "msHidden";
+        visibilityChange = "msvisibilitychange";
+    } else if (typeof document.webkitHidden !== "undefined") {
+        hidden = "webkitHidden";
+        visibilityChange = "webkitvisibilitychange";
+    }
+
+    if (typeof document.addEventListener === "undefined" || hidden === undefined) {
+
+    } else {
+        document.addEventListener(visibilityChange, function(){
+            JingleJam.update = !document[hidden];
+
+            updateScreen();
+        }, false);
+    }
 }
 
 async function getTiltify(){
@@ -89,7 +116,7 @@ function animateCount(elem, target, format) {
     if(!target)
         target = 0;
 
-    var incAmount = (target-number)/120;
+    var incAmount = (target-number)/90;
     if(number < target) {
         var interval = setInterval(function() {
             $(elem).text(format(number));
@@ -131,17 +158,28 @@ function onUpdate(){
     animateCount('#raisedEntireDollars', JingleJam.model.total.dollars + JingleJam.model.previous.dollars, (x) => formatCurrency(x, '$', 0));
     animateCount('#raisedEntirePounds', JingleJam.model.total.pounds + JingleJam.model.previous.pounds, (x) => formatCurrency(x, '£', 0));
     animateCount('#bundlesSold', JingleJam.model.bundles.sold, formatInt);
+    animateCount('#bundlesSold', JingleJam.model.bundles.remaining, formatInt);
     animateCount('#donationCount', JingleJam.model.donations.count, (amount) => formatInt(amount) + "+");
+    animateCount('#averageDonationDollars', JingleJam.model.average.dollars, formatCurrency);
+    animateCount('#averageDonationPounds', JingleJam.model.average.pounds, (x) => formatCurrency(x, '£'));
 
     setTable();
+
+    $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.date).toLocaleString())
 }
 
-async function callUpdates(){
+async function updateScreen(){
+    if (JingleJam.update) {
+        JingleJam.model = await getTiltify();
+    
+        onUpdate();
+    }
+}
+
+async function eventLoop(){
     setTimeout(function(){
-        callUpdates();
+        eventLoop();
     }, JingleJam.refreshTime);
     
-    JingleJam.model = await getTiltify();
-
-    onUpdate();
+    updateScreen();
 }
