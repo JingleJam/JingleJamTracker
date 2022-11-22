@@ -102,3 +102,48 @@ body{
 :root {
   color-scheme: dark;
 }
+
+@media screen and (max-width: 1140px) {
+    #headerName {
+        display: none !important;
+    }
+}
+
+@media screen and (min-width: 730px) {
+    #headerButtonsSmall {
+        display: none !important;
+    }
+    
+    #headerButtonsLarge {
+        display: inline-flex !important;
+    }
+}
+
+@media screen and (max-width: 730px) {
+    #headerButtonsSmall {
+        display: inline-flex !important;
+    }
+    
+    #headerButtonsLarge {
+        display: none !important;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    .ui.statistics.huge .statistic .value {
+        font-size: 4rem !important;
+    }
+
+    .ui.statistics .statistic .value {
+        font-size: 3rem !important;
+    }
+
+    #firstRow {
+        padding-top: 25px !important;
+    }
+
+    .ui.statistics .statistic {
+        margin-top: 12px !important;
+        margin-bottom: 12px !important;
+    }
+}

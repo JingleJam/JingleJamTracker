@@ -7,6 +7,8 @@
       <script src="./script.js"></script>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.css" integrity="sha512-PwhgdrueUt7iVICnZMjYcbiLalCztrVfzUIYXekIK8hZu4DQP141GrKh6fUHmNERWi4bGdBXIZqtBZnsSzHEMg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
       <link rel="stylesheet" href="./style.css"/>
+
+      <meta name="viewport" content="width=device-width, initial-scale=2">
    </head>
    <body>
       <header id="header">
@@ -16,11 +18,17 @@
         <h1 class="ui header inverted" id="headerName">
           The Jingle Jam Live Dashboard
         </h1>
-        <div class="ui buttons">
+        <div class="ui buttons" id="headerButtonsLarge">
           <button class="ui button purple" id="watchLive"><i class="icon twitch"></i>Watch Live</button>
           <button class="ui button green" id="donate"><i class="icon money"></i>Donate</button>
           <button class="ui button blue" id="previousYears"><i class="icon google"></i>Previous Years</button>
           <button class="ui button pink" id="learnMore"><i class="icon question circle"></i>Learn More</button>
+        </div>
+        <div class="ui icon buttons" id="headerButtonsSmall">
+          <button class="ui button purple" id="watchLive"><i class="icon twitch"></i></button>
+          <button class="ui button green" id="donate"><i class="icon money"></i></button>
+          <button class="ui button blue" id="previousYears"><i class="icon google"></i></button>
+          <button class="ui button pink" id="learnMore"><i class="icon question circle"></i></button>
         </div>
       </header>
       <div class="ui inverted segment" id="loader">
@@ -34,7 +42,7 @@
             <label>£</label>
           </div>
         </div>
-        <div class="ui huge statistics inverted green">
+        <div class="ui huge statistics inverted green" id="firstRow">
           <div class="statistic dollarComponent">
              <div class="value" id="raisedTotalDollars">
                 $0.00
