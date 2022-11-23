@@ -1,3 +1,4 @@
+  import { summary, getTotals } from "./data";
 
   const maxSim = 6;                             //Maximum number of simultaneous fetches
   
@@ -206,61 +207,17 @@
     }
   
     var numberOfDonations = totalBundlesSold + env.DONATION_DIFFERENCE;
-  
-    /*
+
+    let entireTotals = getTotals();
+    entireTotals.dollars += parseFloat((grandTotalPounds * currencyConversion).toFixed(2));
+    entireTotals.pounds += parseFloat(grandTotalPounds.toFixed(2));
+
     return new Response(
       JSON.stringify({
         year: env.YEAR,
         name: env.NAME,
         date: retrieveDate,
         poundsToDollars: parseFloat(currencyConversion.toFixed(6)),
-        previous: {
-          dollars: parseFloat(env.TOTAL_RAISED_PREVIOUS_DOLLARS.toFixed(2)),
-          pounds: parseFloat(env.TOTAL_RAISED_PREVIOUS_POUNDS.toFixed(2)),
-        },
-        raised: {
-          dollars: parseFloat(((Date.now()/100)%1000000).toFixed(2)),//parseFloat(raisedDollars.toFixed(2)),
-          pounds: parseFloat(((Date.now()/120)%1000000).toFixed(2))
-        },
-        fundraisers: {
-          dollars: parseFloat(((Date.now()/100)%1245445).toFixed(2)),//parseFloat(raisedDollars.toFixed(2)),
-          pounds: parseFloat(((Date.now()/120)%1245445).toFixed(2))
-        },
-        total: {
-          dollars: parseFloat((grandTotalPounds * currencyConversion).toFixed(2)),
-          pounds: parseFloat(grandTotalPounds.toFixed(2))
-        },
-        bundles: {
-          sold: parseInt(((Date.now()/1000)%100000)),
-          remaining: totalBundlesRemaining,
-          available: totalBundlesAllocated
-        },
-        donations:{
-          count: numberOfDonations
-        },
-        average: {
-          dollars: parseFloat(((grandTotalPounds * currencyConversion) / numberOfDonations).toFixed(2)),
-          pounds: parseFloat((grandTotalPounds / numberOfDonations).toFixed(2))
-        },
-        campaigns: campaignObjs
-      }),
-      {
-        headers: {
-          "content-type": "application/json;charset=UTF-8"
-        }
-      }
-    );
-    */
-    return new Response(
-      JSON.stringify({
-        year: env.YEAR,
-        name: env.NAME,
-        date: retrieveDate,
-        poundsToDollars: parseFloat(currencyConversion.toFixed(6)),
-        previous: {
-          dollars: parseFloat(env.TOTAL_RAISED_PREVIOUS_DOLLARS.toFixed(2)),
-          pounds: parseFloat(env.TOTAL_RAISED_PREVIOUS_POUNDS.toFixed(2)),
-        },
         raised: {
           dollars: parseFloat(raisedDollars.toFixed(2)),
           pounds: parseFloat(totalRaisedPounds.toFixed(2))
@@ -285,6 +242,14 @@
         average: {
           dollars: parseFloat(((grandTotalPounds * currencyConversion) / numberOfDonations).toFixed(2)),
           pounds: parseFloat((grandTotalPounds / numberOfDonations).toFixed(2))
+        },
+        years: summary,
+        entire: {
+          amount: {
+            dollars: entireTotals.dollars,
+            pounds: entireTotals.pounds
+          },
+          donations: entireTotals.donations
         },
         campaigns: campaignObjs
       }),

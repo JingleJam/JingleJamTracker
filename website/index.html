@@ -6,6 +6,7 @@
       <script src="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.js" integrity="sha512-kcjXjSNAMuKRYv8VAk/rMsHzGC/M/thh4QRZAE3SM2HPAQs77N0aOVh35IpJAtLxFpzfHeYzFHf9upgnNFfQUQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
       <script src="./script.js"></script>
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.css" integrity="sha512-PwhgdrueUt7iVICnZMjYcbiLalCztrVfzUIYXekIK8hZu4DQP141GrKh6fUHmNERWi4bGdBXIZqtBZnsSzHEMg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+      <link rel="stylesheet" href="https://cdn.datatables.net/responsive/2.4.0/css/responsive.semanticui.min.css"/>
       <link rel="stylesheet" href="./style.css"/>
 
       <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -45,15 +46,15 @@
         <div class="ui huge statistics inverted green" id="firstRow">
           <div class="statistic dollarComponent">
              <div class="value" id="raisedTotalDollars">
-                $0.00
+                $ 0
              </div>
              <div class="label">
-                Amount Raised For 2022
+                Total Amount Raised For 2022
              </div>
           </div>
           <div class="statistic poundComponent">
              <div class="value" id="raisedTotalPounds">
-               £0.00
+               £ 0
              </div>
              <div class="label">
               Total Amount Raised For 2022
@@ -62,52 +63,61 @@
        </div>
        <div class="ui statistics inverted custom-grid">
          <div class="statistic green dollarComponent custom-grid-column-3">
+            <div class="value" id="raisedYogscastDollars">
+               $ 0
+            </div>
+            <div class="label">
+               Amount Raised By The Yogscast
+            </div>
+         </div>
+         <div class="statistic green dollarComponent custom-grid-column-3">
+            <div class="value" id="raisedFundraisersDollars">
+               $ 0
+            </div>
+            <div class="label">
+               Amount Raised From Fundraisers
+            </div>
+         </div>
+         <div class="statistic green poundComponent custom-grid-column-3">
+            <div class="value" id="raisedYogscastPounds">
+             £ 0
+            </div>
+            <div class="label">
+               Amount Raised By The Yogscast
+            </div>
+         </div>
+         <div class="statistic green poundComponent custom-grid-column-3">
+            <div class="value" id="raisedFundraisersPounds">
+             £ 0
+            </div>
+            <div class="label">
+               Amount Raised From Fundraisers
+            </div>
+         </div>
+         <div class="statistic pink dollarComponent custom-grid-column-3">
             <div class="value" id="raisedEntireDollars">
-               $0.00
+               $ 0
             </div>
             <div class="label">
                Total Raised Since 2011
             </div>
          </div>
-         <div class="statistic green poundComponent custom-grid-column-3">
+         <div class="statistic pink poundComponent custom-grid-column-3">
             <div class="value" id="raisedEntirePounds">
-              £0.00
+              £ 0
             </div>
             <div class="label">
               Total Raised Since 2011
             </div>
          </div>
-         <div class="statistic green dollarComponent custom-grid-column-3">
-            <div class="value" id="averageDonationDollars">
-               $0.00
-            </div>
-            <div class="label">
-               Average Donation
-            </div>
-         </div>
-         <div class="statistic green poundComponent custom-grid-column-3">
-            <div class="value" id="averageDonationPounds">
-              £0.00
-            </div>
-            <div class="label">
-              Average Donation
-            </div>
-         </div>
-      </div> <div class="ui statistics inverted custom-grid">
+      </div>
+      <div class="ui statistics inverted custom-grid">
         <div class="statistic blue custom-grid-column-3">
            <div class="value" id="bundlesSold">
               0
            </div>
            <div class="label">
               Bundles Sold
-           </div>
-        </div>
-        <div class="statistic blue custom-grid-column-3">
-           <div class="value" id="bundlesRemaining">
-              0
-           </div>
-           <div class="label">
-              Bundles Remaining
            </div>
         </div>
         <div class="statistic blue custom-grid-column-3">
@@ -118,62 +128,147 @@
               Donations
            </div>
         </div>
+        <div class="statistic yellow dollarComponent custom-grid-column-3">
+           <div class="value" id="averageDonationDollars">
+              $ 0.00
+           </div>
+           <div class="label">
+              Average Donation
+           </div>
+        </div>
+        <div class="statistic yellow poundComponent custom-grid-column-3">
+           <div class="value" id="averageDonationPounds">
+             £ 0.00
+           </div>
+           <div class="label">
+             Average Donation
+           </div>
+        </div>
      </div>
-      <div style="margin-top: 7px">
-        <label id="labelDate">
-          Last Refreshed: 12/12/2022
+      <div id="liveUpdatingRow">
+         <label class="subtext-label" id="updatingRealTime">
+           Updating Live
+           <div class="ui active slow inverted loader mini"></div>
+         </label>
+        <label class="subtext-label" id="labelDate" style="float: right;">
+          Last Updated: N/A
         </label>
       </div>
        <div class="ui divider" style="margin-top: 0px;"></div>
-       <div class="ui statistics inverted green custom-grid">
-          <div class="statistic dollarComponent custom-grid-column-2">
-             <div class="value" id="raisedYogscastDollars">
-                $0.00
-             </div>
-             <div class="label">
-                Amount Raised By The Yogscast
-             </div>
-          </div>
-          <div class="statistic dollarComponent custom-grid-column-2">
-             <div class="value" id="raisedFundraisersDollars">
-                $0.00
-             </div>
-             <div class="label">
-                Amount Raised From Fundraisers
-             </div>
-          </div>
-          <div class="statistic poundComponent custom-grid-column-2">
-             <div class="value" id="raisedYogscastPounds">
-              £0.00
-             </div>
-             <div class="label">
-                Amount Raised By The Yogscast
-             </div>
-          </div>
-          <div class="statistic poundComponent custom-grid-column-2">
-             <div class="value" id="raisedFundraisersPounds">
-              £0.00
-             </div>
-             <div class="label">
-                Amount Raised From Fundraisers
-             </div>
-          </div>
+       <div class="ui tiny statistics inverted green custom-grid">
+         <div class="custom-grid-column-6 statistic dollarComponent">
+            <div class="value" id="dollars2016">
+               $ 0
+            </div>
+            <div class="label">
+               2016
+            </div>
+         </div>
+         <div class="custom-grid-column-6 statistic dollarComponent">
+            <div class="value" id="dollars2017">
+               $ 0
+            </div>
+            <div class="label">
+               2017
+            </div>
+         </div>
+         <div class="custom-grid-column-6 statistic dollarComponent">
+            <div class="value" id="dollars2018">
+               $ 0
+            </div>
+            <div class="label">
+               2018
+            </div>
+         </div>
+         <div class="custom-grid-column-6 statistic dollarComponent">
+            <div class="value" id="dollars2019">
+               $ 0
+            </div>
+            <div class="label">
+               2019
+            </div>
+         </div>
+         <div class="custom-grid-column-6 statistic dollarComponent">
+            <div class="value" id="dollars2020">
+               $ 0
+            </div>
+            <div class="label">
+               2020
+            </div>
+         </div>
+         <div class="custom-grid-column-6 statistic dollarComponent">
+            <div class="value" id="dollars2021">
+               $ 0
+            </div>
+            <div class="label">
+               2021
+            </div>
+         </div>
+
+         <div class="custom-grid-column-6 statistic poundComponent">
+            <div class="value" id="pounds2016">
+               £ 0
+            </div>
+            <div class="label">
+               2016
+            </div>
+         </div>
+         <div class="custom-grid-column-6 statistic poundComponent">
+            <div class="value" id="pounds2017">
+               £ 0
+            </div>
+            <div class="label">
+               2017
+            </div>
+         </div>
+         <div class="custom-grid-column-6 statistic poundComponent">
+            <div class="value" id="pounds2018">
+               £ 0
+            </div>
+            <div class="label">
+               2018
+            </div>
+         </div>
+         <div class="custom-grid-column-6 statistic poundComponent">
+            <div class="value" id="pounds2019">
+               £ 0
+            </div>
+            <div class="label">
+               2019
+            </div>
+         </div>
+         <div class="custom-grid-column-6 statistic poundComponent">
+            <div class="value" id="pounds2020">
+               £ 0
+            </div>
+            <div class="label">
+               2020
+            </div>
+         </div>
+         <div class="custom-grid-column-6 statistic poundComponent">
+            <div class="value" id="pounds2021">
+               £ 0
+            </div>
+            <div class="label">
+               2021
+            </div>
+         </div>
        </div>
        <div class="ui divider"></div>
        <div class="section">
-         <table class="ui large celled striped table inverted black" id="charitiesTable">
+         <table class="ui large celled striped table inverted black unstackable" id="charitiesTable">
            <thead>
              <tr>
-               <th rowspan="2" style="min-width: 365px;">Charities</th>
-               <th colspan="3" style="width: 600px;" class="center aligned">Amount Raised</th>
-               <th colspan="2" style="width: 300px;" class="center aligned">Bundles</th>
+               <th rowspan="2" style="width: 365px;">Charities</th>
+               <th colspan="3" style="width: 600px; min-width: 230px;" class="center aligned">Amount Raised</th>
+               <th colspan="2" style="width: 300px; min-width: 124px;" class="center aligned">Bundles</th>
              </tr>
              <tr>
-               <th class="center aligned" style="width: 200px; border-left: 1px solid rgba(255,255,255,.1);">The Yogscast</th>
-               <th class="center aligned" style="width: 200px;">Fundraisers</th>
-               <th class="center aligned" style="width: 200px;">Total</th>
-               <th class="center aligned" style="width: 150px;">Sold</th>
-               <th class="center aligned" style="width: 150px;">Remaining</th>
+               <th class="center aligned" style="width: 200px; min-width: 93px; border-left: 1px solid rgba(255,255,255,.1);">The Yogscast</th>
+               <th class="center aligned" style="width: 200px; min-width: 93px;">Fundraisers</th>
+               <th class="center aligned" style="width: 200px; min-width: 93px;">Total</th>
+               <th class="center aligned" style="width: 150px; min-width: 44px;">Sold</th>
+               <th class="center aligned" style="width: 150px; min-width: 80px;">Remaining</th>
              </tr>
            <tbody>
            </tbody>
