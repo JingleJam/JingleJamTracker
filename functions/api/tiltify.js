@@ -1,6 +1,6 @@
   import { summary, getTotals } from "./data";
 
-  const maxSim = 20;                             //Maximum number of simultaneous fetches
+  const maxSim = 6;                             //Maximum number of simultaneous fetches
   
   //End of 2020 yogscast dollar amount = 2827226.00
   //End of 2021 yogscast dollar amount = 6571211.42
