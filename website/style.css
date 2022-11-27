@@ -123,6 +123,26 @@ body{
     height: 20px;
 }
 
+.stat-row {
+    margin-left: 20px;
+    margin-right: 20px;
+    height: 600px;
+    width: calc(100% - 40px) !important;
+    max-width: 1350px !important;
+}
+
+#dateRange {
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-top: 10px;
+    width: calc(100% - 40px) !important;
+    max-width: 1350px !important;
+}
+
+.slider .labels .label {
+    color: #5a5a5a !important;
+}
+
 :root {
   color-scheme: dark;
 }
@@ -200,4 +220,90 @@ body{
     #updatingRealTime {
         display: none;
     }
+}
+
+.loading-circle {
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.live-icon {
+    font-size: 15px;
+    margin-top: 10px;
+    -webkit-animation-name: toggle;
+    -webkit-animation-duration: 4s;
+    -webkit-animation-timing-function: linear;
+    -webkit-animation-iteration-count: infinite;
+    -moz-animation-name: toggle;
+    -moz-animation-duration: 4s;
+    -moz-animation-timing-function: linear;
+    -moz-animation-iteration-count: infinite;
+    animation-name: toggle;
+    animation-duration: 4s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+@keyframes toggle {
+    from {
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@-webkit-keyframes toggle {
+    from {
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.color-2016 {
+    color: #46bdc6 !important;
+}
+
+.color-2017 {
+    color: #ab30c4 !important;
+}
+
+.color-2018 {
+    color: #c1bc1f !important;
+}
+
+.color-2019 {
+    color: #71f437 !important;
+}
+
+.color-2020 {
+    color: #ff0081 !important;
+}
+
+.color-2021 {
+    color: #6967ff !important;
+}
+
+.color-2022 {
+    color: #6ba950 !important;
 }
