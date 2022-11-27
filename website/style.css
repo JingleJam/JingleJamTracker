@@ -50,6 +50,11 @@ body{
     margin-right: 20px;
 }
 
+.section-center {
+    display: flex;
+    justify-content: center;
+}
+
 .ui.statistics {
     display: flex;
     justify-content: center;
@@ -128,7 +133,7 @@ body{
     margin-right: 20px;
     height: 600px;
     width: calc(100% - 40px) !important;
-    max-width: 1350px !important;
+    max-width: 1330px !important;
 }
 
 #dateRange {

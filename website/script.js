@@ -78,7 +78,6 @@ function createEvents(){
             
             toggleDollars(!val);
             setTable();
-            updateProcess();
             createGraph();
         }
     });
@@ -269,43 +268,6 @@ function onUpdate(){
     setTable();
 
     $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.date).toLocaleString());
-
-    updateProcess();
-}
-
-function updateProcess(){
-    return;
-    
-    let goal = JingleJam.model.goal.amount;
-
-    let percent = JingleJam.model.goal.currency === 'pounds' ? (JingleJam.model.raised.pounds/goal) : (JingleJam.model.raised.dollars/goal);
-
-    let goalAdjusted = 0;
-    let left = 0;
-    if(isPounds){
-        goalAdjusted = (1.0/percent) * JingleJam.model.raised.pounds;
-        left = goal - JingleJam.model.raised.pounds;
-    }
-    else{
-        goalAdjusted = (1.0/percent) * JingleJam.model.raised.dollars;
-        left = goal - JingleJam.model.raised.dollars;
-    }
-
-    console.log(left);
-
-    let text = JingleJam.model.goal.text.replace('{amount}', formatCurrency(Math.round(goalAdjusted), isPounds ? '£' : '$', 0, false));
-    let success = JingleJam.model.goal.success.replace('{amount}', formatCurrency(Math.round(goalAdjusted), isPounds ? '£' : '$', 0, false));
-    let percentText = `{percent}% - ${formatCurrency(Math.round(left), isPounds ? '£' : '$', 0, false)}`
-
-    $('#goalProgress').progress({
-        percent: percent*100,
-        precision: 1,
-        text: {
-          active  : text,
-          success : success,
-          percent : percentText
-        }
-    });
 }
 
 async function updateScreen(){

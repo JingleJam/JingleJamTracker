@@ -107,8 +107,8 @@ function getTotals(){
         model.pounds += item.total.pounds;
         model.donations += item.donations;
     }
-    model.dollars = parseFloat(model.dollars.toFixed(2));
-    model.pounds = parseFloat(model.pounds.toFixed(2));
+    model.dollars = model.dollars;
+    model.pounds = model.pounds;
 
     return model;
 }
