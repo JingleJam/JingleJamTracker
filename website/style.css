@@ -186,7 +186,7 @@ body{
         display: none;
       }
       table td {
-        display: flex !important;
+        display: table !important;
       }
       
       table td::before {
