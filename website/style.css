@@ -50,6 +50,11 @@ body{
     margin-right: 20px;
 }
 
+.section-center {
+    display: flex;
+    justify-content: center;
+}
+
 .ui.statistics {
     display: flex;
     justify-content: center;
@@ -58,8 +63,8 @@ body{
 }
 
 .ui.statistics .statistic{
-    margin-top: 35px;
-    margin-bottom: 35px;
+    margin-top: 25px;
+    margin-bottom: 25px;
     margin-left: 12px;
     margin-right: 12px;
 }
@@ -88,22 +93,66 @@ body{
     flex-basis: 30% !important;
 }
 
+.custom-grid .custom-grid-column-6{
+    display: flex;
+    flex-basis: 15% !important;
+}
+
+#goalProgress {
+    margin: 20px;
+    margin-bottom: 40px;
+}
+
 #charitiesTable{
     max-width: 1500px;
     margin-left: auto;
     margin-right: auto;
 }
 
-#labelDate {
+.subtext-label {
     color: #5a5a5a;
     margin-left: 20px;
+    margin-right: 20px;
+}
+
+#updatingRealTime .ui.loader {
+    position: relative;
+    left: 0;
+    display: inline-block;
+    margin-left: 10px;
+    top: 9px;
+}
+
+#liveUpdatingRow {
+    margin-top: 7px;
+    height: 20px;
+}
+
+.stat-row {
+    margin-left: 20px;
+    margin-right: 20px;
+    height: 600px;
+    width: calc(100% - 40px) !important;
+    max-width: 1330px !important;
+}
+
+#dateRange {
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-top: 10px;
+    width: calc(100% - 40px) !important;
+    max-width: 1350px !important;
+}
+
+.slider .labels .label {
+    color: #5a5a5a !important;
 }
 
 :root {
   color-scheme: dark;
 }
 
-@media screen and (max-width: 1140px) {
+@media screen and (max-width: 1160px) {
     #headerName {
         display: none !important;
     }
@@ -119,7 +168,7 @@ body{
     }
 }
 
-@media screen and (max-width: 730px) {
+@media screen and (max-width: 740px) {
     #headerButtonsSmall {
         display: inline-flex !important;
     }
@@ -127,6 +176,35 @@ body{
     #headerButtonsLarge {
         display: none !important;
     }
+
+    .ui.statistics .statistic {
+        margin-top: 12px !important;
+        margin-bottom: 12px !important;
+    }
+
+    table thead {
+        display: none;
+      }
+      table td {
+        display: flex;
+      }
+      
+      table td::before {
+        content: attr(label);
+        font-weight: bold;
+        width: 120px;
+        min-width: 120px;
+        margin-right: 10px;
+        text-align: left;
+      }
+
+      #firstRow {
+          padding-top: 25px !important;
+      }
+
+      #liveUpdatingRow {
+        margin-top: 15px;
+      }
 }
 
 @media screen and (max-width: 500px) {
@@ -138,12 +216,99 @@ body{
         font-size: 3rem !important;
     }
 
-    #firstRow {
-        padding-top: 25px !important;
+    .ui.statistics.tiny .statistic .value {
+        font-size: 1.5rem !important;
+    }
+}
+
+@media screen and (max-width: 456px) {
+    #updatingRealTime {
+        display: none;
+    }
+}
+
+.loading-circle {
+    display: inline-block;
+    margin-right: 4px;
+}
+
+.live-icon {
+    font-size: 15px;
+    margin-top: 10px;
+    -webkit-animation-name: toggle;
+    -webkit-animation-duration: 4s;
+    -webkit-animation-timing-function: linear;
+    -webkit-animation-iteration-count: infinite;
+    -moz-animation-name: toggle;
+    -moz-animation-duration: 4s;
+    -moz-animation-timing-function: linear;
+    -moz-animation-iteration-count: infinite;
+    animation-name: toggle;
+    animation-duration: 4s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+}
+
+@keyframes toggle {
+    from {
+        opacity: 0;
     }
 
-    .ui.statistics .statistic {
-        margin-top: 12px !important;
-        margin-bottom: 12px !important;
+    20% {
+        opacity: 1;
     }
+
+    80% {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+@-webkit-keyframes toggle {
+    from {
+        opacity: 0;
+    }
+
+    20% {
+        opacity: 1;
+    }
+
+    80% {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.color-2016 {
+    color: #46bdc6 !important;
+}
+
+.color-2017 {
+    color: #ab30c4 !important;
+}
+
+.color-2018 {
+    color: #c1bc1f !important;
+}
+
+.color-2019 {
+    color: #71f437 !important;
+}
+
+.color-2020 {
+    color: #ff0081 !important;
+}
+
+.color-2021 {
+    color: #6967ff !important;
+}
+
+.color-2022 {
+    color: #6ba950 !important;
 }
