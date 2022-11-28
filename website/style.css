@@ -137,7 +137,7 @@ body{
     margin-right: 20px;
     height: 600px;
     width: calc(100% - 40px) !important;
-    max-width: 1330px !important;
+    max-width: 1300px !important;
 }
 
 #dateRange {

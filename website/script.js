@@ -3,7 +3,8 @@ let JingleJam = {
     previous: [],
     graph: [],
     refreshTime: 15000,
-    update: true
+    update: true,
+    year: 2022
 };
 
 let isPounds = localStorage.getItem('currency') !== 'false';
@@ -16,9 +17,14 @@ $(document).ready(async function(){
     toggleDollars(!isPounds);
     createEvents();
     toggleRefresh(true);
-    await getPrevious();
-    await eventLoop();
-    await createGraph();
+
+    await Promise.all([
+        realTimeLoop(),
+        getPrevious()
+    ]);
+
+    await graphLoop();
+
     show();
 });
 
@@ -54,7 +60,7 @@ function isMobileChart(){
 }
 
 const startHour = 17;
-const startDate = new Date(2022, 11, 1, startHour, 0, 0);
+const startDate = new Date('Dec 01 2022 ' + startHour + ':00:00');
 
 function createEvents(){
     $('.button-watch-live').on('click', function(e) {
@@ -102,6 +108,7 @@ function createEvents(){
             JingleJam.update = !document[hidden];
 
             updateScreen();
+            updateGraph();
         }, false);
     }
 
@@ -278,9 +285,30 @@ async function updateScreen(){
     }
 }
 
-async function eventLoop(){
+async function updateGraph(){
+    if (JingleJam.update) {
+        await getCurrent();
+        await createGraph();
+    }
+}
+
+async function graphLoop(){
+    let time = 1000 * 60 * 10;
+    if(new Date('12/01/2022 18:00:00 GMT') >= new Date(new Date().toLocaleString("en-US", { timeZone: "GMT" })))
+        time = 1000 * 60;
+
     setTimeout(function(){
-        eventLoop();
+        graphLoop();
+    }, time);
+
+    toggleRefresh(true);
+    await updateGraph();
+    toggleRefresh(false);
+}
+
+async function realTimeLoop(){
+    setTimeout(function(){
+        realTimeLoop();
     }, JingleJam.refreshTime);
 
     toggleRefresh(true);
@@ -349,6 +377,24 @@ function getInterpolatedValue(year, date = new Date(JingleJam.model.date)){
     return response;
 }
 
+async function getCurrent(){
+    try{
+        let response = await fetch('./api/current');
+    
+        let points = await response.json();
+        
+        for(let point of points){
+            point.time = new Date(Date.parse(point.timestamp + ' ' + JingleJam.year));
+            point.x = point.time.getTime();
+        }
+    
+        JingleJam.current = groupBy(points, x => x.year);
+    }
+    catch {
+        JingleJam.current = [];
+    }
+}
+
 async function getPrevious(){
     let points = await (await fetch('./api/previous')).json();
     
@@ -356,9 +402,9 @@ async function getPrevious(){
         point.time = new Date(point.timestamp);
 
         if(point.time.getMonth() < 10)
-            point.x = point.time.setFullYear(2023);
+            point.x = point.time.setFullYear(JingleJam.year+1);
         else
-            point.x = point.time.setFullYear(2022);
+            point.x = point.time.setFullYear(JingleJam.year);
     }
 
     JingleJam.previous = groupBy(points, x => x.year);
@@ -374,8 +420,8 @@ const colors = {
     '2022': '#6ba950'
 }
 var myChart;
-let minDate = Date.parse('12/01/2022 17:00');
-let maxDate = Date.parse('12/31/2022 23:59');
+let minDate = Date.parse('12/01/' + JingleJam.year + ' 17:00');
+let maxDate = Date.parse('12/31/' + JingleJam.year + ' 23:59');
 
 async function createGraph(){
     let data = {
@@ -383,6 +429,7 @@ async function createGraph(){
         labels: new Set(),
         datasets: []
     }
+
     for(let year of JingleJam.previous){
         if(year[0] < 2017)
             continue;
@@ -392,30 +439,38 @@ async function createGraph(){
             label: year[0],
             showLine: true,
             fill: false,
-            borderColor: colors[year[0]],
-            backgroundColor: colors[year[0]],
+            borderColor: colors[year[0]] + '99',
+            backgroundColor: colors[year[0]] + '99',
             borderWidth: 3,
             pointRadius: 0,
             pointHoverRadius: 3,
+            order: 2,
             borderDash: [2],
             data: year[1].filter(x => x.time.getMonth() >= 11).map(function(m) { return {x: m.x, y: m[isPounds ? 'amountPounds' : 'amountDollars']}; })
         })
     }
+    
+    for(let year of JingleJam.current){
+        year[1].forEach(x => data.labels.add(x.x));
+        data.datasets.push({
+            label: year[0],
+            showLine: true,
+            fill: false,
+            borderColor: colors[year[0]],
+            backgroundColor: colors[year[0]],
+            borderWidth: 4,
+            pointRadius: 0,
+            pointHoverRadius: 3,
+            order: 1,
+            data: year[1].map(function(m) { return {x: m.x, y: m[isPounds ? 'amountPounds' : 'amountDollars']}; })
+        })
+    }
 
-    data.datasets.push({
-        label: JingleJam.model.year,
-        showLine: true,
-        fill: false,
-        borderColor: colors[JingleJam.model.year],
-        backgroundColor: colors[JingleJam.model.year],
-        borderWidth: 4,
-        pointRadius: 0,
-        pointHoverRadius: 3,
-        data: []
-    });
-
-    if(myChart)
-        myChart.destroy();
+    if(myChart){
+        myChart.data = data;
+        myChart.update('none');
+        return;
+    }
 
     var ctxR = $('#comparisonChart')
     myChart = new Chart(ctxR, {
