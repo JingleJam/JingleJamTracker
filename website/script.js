@@ -57,16 +57,16 @@ const startHour = 17;
 const startDate = new Date(2022, 11, 1, startHour, 0, 0);
 
 function createEvents(){
-    $('#watchLive').on('click', function(e) {
+    $('.button-watch-live').on('click', function(e) {
         window.open('https://twitch.tv/yogscast', "_blank");
     });
-    $('#donate').on('click', function(e) {
+    $('.button-donate').on('click', function(e) {
         window.open('https://jinglejam.tiltify.com/', "_blank");
     });
-    $('#previousYears').on('click', function(e) {
+    $('.button-previous-years').on('click', function(e) {
         window.open('https://docs.google.com/spreadsheets/d/11Ua2EVlmLCtMKSwKDHnLI8jGvkgJV8BMMHZ1sWowRn0/edit#gid=161223743', "_blank");
     });
-    $('#learnMore').on('click', function(e) {
+    $('.button-learn-more').on('click', function(e) {
         window.open('https://www.jinglejam.co.uk/', "_blank");
     });
 
@@ -202,12 +202,12 @@ function setTable(){
     let sortedCampaigns = JingleJam.model.campaigns.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
     for(let campaign of sortedCampaigns){
         table += '<tr>'
-        table += `<td label="Charity" >${campaign.name}</td>`
-        table += `<td label="Yogscast" class="right aligned">${isPounds ? formatCurrency(campaign.raised.pounds, '£', 2) : formatCurrency(campaign.raised.dollars, '$', 2)}</td>`
-        table += `<td label="Fundraiser" class="right aligned">${isPounds ? formatCurrency(campaign.fundraisers.pounds, '£', 2) : formatCurrency(campaign.fundraisers.dollars, '$', 2)}</td>`
-        table += `<td label="Total" class="right aligned">${isPounds ? formatCurrency(campaign.total.pounds, '£', 2) : formatCurrency(campaign.total.dollars, '$', 2)}</td>`
-        table += `<td label="Bundles Sold" class="right aligned">${formatInt(campaign.bundles.sold)}</td>`
-        table += `<td label="Bundles Remain" class="right aligned">${formatInt(campaign.bundles.remaining)}</td>`
+        table += `<th label="Charity">${campaign.name}</th>`
+        table += `<th label="Yogscast" class="right aligned">${isPounds ? formatCurrency(campaign.raised.pounds, '£', 2) : formatCurrency(campaign.raised.dollars, '$', 2)}</th>`
+        table += `<th label="Fundraisers" class="right aligned">${isPounds ? formatCurrency(campaign.fundraisers.pounds, '£', 2) : formatCurrency(campaign.fundraisers.dollars, '$', 2)}</th>`
+        table += `<th label="Total" class="right aligned">${isPounds ? formatCurrency(campaign.total.pounds, '£', 2) : formatCurrency(campaign.total.dollars, '$', 2)}</th>`
+        table += `<th label="Bundles Sold" class="right aligned">${formatInt(campaign.bundles.sold)}</th>`
+        table += `<th label="Bundles Remain" class="right aligned">${formatInt(campaign.bundles.remaining)}</th>`
         table += '</tr>'
     }
     $('#charitiesTable tbody').html(table);
@@ -394,7 +394,7 @@ async function createGraph(){
             fill: false,
             borderColor: colors[year[0]],
             backgroundColor: colors[year[0]],
-            borderWidth: 2,
+            borderWidth: 3,
             pointRadius: 0,
             pointHoverRadius: 3,
             borderDash: [2],
@@ -408,7 +408,7 @@ async function createGraph(){
         fill: false,
         borderColor: colors[JingleJam.model.year],
         backgroundColor: colors[JingleJam.model.year],
-        borderWidth: 2,
+        borderWidth: 4,
         pointRadius: 0,
         pointHoverRadius: 3,
         data: []

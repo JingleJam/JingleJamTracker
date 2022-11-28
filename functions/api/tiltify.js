@@ -202,7 +202,7 @@ async function getSummaryData(env, getAll) {
     campaign.goals.original.dollars = roundAmount(campaign.goals.original.pounds * currencyConversion);
     campaign.goals.current.dollars = roundAmount(campaign.goals.current.pounds * currencyConversion);
 
-    campaign.total.pounds = roundAmount(campaign.raised.pounds);
+    campaign.total.pounds = roundAmount(campaign.total.pounds);
 
     campaign.total.dollars = roundAmount(campaign.total.pounds * currencyConversion);
     campaign.fundraisers.dollars = roundAmount(campaign.fundraisers.pounds * currencyConversion);
