@@ -1,3 +1,7 @@
+* {
+    touch-action: pan-y;
+}
+
 body{
     background-color: #1b1c1d;
     height: fit-content;
@@ -152,6 +156,10 @@ body{
   color-scheme: dark;
 }
 
+tbody th {
+    padding: 10px !important;
+}
+
 @media screen and (max-width: 1160px) {
     #headerName {
         display: none !important;
@@ -181,30 +189,31 @@ body{
         margin-top: 12px !important;
         margin-bottom: 12px !important;
     }
-
+    
     table thead {
         display: none;
-      }
-      table td {
-        display: table !important;
-      }
-      
-      table td::before {
+    }
+    
+    table tbody th::before {
         content: attr(label);
         font-weight: bold;
         width: 120px;
         min-width: 120px;
         margin-right: 10px;
         text-align: left;
-      }
+    }
 
-      #firstRow {
-          padding-top: 25px !important;
-      }
+    tbody th {
+        display: flex !important;
+    }
 
-      #liveUpdatingRow {
+    #firstRow {
+        padding-top: 25px !important;
+    }
+
+    #liveUpdatingRow {
         margin-top: 15px;
-      }
+    }
 }
 
 @media screen and (max-width: 500px) {
