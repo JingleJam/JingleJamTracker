@@ -57,16 +57,16 @@ const startHour = 17;
 const startDate = new Date(2022, 11, 1, startHour, 0, 0);
 
 function createEvents(){
-    $('#watchLive').on('click', function(e) {
+    $('.button-watch-live').on('click', function(e) {
         window.open('https://twitch.tv/yogscast', "_blank");
     });
-    $('#donate').on('click', function(e) {
+    $('.button-donate').on('click', function(e) {
         window.open('https://jinglejam.tiltify.com/', "_blank");
     });
-    $('#previousYears').on('click', function(e) {
+    $('.button-previous-years').on('click', function(e) {
         window.open('https://docs.google.com/spreadsheets/d/11Ua2EVlmLCtMKSwKDHnLI8jGvkgJV8BMMHZ1sWowRn0/edit#gid=161223743', "_blank");
     });
-    $('#learnMore').on('click', function(e) {
+    $('.button-learn-more').on('click', function(e) {
         window.open('https://www.jinglejam.co.uk/', "_blank");
     });
 
@@ -394,7 +394,7 @@ async function createGraph(){
             fill: false,
             borderColor: colors[year[0]],
             backgroundColor: colors[year[0]],
-            borderWidth: 2,
+            borderWidth: 3,
             pointRadius: 0,
             pointHoverRadius: 3,
             borderDash: [2],
@@ -408,7 +408,7 @@ async function createGraph(){
         fill: false,
         borderColor: colors[JingleJam.model.year],
         backgroundColor: colors[JingleJam.model.year],
-        borderWidth: 2,
+        borderWidth: 4,
         pointRadius: 0,
         pointHoverRadius: 3,
         data: []
