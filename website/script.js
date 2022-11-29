@@ -9,8 +9,10 @@
         domain: '.'
     };
 
-    if(window.location.hostname.includes('jinglejam.co.uk'))
-        JingleJam.domain = 'https://jinglejam.no1mann.com';
+    if(window.location.hostname.includes('jinglejam.co.uk') || 
+        window.location.hostname.includes('squarespace.com')  || 
+        window.location.hostname.includes('yogscast.com'))
+        JingleJam.domain = 'https://tracker.jinglejam.co.uk';
 
     let isPounds = localStorage.getItem('currency') !== 'false';
 
