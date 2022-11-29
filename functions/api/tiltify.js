@@ -217,7 +217,7 @@ async function getSummaryData(env, getAll) {
   entireTotals.dollars += roundAmount(totalPounds * currencyConversion);
   entireTotals.pounds += roundAmount(totalPounds);
 
-  return new Response(
+  let response = new Response(
     JSON.stringify({
       year: env.YEAR,
       name: env.NAME,
@@ -259,10 +259,17 @@ async function getSummaryData(env, getAll) {
       campaigns: campaignObjs
     }), {
       headers: {
-        "content-type": "application/json;charset=UTF-8"
+        "content-type": "application/json;charset=UTF-8",
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+        'Access-Control-Max-Age': '86400',
+        'Allow': 'GET, HEAD, OPTIONS',
+        'Vary': 'Origin'
       }
     }
   );
+
+  return response;
 }
 
 function roundAmount(val, decimals = 2) {
@@ -311,5 +318,19 @@ function group(arr, chunkSize, maxLength) {
 }
 
 export async function onRequest(context) {
-  return await handleRequest(context);
+  if (context.request.method === "GET" || context.request.method == "HEAD") {
+    return await handleRequest(context);
+  }
+
+  return new Response(null,  {
+    status: 204,
+    headers: {
+      "content-type": "application/json;charset=UTF-8",
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+      'Access-Control-Max-Age': '86400',
+      'Allow': 'GET, HEAD, OPTIONS'
+    }
+  });
 }
+

@@ -24,6 +24,19 @@ async function getRawData(spreedsheet, query, year){
 }
 
 export async function onRequest(context) {
+    if (context.request.method !== "GET" && context.request.method !== "HEAD") {
+        return new Response(null,  {
+            status: 204,
+            headers: {
+            "content-type": "application/json;charset=UTF-8",
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+            'Access-Control-Max-Age': '86400',
+            'Allow': 'GET, HEAD, OPTIONS'
+            }
+        });
+    }
+  
     let spreadsheet = context.env.GOOGLE_SHEETS_DOCUMENT;
     let query = context.env.GOOGLE_SHEETS_QUERY;
     let year = parseInt(context.env.YEAR);
@@ -32,7 +45,12 @@ export async function onRequest(context) {
     return new Response(JSON.stringify(data),
       {
         headers: {
-          "content-type": "application/json;charset=UTF-8"
+          "content-type": "application/json;charset=UTF-8",
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+          'Access-Control-Max-Age': '86400',
+          'Allow': 'GET, HEAD, OPTIONS',
+          'Vary': 'Origin'
         }
       });
   }
