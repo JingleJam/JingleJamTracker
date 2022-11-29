@@ -4,8 +4,12 @@ let JingleJam = {
     graph: [],
     refreshTime: 15000,
     update: true,
-    year: 2022
+    year: 2022,
+    domain: '.'
 };
+
+if(window.location.hostname.includes('jinglejam.co.uk'))
+    JingleJam.domain = 'https://feature-development.jingle-jam-tracker.pages.dev';
 
 let isPounds = localStorage.getItem('currency') !== 'false';
 
@@ -13,6 +17,9 @@ $(document).ready(async function(){
     if(isPounds){
         $('#currencyCheckbox').attr('checked', 'checked')
     }
+
+    Chart.defaults.font.family = 'Montserrat';
+    Chart.defaults.font.size = 14;
 
     toggleDollars(!isPounds);
     createEvents();
@@ -63,19 +70,6 @@ const startHour = 17;
 const startDate = new Date('Dec 01 2022 ' + startHour + ':00:00');
 
 function createEvents(){
-    $('.button-watch-live').on('click', function(e) {
-        window.open('https://twitch.tv/yogscast', "_blank");
-    });
-    $('.button-donate').on('click', function(e) {
-        window.open('https://jinglejam.tiltify.com/', "_blank");
-    });
-    $('.button-previous-years').on('click', function(e) {
-        window.open('https://docs.google.com/spreadsheets/d/11Ua2EVlmLCtMKSwKDHnLI8jGvkgJV8BMMHZ1sWowRn0/edit#gid=161223743', "_blank");
-    });
-    $('.button-learn-more').on('click', function(e) {
-        window.open('https://www.jinglejam.co.uk/', "_blank");
-    });
-
     $('#currencyCheckbox').checkbox({
         onChange: function(){
             let val = $('#currencyCheckbox').is(':checked');
@@ -151,7 +145,7 @@ function addHours(date, hours) {
   
 
 async function getTiltify(){
-    const response = await fetch('./api/tiltify');
+    const response = await fetch(JingleJam.domain + '/api/tiltify');
 
     return await response.json();
 }
@@ -210,11 +204,11 @@ function setTable(){
     for(let campaign of sortedCampaigns){
         table += '<tr>'
         table += `<th label="Charity">${campaign.name}</th>`
-        table += `<th label="Yogscast" class="right aligned">${isPounds ? formatCurrency(campaign.raised.pounds, '£', 2) : formatCurrency(campaign.raised.dollars, '$', 2)}</th>`
-        table += `<th label="Fundraisers" class="right aligned">${isPounds ? formatCurrency(campaign.fundraisers.pounds, '£', 2) : formatCurrency(campaign.fundraisers.dollars, '$', 2)}</th>`
-        table += `<th label="Total" class="right aligned">${isPounds ? formatCurrency(campaign.total.pounds, '£', 2) : formatCurrency(campaign.total.dollars, '$', 2)}</th>`
-        table += `<th label="Bundles Sold" class="right aligned">${formatInt(campaign.bundles.sold)}</th>`
-        table += `<th label="Bundles Remain" class="right aligned">${formatInt(campaign.bundles.remaining)}</th>`
+        table += `<th label="Yogscast" class="right aligned jj-thin">${isPounds ? formatCurrency(campaign.raised.pounds, '£', 2) : formatCurrency(campaign.raised.dollars, '$', 2)}</th>`
+        table += `<th label="Fundraisers" class="right aligned jj-thin">${isPounds ? formatCurrency(campaign.fundraisers.pounds, '£', 2) : formatCurrency(campaign.fundraisers.dollars, '$', 2)}</th>`
+        table += `<th label="Total" class="right aligned jj-thin">${isPounds ? formatCurrency(campaign.total.pounds, '£', 2) : formatCurrency(campaign.total.dollars, '$', 2)}</th>`
+        table += `<th label="Collections Sold" class="right aligned jj-thin">${formatInt(campaign.bundles.sold)}</th>`
+        table += `<th label="Collections Remain" class="right aligned jj-thin">${formatInt(campaign.bundles.remaining)}</th>`
         table += '</tr>'
     }
     $('#charitiesTable tbody').html(table);
@@ -255,22 +249,6 @@ function onUpdate(){
     animateCount('#pounds2019', getYear(2019).total.pounds, (x) => formatCurrency(x, '£'));
     animateCount('#pounds2020', getYear(2020).total.pounds, (x) => formatCurrency(x, '£'));
     animateCount('#pounds2021', getYear(2021).total.pounds, (x) => formatCurrency(x, '£'));
-
-    /*
-    animateCount('#dollarsCurrent2016', getInterpolatedValue(2016).interpolated.amountDollars, (x) => formatCurrency(x, '$'));
-    animateCount('#dollarsCurrent2017', getInterpolatedValue(2017).interpolated.amountDollars, (x) => formatCurrency(x, '$'));
-    animateCount('#dollarsCurrent2018', getInterpolatedValue(2018).interpolated.amountDollars, (x) => formatCurrency(x, '$'));
-    animateCount('#dollarsCurrent2019', getInterpolatedValue(2019).interpolated.amountDollars, (x) => formatCurrency(x, '$'));
-    animateCount('#dollarsCurrent2020', getInterpolatedValue(2020).interpolated.amountDollars, (x) => formatCurrency(x, '$'));
-    animateCount('#dollarsCurrent2021', getInterpolatedValue(2021).interpolated.amountDollars, (x) => formatCurrency(x, '$'));
-
-    animateCount('#poundsCurrent2016', getInterpolatedValue(2016).interpolated.amountPounds, (x) => formatCurrency(x, '£'));
-    animateCount('#poundsCurrent2017', getInterpolatedValue(2017).interpolated.amountPounds, (x) => formatCurrency(x, '£'));
-    animateCount('#poundsCurrent2018', getInterpolatedValue(2018).interpolated.amountPounds, (x) => formatCurrency(x, '£'));
-    animateCount('#poundsCurrent2019', getInterpolatedValue(2019).interpolated.amountPounds, (x) => formatCurrency(x, '£'));
-    animateCount('#poundsCurrent2020', getInterpolatedValue(2020).interpolated.amountPounds, (x) => formatCurrency(x, '£'));
-    animateCount('#poundsCurrent2021', getInterpolatedValue(2021).interpolated.amountPounds, (x) => formatCurrency(x, '£'));
-    */
 
     setTable();
 
@@ -379,7 +357,7 @@ function getInterpolatedValue(year, date = new Date(JingleJam.model.date)){
 
 async function getCurrent(){
     try{
-        let response = await fetch('./api/current');
+        let response = await fetch(JingleJam.domain + '/api/current');
     
         let points = await response.json();
         
@@ -396,7 +374,7 @@ async function getCurrent(){
 }
 
 async function getPrevious(){
-    let points = await (await fetch('./api/previous')).json();
+    let points = await (await fetch(JingleJam.domain + '/api/previous')).json();
     
     for(let point of points){
         point.time = new Date(point.timestamp);
@@ -421,7 +399,7 @@ const colors = {
 }
 var myChart;
 let minDate = Date.parse('12/01/' + JingleJam.year + ' 17:00');
-let maxDate = Date.parse('12/31/' + JingleJam.year + ' 23:59');
+let maxDate = Date.parse('01/01/' + (JingleJam.year+1) + ' 00:00');
 
 async function createGraph(){
     let data = {
@@ -439,8 +417,8 @@ async function createGraph(){
             label: year[0],
             showLine: true,
             fill: false,
-            borderColor: colors[year[0]] + '99',
-            backgroundColor: colors[year[0]] + '99',
+            borderColor: colors[year[0]] + 'BB',
+            backgroundColor: colors[year[0]] + 'BB',
             borderWidth: 3,
             pointRadius: 0,
             pointHoverRadius: 3,
@@ -493,10 +471,10 @@ async function createGraph(){
                     type: 'time',
                     time: {
                         displayFormats: {
-                            'millisecond': 'D (hh:mm)',
-                            'second': 'D (hh:mm)',
-                            'minute': 'D (hh:mm)',
-                            'hour': 'D (hh:00)',
+                            'millisecond': 'D - H:mm',
+                            'second': 'D - H:mm',
+                            'minute': 'D - H:mm',
+                            'hour': 'D - H:00',
                             'day': 'D',
                             'week': 'D',
                             'month': 'D',
@@ -504,15 +482,23 @@ async function createGraph(){
                             'year': 'D',
                         }
                     },
+                    title: {
+                        display: true,
+                        text: 'Day (GMT)'
+                    },
                     min: minDate,
                     max: maxDate,
                     grid: {
-                        color: '#353434'
+                        color: '#d4d4d4'
                     }
                 },
                 y: {
                     type: 'linear',
                     min: 0,
+                    title: {
+                        display: true,
+                        text: 'Amount Raised'
+                    },
                     ticks: {
                         // Include a dollar sign in the ticks
                         callback: function(value, index, ticks) {
@@ -525,7 +511,7 @@ async function createGraph(){
                         }
                     },
                     grid: {
-                        color: '#353434'
+                        color: '#d4d4d4'
                     }
                 }
             },

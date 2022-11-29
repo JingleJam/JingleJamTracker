@@ -1,125 +1,112 @@
-* {
-    touch-action: pan-y;
+#embedContainer *:not(i) {
+    font-family: "Montserrat";
+  }
+
+#embedContainer {
+    margin-top: 10px;
+    margin-bottom: 20px;
+    border: 0;
+    width: 100%;
+    height: 100%;
 }
 
-body{
-    background-color: #1b1c1d;
-    height: fit-content;
-}
-
-#header{
-    margin: 20px;
-    margin-bottom: 10px;
-}
-
-#header .ui.image {
-    display: inline;
-}
-
-#header .ui.header {
-    display: inline;
-}
-
-#header .ui.buttons {
-    float: right;
-}
-
-#header #headerName{
-    position: absolute;
-    margin-top: 7px;
-    margin-left: 30px;
-}
-
-#currencySelectorObj{
+#embedContainer #currencySelectorObj{
     position: absolute;
     right: 0;
     font-weight: bold;
     margin: 0;
     padding: 0;
     margin-right: 20px;
+    border: 0;
+    box-shadow: none;
+    background-color: #fafafa;
 }
 
-#loader{
+#embedContainer #loader{
     height: calc(100vh - 145px);
+    box-shadow: none;
+    border: 0;
+    background-color: #fafafa;
 }
 
-#footer {
-    color: #919191;
-    text-align: center;
-    padding: 10px;
-}
-
-.section {
+#embedContainer .section {
     margin-left: 20px;
     margin-right: 20px;
 }
 
-.section-center {
+#embedContainer .section-center {
     display: flex;
     justify-content: center;
 }
 
-.ui.statistics {
+#embedContainer .ui.statistics {
     display: flex;
     justify-content: center;
     margin-left: 20px;
     margin-right: 20px;
 }
 
-.ui.statistics .statistic{
+#embedContainer .ui.statistics .statistic{
     margin-top: 25px;
     margin-bottom: 25px;
     margin-left: 12px;
     margin-right: 12px;
 }
 
-.ui.statistics .statistic .value {
+#embedContainer .ui.statistics .statistic .value {
     white-space: nowrap;
+    font-weight: bold;
 }
 
-.ui.divider {
+#embedContainer .ui.slider .inner .track-fill {
+    background-color: #e21251 !important;
+}
+
+#embedContainer .divider {
+    margin-top: 3px;
     margin-left: 20px;
     margin-right: 20px;
+    width: calc(100% - 40px);
 }
 
-.custom-grid{
+#embedContainer .custom-grid{
     display: flex !important;
     flex-wrap: wrap !important;
 }
 
-.custom-grid .custom-grid-column-2{
+#embedContainer .custom-grid .custom-grid-column-2{
     display: flex;
     flex-basis: 45% !important;
 }
 
-.custom-grid .custom-grid-column-3{
+#embedContainer .custom-grid .custom-grid-column-3{
     display: flex;
     flex-basis: 30% !important;
 }
 
-.custom-grid .custom-grid-column-6{
+#embedContainer .custom-grid .custom-grid-column-6{
     display: flex;
     flex-basis: 15% !important;
 }
 
-#goalProgress {
+#embedContainer #goalProgress {
     margin: 20px;
     margin-bottom: 40px;
 }
 
-#charitiesTable{
+#embedContainer #charitiesTable{
     max-width: 1500px;
     margin-left: auto;
     margin-right: auto;
 }
 
-.subtext-label {
-    color: #5a5a5a;
+#embedContainer .subtext-label {
+    color: black;
     margin-left: 20px;
     margin-right: 20px;
 }
 
-#updatingRealTime .ui.loader {
+#embedContainer #updatingRealTime .ui.loader {
     position: relative;
     left: 0;
     display: inline-block;
@@ -127,12 +114,12 @@ body{
     top: 9px;
 }
 
-#liveUpdatingRow {
+#embedContainer #liveUpdatingRow {
     margin-top: 7px;
     height: 20px;
 }
 
-.stat-row {
+#embedContainer .stat-row {
     margin-left: 20px;
     margin-right: 20px;
     height: 600px;
@@ -140,61 +127,61 @@ body{
     max-width: 1300px !important;
 }
 
-#dateRange {
+#embedContainer #dateRange {
     margin-left: 20px;
     margin-right: 20px;
-    margin-top: 10px;
+    margin-top: 5px;
     width: calc(100% - 40px) !important;
     max-width: 1350px !important;
 }
 
-.slider .labels .label {
+#embedContainer .slider .labels .label {
     color: #5a5a5a !important;
 }
 
-:root {
-  color-scheme: dark;
+#embedContainer .bottom-margin{
+    margin-bottom: 70px;
 }
 
-tbody th {
+#embedContainer tbody th {
     padding: 10px !important;
 }
 
 @media screen and (max-width: 1160px) {
-    #headerName {
+    #embedContainer #headerName {
         display: none !important;
     }
 }
 
 @media screen and (min-width: 730px) {
-    #headerButtonsSmall {
+    #embedContainer #headerButtonsSmall {
         display: none !important;
     }
     
-    #headerButtonsLarge {
+    #embedContainer #headerButtonsLarge {
         display: inline-flex !important;
     }
 }
 
 @media screen and (max-width: 740px) {
-    #headerButtonsSmall {
+    #embedContainer #headerButtonsSmall {
         display: inline-flex !important;
     }
     
-    #headerButtonsLarge {
+    #embedContainer #headerButtonsLarge {
         display: none !important;
     }
 
-    .ui.statistics .statistic {
+    #embedContainer .ui.statistics .statistic {
         margin-top: 12px !important;
         margin-bottom: 12px !important;
     }
     
-    table thead {
+    #embedContainer table thead {
         display: none;
     }
     
-    table tbody th::before {
+    #embedContainer table tbody th::before {
         content: attr(label);
         font-weight: bold;
         width: 120px;
@@ -203,47 +190,51 @@ tbody th {
         text-align: left;
     }
 
-    tbody th {
+    #embedContainer tbody th {
         display: flex !important;
     }
 
-    #firstRow {
+    #embedContainer #firstRow {
         padding-top: 25px !important;
     }
 
-    #liveUpdatingRow {
+    #embedContainer #liveUpdatingRow {
         margin-top: 15px;
     }
+    
+    #embedContainer .ui.statistics.small .statistic {
+        min-width: 100vw !important;
+    } 
 }
 
 @media screen and (max-width: 500px) {
-    .ui.statistics.huge .statistic .value {
+    #embedContainer .ui.statistics.large .statistic .value {
         font-size: 4rem !important;
     }
 
-    .ui.statistics .statistic .value {
+    #embedContainer .ui.statistics .statistic .value {
         font-size: 3rem !important;
     }
 
-    .ui.statistics.tiny .statistic .value {
+    #embedContainer .ui.statistics.tiny .statistic .value {
         font-size: 1.5rem !important;
     }
 }
 
 @media screen and (max-width: 456px) {
-    #updatingRealTime {
+    #embedContainer #updatingRealTime {
         display: none;
     }
 }
 
-.loading-circle {
+#embedContainer .loading-circle {
     display: inline-block;
     margin-right: 4px;
 }
 
-.live-icon {
+#embedContainer .live-icon {
     font-size: 15px;
-    margin-top: 10px;
+    color: #e21251;
     -webkit-animation-name: toggle;
     -webkit-animation-duration: 4s;
     -webkit-animation-timing-function: linear;
@@ -294,30 +285,62 @@ tbody th {
     }
 }
 
-.color-2016 {
+#embedContainer .color-2016 {
     color: #46bdc6 !important;
 }
 
-.color-2017 {
+#embedContainer .color-2017 {
     color: #ab30c4 !important;
 }
 
-.color-2018 {
+#embedContainer .color-2018 {
     color: #c1bc1f !important;
 }
 
-.color-2019 {
+#embedContainer .color-2019 {
     color: #71f437 !important;
 }
 
-.color-2020 {
+#embedContainer .color-2020 {
     color: #ff0081 !important;
 }
 
-.color-2021 {
+#embedContainer .color-2021 {
     color: #6967ff !important;
 }
 
-.color-2022 {
+#embedContainer .color-2022 {
     color: #6ba950 !important;
+}
+
+#embedContainer .jj-pink {
+    color: #e21251;
+}
+
+#embedContainer .navy {
+    color: #2e3542;
+}
+
+#embedContainer .link {
+    color: #308391;
+}
+
+#embedContainer .light-blue {
+    color: #3584BF;
+}
+
+#embedContainer .dark-blue {
+    color: #09437a;
+}
+
+#embedContainer .light-red {
+    color: #E30E50;
+}
+
+#embedContainer .dark-red {
+    color: #57051f;
+}
+
+#embedContainer .jj-thin{
+    font-weight: 300;
 }
