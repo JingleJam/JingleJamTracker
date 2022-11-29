@@ -12,7 +12,7 @@
     if(window.location.hostname.includes('jinglejam.co.uk') || 
         window.location.hostname.includes('squarespace.com')  || 
         window.location.hostname.includes('yogscast.com'))
-        JingleJam.domain = 'https://tracker.jinglejam.co.uk';
+        JingleJam.domain = 'https://dashboard.jinglejam.co.uk';
 
     let isPounds = localStorage.getItem('currency') !== 'false';
 
