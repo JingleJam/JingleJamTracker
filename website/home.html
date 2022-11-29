@@ -3,31 +3,47 @@
         <div id='myContainer'></div>
 
         <script>
-            let domain = './';
+            (function(){
+                const domain = './';
 
-            let element = document.querySelector('#myContainer');
+                let element = document.querySelector('#myContainer');
 
-            async function create(){
-                let html = await fetch(domain)
-                element.innerHTML = await html.text();
-            }
-            
-            function createScript(url){
-                var scr = document.createElement('script');
-                scr.src = url;
-                scr.type = 'text/javascript';
-                scr.async = false; // optionally
-                element.appendChild(scr);
-            }
-            
-            create();
+                async function loadTracker(){
+                    let html = await fetch(domain)
+                    element.innerHTML = await html.text();
+                }
+                
+                function createScript(url){
+                    let scr = document.createElement('script');
+                    scr.src = url;
+                    scr.type = 'text/javascript';
+                    scr.async = false;
+                    element.appendChild(scr);
+                }
+                
+                function createStyle(url){
+                    let scr = document.createElement('div');
+                    scr.innerHTML = `<link rel="stylesheet" type="text/css" href="${url}"/>`;
+                    document.getElementsByTagName("head")[0].appendChild(scr);
+                }
 
-            createScript('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js');
-            createScript('https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.js');
-            createScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js');
-            createScript('https://cdn.jsdelivr.net/npm/moment@^2');
-            createScript('https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@^1');
-            createScript(domain + 'script.js');
+                async function create(){
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js');
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.js');
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js');
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js');
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-moment/1.0.1/chartjs-adapter-moment.min.js');
+                    
+                    createStyle('https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.css');
+                    createStyle(domain + 'style.css');
+
+                    await loadTracker();
+
+                    createScript(domain + 'script.js');
+                }
+
+                create();
+            })();
         </script>
 
     </body>
