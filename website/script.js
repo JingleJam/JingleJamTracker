@@ -9,7 +9,7 @@ let JingleJam = {
 };
 
 if(window.location.hostname.includes('jinglejam.co.uk'))
-    JingleJam.domain = 'https://feature-development.jingle-jam-tracker.pages.dev';
+    JingleJam.domain = 'https://feature-styling.jingle-jam-tracker.pages.dev';
 
 let isPounds = localStorage.getItem('currency') !== 'false';
 
