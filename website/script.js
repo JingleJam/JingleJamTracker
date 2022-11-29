@@ -10,7 +10,7 @@
     };
 
     if(window.location.hostname.includes('jinglejam.co.uk'))
-        JingleJam.domain = 'https://feature-styling.jingle-jam-tracker.pages.dev';
+        JingleJam.domain = 'https://jinglejam.no1mann.com';
 
     let isPounds = localStorage.getItem('currency') !== 'false';
 
