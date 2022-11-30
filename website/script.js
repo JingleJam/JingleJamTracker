@@ -69,8 +69,20 @@
         return window.innerWidth < 675;
     }
 
+    async function fetchWithTimeout(resource, options = { timeout: 10000 }) {
+        const { timeout = 10000 } = options;
+        
+        const controller = new AbortController();
+        const fetchId = setTimeout(() => controller.abort(), timeout);
+        const response = await fetch(resource, {
+          signal: controller.signal  
+        });
+        clearTimeout(fetchId);
+        return response;
+      }
+
     const startHour = 17;
-    const startDate = new Date('Dec 01 2022 ' + startHour + ':00:00');
+    const startDate = new Date('Dec 01 ' + JingleJam.year + ' ' + startHour + ':00:00');
 
     function createEvents(){
         $('#currencyCheckbox').checkbox({
@@ -148,7 +160,7 @@
     
 
     async function getTiltify(){
-        const response = await fetch(JingleJam.domain + '/api/tiltify');
+        const response = await fetchWithTimeout(JingleJam.domain + '/api/tiltify');
 
         return await response.json();
     }
@@ -210,8 +222,6 @@
             table += `<th label="Yogscast" class="right aligned jj-thin">${isPounds ? formatCurrency(campaign.raised.pounds, '£', 2) : formatCurrency(campaign.raised.dollars, '$', 2)}</th>`
             table += `<th label="Fundraisers" class="right aligned jj-thin">${isPounds ? formatCurrency(campaign.fundraisers.pounds, '£', 2) : formatCurrency(campaign.fundraisers.dollars, '$', 2)}</th>`
             table += `<th label="Total" class="right aligned jj-thin">${isPounds ? formatCurrency(campaign.total.pounds, '£', 2) : formatCurrency(campaign.total.dollars, '$', 2)}</th>`
-            table += `<th label="Collections Sold" class="right aligned jj-thin">${formatInt(campaign.bundles.sold)}</th>`
-            table += `<th label="Collections Remain" class="right aligned jj-thin">${formatInt(campaign.bundles.remaining)}</th>`
             table += '</tr>'
         }
         $('#charitiesTable tbody').html(table);
@@ -275,7 +285,7 @@
 
     async function graphLoop(){
         let time = 1000 * 60 * 10;
-        if(new Date('12/01/2022 18:00:00 GMT') >= new Date(new Date().toLocaleString("en-US", { timeZone: "GMT" })))
+        if(new Date('12/01/' + JingleJam.year + ' 18:00:00 GMT') >= new Date(new Date().toLocaleString("en-US", { timeZone: "GMT" })))
             time = 1000 * 60;
 
         setTimeout(function(){
@@ -360,7 +370,7 @@
 
     async function getCurrent(){
         try{
-            let response = await fetch(JingleJam.domain + '/api/current');
+            let response = await fetchWithTimeout(JingleJam.domain + '/api/current');
         
             let points = await response.json();
             
@@ -377,7 +387,7 @@
     }
 
     async function getPrevious(){
-        let points = await (await fetch(JingleJam.domain + '/api/previous')).json();
+        let points = await (await fetchWithTimeout(JingleJam.domain + '/api/previous')).json();
         
         for(let point of points){
             point.time = new Date(point.timestamp);
