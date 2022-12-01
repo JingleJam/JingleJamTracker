@@ -78,6 +78,7 @@ async function getSummaryData(env) {
   var regionResults = {};
 
   let fundraiserTotalPounds = 0;
+  let individualFundraisersPound = 0;
 
   try {
     if(true){
@@ -122,6 +123,8 @@ async function getSummaryData(env) {
               campaign.raised.pounds = 0;
               campaign.fundraisers.pounds = fundraiserCampaignTotalPounds;
               campaign.total.pounds = campaign.raised.pounds + campaign.fundraisers.pounds;
+
+              individualFundraisersPound += fundraiserCampaignTotalPounds;
             }
           }
         }
@@ -145,7 +148,7 @@ async function getSummaryData(env) {
   for(let campaign of campaignObjs){
     if(campaign.id === 566){
       campaign.raised.pounds = yogscastTotalPounds;
-      campaign.total.pounds = totalPounds;
+      campaign.total.pounds = totalPounds- individualFundraisersPound;
       campaign.fundraisers.pounds = campaign.total.pounds - campaign.raised.pounds;
     }
   }
