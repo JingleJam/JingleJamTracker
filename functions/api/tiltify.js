@@ -74,62 +74,74 @@ async function getSummaryData(env) {
     campaignObjs.push(obj);
   }
 
-  var regionGroups = group(JSON.parse(JSON.stringify(regionIds)), maxSim, Math.ceil(regionIds.length / maxSim));
-  var regionResults = {};
-
+  let yogscastTotalPounds = 0;
   let fundraiserTotalPounds = 0;
-  let individualFundraisersPound = 0;
+  let allFundraiserTotalPounds = 0;
 
   try {
     if(true){
 
-      for (var i = 0; i < regionGroups.length; i++) {
-        var regionGroup = regionGroups[i];
-        var regionRequests = [];
-  
-        for (var j = 0; j < regionGroup.length; j++) {
-          var region = regionGroup[j];
-  
-          regionRequests.push(getCampaignsForRegion(env.FUNDRAISER_PUBLIC_ID, region.id));
+      let offset = 0;
+      var campaigns = [];
+      let end = false;
+
+      while(offset <= 20*48 && !end) {
+        let requests = [];
+
+        for (var j = 0; j < maxSim; j++) {
+          requests.push(getCampaigns(env.FUNDRAISER_PUBLIC_ID, offset));
+          offset += 20;
         }
   
-        var regionResponses = await Promise.all(regionRequests);
+        var regionResponses = await Promise.all(requests);
   
         for(let j = 0; j < regionResponses.length; j++){
-          regionResults[regionGroup[j].id] = regionResponses[j];
+          let response = regionResponses[j].data.fundraisingEvent.publishedCampaigns;
+          
+          campaigns = campaigns.concat(response.edges);
+
+          if(!response.pagination.hasNextPage){
+            end = true;
+            break;
+          }
         }
       }
   
-      for (var regionId of Object.keys(regionResults)) {
-        let campaigns = regionResults[regionId].data.fundraisingEvent.publishedCampaigns;
-  
-        let fundraiserCampaignTotalPounds = 0;
-  
-        for (var j = 0; j < campaigns.edges.length; j++) {
-          var responseCampaign = campaigns.edges[j];
-  
-          fundraiserCampaignTotalPounds += parseFloat(responseCampaign.node.totalAmountRaised.value);
+      for (let campaign of campaigns) {
+        let region = campaign.node.region;
+
+        let amount = parseFloat(campaign.node.totalAmountRaised.value);
+
+        let regionId = 566;
+        let isYogscast = false;
+
+        if(region){
+          regionId = region.id;
         }
-  
-        for(let campaign of campaignObjs){
-  
-          if(campaign.id == regionId){
-            if(campaign.id === 566){
-              campaign.fundraisers.pounds = fundraiserCampaignTotalPounds;
-              campaign.total.pounds = totalPounds;
-              campaign.raised.pounds = campaign.total.pounds - campaign.fundraisers.pounds;
+        else{
+          isYogscast = true;
+        }
+
+        for(let campaignObj of campaignObjs){
+          if(campaignObj.id == regionId){
+            if(isYogscast){
+              campaignObj.raised.pounds += amount;
+
+              yogscastTotalPounds += amount;
             }
             else{
-              campaign.raised.pounds = 0;
-              campaign.fundraisers.pounds = fundraiserCampaignTotalPounds;
-              campaign.total.pounds = campaign.raised.pounds + campaign.fundraisers.pounds;
+              campaignObj.fundraisers.pounds += amount;
+  
+              fundraiserTotalPounds += amount;
 
-              individualFundraisersPound += fundraiserCampaignTotalPounds;
+              if(regionId === 566){
+                allFundraiserTotalPounds += amount;
+              }
             }
+
+            campaignObj.total.pounds = campaignObj.raised.pounds + campaignObj.fundraisers.pounds;
           }
         }
-  
-        fundraiserTotalPounds += fundraiserCampaignTotalPounds;
       }
     }
   } catch (e) {
@@ -143,13 +155,18 @@ async function getSummaryData(env) {
   let fundraiserTotalDollars = roundAmount(fundraiserTotalPounds * currencyConversion);
 
   let yogscastDollars = roundAmount(totalDollars - fundraiserTotalDollars);
-  let yogscastTotalPounds = roundAmount(totalPounds - fundraiserTotalPounds);
+
+  console.log(totalPounds);
+  console.log(fundraiserTotalPounds);
+  console.log(allFundraiserTotalPounds);
+  console.log(yogscastTotalPounds);
 
   for(let campaign of campaignObjs){
     if(campaign.id === 566){
       campaign.raised.pounds = yogscastTotalPounds;
-      campaign.total.pounds = totalPounds- individualFundraisersPound;
-      campaign.fundraisers.pounds = campaign.total.pounds - campaign.raised.pounds;
+      campaign.fundraisers.pounds = allFundraiserTotalPounds;
+      campaign.total.pounds = allFundraiserTotalPounds + yogscastTotalPounds;
+      break;
     }
   }
 
@@ -177,8 +194,8 @@ async function getSummaryData(env) {
       date: retrieveDate,
       poundsToDollars: roundAmount(currencyConversion, 8),
       raised: {
-        dollars: roundAmount(yogscastDollars),
-        pounds: roundAmount(yogscastTotalPounds)
+        dollars: yogscastDollars,
+        pounds: yogscastTotalPounds
       },
       fundraisers: {
         dollars: fundraiserTotalDollars,
@@ -268,6 +285,30 @@ async function getCampaignsForRegion(fundraiserPublicId, regionId){
       "content-type": "application/json",
     }
   };
+
+  let response = await fetch("https://api.tiltify.com/", request)
+
+  return await response.json();
+}
+
+  async function getCampaigns(fundraiserPublicId, offset){
+    let request = {
+      body: JSON.stringify({
+        "operationName": "get_campaigns_by_fundraising_event_id",
+        "variables": {
+          "limit":20,
+          "offset":offset,
+          "query":null,
+          "regionId":null,
+          "publicId":fundraiserPublicId
+        },
+        "query": "query get_campaigns_by_fundraising_event_id($publicId: String!, $limit: Int!, $query: String, $offset: Int, $regionId: Int) { fundraisingEvent(publicId: $publicId) { publishedCampaigns( limit: $limit offset: $offset query: $query regionId: $regionId ) { pagination { hasNextPage limit offset total } edges { cursor node { publicId name slug user { id username slug } region { id } team { id slug } totalAmountRaised { value } } } } } } "
+      }),
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      }
+    };
 
   let response = await fetch("https://api.tiltify.com/", request)
 
