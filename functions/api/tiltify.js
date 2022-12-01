@@ -110,12 +110,7 @@ async function getSummaryData(env) {
       for (var j = 0; j < campaigns.edges.length; j++) {
         var responseCampaign = campaigns[j];
 
-        if (responseCampaign.team.id === env.TEAM_ID) {
-          yogcastCampaignTotalPounds += parseFloat(responseCampaign.totalAmountRaised.value);
-        }
-        else{
-          fundraiserCampaignTotalPounds += parseFloat(responseCampaign.totalAmountRaised.value);
-        }
+        fundraiserCampaignTotalPounds += parseFloat(responseCampaign.totalAmountRaised.value);
       }
 
       for(let campaign of campaignObjs){
@@ -124,37 +119,34 @@ async function getSummaryData(env) {
           campaign.fundraisers.pounds = fundraiserCampaignTotalPounds;
           campaign.total.pounds = campaign.raised.pounds + campaign.fundraisers.pounds;
         }
+
+        if(campaign.id === 566){
+          campaign.raised.pounds = yogcastCampaignTotalPounds;
+        }
       }
 
-      yogscastTotalPounds += yogcastCampaignTotalPounds;
       fundraiserTotalPounds += fundraiserCampaignTotalPounds;
     }
   } catch (e) {
     console.log(e);
   }
 
-  var yogscastTotalDollars = team.totalAmountRaised - env.DOLLAR_OFFSET;
-
   var currencyConversion = 1.21;
 
-  try {
-    if (yogscastPounds > .01 && yogscastTotalDollars > .01)
-      currencyConversion = yogscastTotalDollars / yogscastTotalPounds;
-  } catch {}
+  let totalPounds = roundAmount(parseFloat(totals.fundraisingEvent.amountRaised.value));
+  let totalDollars = roundAmount(totalPounds * currencyConversion);
+  
+  let fundraiserTotalDollars = roundAmount(fundraiserTotalPounds * currencyConversion);
+
+  let yogscastDollars = roundAmount(totalDollars - fundraiserTotalDollars);
+  yogscastTotalPounds = roundAmount(totalPounds - fundraiserTotalPounds);
 
   //Update campaigns after creation;
   for (let campaign of campaignObjs) {
     campaign.total.dollars = roundAmount(campaign.total.pounds * currencyConversion);
     campaign.fundraisers.dollars = roundAmount(campaign.fundraisers.pounds * currencyConversion);
     campaign.raised.dollars = roundAmount(campaign.raised.pounds * currencyConversion);
-
   }
-
-  let totalPounds = roundAmount(parseFloat(totals.fundraisingEvent.amountRaised.value));
-  let totalDollars = roundAmount(totalPounds * currencyConversion);
-  
-  let fundraisersPounds = roundAmount(totalPounds - yogscastPounds);
-  let fundraiserDollars = roundAmount(fundraisersPounds * currencyConversion);
 
   let totalBundlesAllocated = totals.fundraisingEvent.rewards[0].quantity;
   let totalBundlesRemaining = totals.fundraisingEvent.rewards[0].remaining;
@@ -173,12 +165,12 @@ async function getSummaryData(env) {
       date: retrieveDate,
       poundsToDollars: roundAmount(currencyConversion, 8),
       raised: {
-        dollars: roundAmount(yogscastTotalDollars),
-        pounds: roundAmount(yogscastPounds)
+        dollars: roundAmount(yogscastDollars),
+        pounds: roundAmount(yogscastTotalPounds)
       },
       fundraisers: {
-        dollars: fundraiserDollars,
-        pounds: fundraisersPounds
+        dollars: fundraiserTotalDollars,
+        pounds: fundraiserTotalPounds
       },
       total: {
         dollars: totalDollars,
