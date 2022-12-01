@@ -104,12 +104,13 @@ async function getSummaryData(env) {
       let fundraiserCampaignTotalPounds = 0;
 
       for (var j = 0; j < campaigns.edges.length; j++) {
-        var responseCampaign = campaigns[j];
+        var responseCampaign = campaigns.edges[j];
 
-        fundraiserCampaignTotalPounds += parseFloat(responseCampaign.totalAmountRaised.value);
+        fundraiserCampaignTotalPounds += parseFloat(responseCampaign.node.totalAmountRaised.value);
       }
 
       for(let campaign of campaignObjs){
+
         if(campaign.id == regionId){
           if(campaign.id === 566){
             campaign.raised.pounds = totalPounds;
@@ -247,7 +248,7 @@ async function getCampaignsForRegion(fundraiserPublicId, regionId){
         "regionId": regionId,
         'limit': 50
       },
-      "query": "query get_campaigns_by_fundraising_event_id_asc($publicId: String!, $limit: Int!, $query: String, $cursor: String, $regionId: Int) { fundraisingEvent(publicId: $publicId) { publishedCampaigns( first: $limit after: $cursor query: $query regionId: $regionId ) { pageInfo { startCursor endCursor hasNextPage hasPreviousPage } edges { cursor node { publicId name slug user { id username slug } team { id name slug } cause { slug name } rewards { quantity remaining } totalAmountRaised { value currency } goal { value currency } } } } } } "
+      "query": "query get_campaigns_by_fundraising_event_id_asc($publicId: String!, $limit: Int!, $query: String, $cursor: String, $regionId: Int) { fundraisingEvent(publicId: $publicId) { publishedCampaigns( first: $limit after: $cursor query: $query regionId: $regionId ) { pageInfo { startCursor endCursor hasNextPage hasPreviousPage } edges { cursor node { publicId name slug user { id username slug } team { id name slug } cause { slug name } totalAmountRaised { value currency }  } } } } }"
     }),
     method: "POST",
     headers: {
@@ -257,7 +258,9 @@ async function getCampaignsForRegion(fundraiserPublicId, regionId){
 
   let response = await fetch("https://api.tiltify.com/", request)
 
-  return await response.json();
+  let data = await response.json();
+
+  return data;
 }
 
 function roundAmount(val, decimals = 2) {
