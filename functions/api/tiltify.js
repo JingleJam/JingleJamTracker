@@ -80,52 +80,54 @@ async function getSummaryData(env) {
   let fundraiserTotalPounds = 0;
 
   try {
+    if(false){
 
-    for (var i = 0; i < regionGroups.length; i++) {
-      var regionGroup = regionGroups[i];
-      var regionRequests = [];
-
-      for (var j = 0; j < regionGroup.length; j++) {
-        var region = regionGroup[j];
-
-        regionRequests.push(getCampaignsForRegion(env.FUNDRAISER_PUBLIC_ID, region.id));
-      }
-
-      var regionResponses = await Promise.all(regionRequests);
-
-      for(let j = 0; j < regionResponses.length; j++){
-        regionResults[regionGroup[j].id] = regionResponses[j];
-      }
-    }
-
-    for (var regionId of Object.keys(regionResults)) {
-      let campaigns = regionResults[regionId].data.fundraisingEvent.publishedCampaigns;
-
-      let fundraiserCampaignTotalPounds = 0;
-
-      for (var j = 0; j < campaigns.edges.length; j++) {
-        var responseCampaign = campaigns.edges[j];
-
-        fundraiserCampaignTotalPounds += parseFloat(responseCampaign.node.totalAmountRaised.value);
-      }
-
-      for(let campaign of campaignObjs){
-
-        if(campaign.id == regionId){
-          if(campaign.id === 566){
-            campaign.raised.pounds = totalPounds;
-            campaign.fundraisers.pounds = fundraiserCampaignTotalPounds;
-            campaign.total.pounds = campaign.raised.pounds + campaign.fundraisers.pounds;
-          }
-          else{
-            campaign.raised.pounds = 0;
-            campaign.fundraisers.pounds = fundraiserCampaignTotalPounds;
-            campaign.total.pounds = campaign.raised.pounds + campaign.fundraisers.pounds;
-          }
+      for (var i = 0; i < regionGroups.length; i++) {
+        var regionGroup = regionGroups[i];
+        var regionRequests = [];
+  
+        for (var j = 0; j < regionGroup.length; j++) {
+          var region = regionGroup[j];
+  
+          regionRequests.push(getCampaignsForRegion(env.FUNDRAISER_PUBLIC_ID, region.id));
+        }
+  
+        var regionResponses = await Promise.all(regionRequests);
+  
+        for(let j = 0; j < regionResponses.length; j++){
+          regionResults[regionGroup[j].id] = regionResponses[j];
         }
       }
-
-      fundraiserTotalPounds += fundraiserCampaignTotalPounds;
+  
+      for (var regionId of Object.keys(regionResults)) {
+        let campaigns = regionResults[regionId].data.fundraisingEvent.publishedCampaigns;
+  
+        let fundraiserCampaignTotalPounds = 0;
+  
+        for (var j = 0; j < campaigns.edges.length; j++) {
+          var responseCampaign = campaigns.edges[j];
+  
+          fundraiserCampaignTotalPounds += parseFloat(responseCampaign.node.totalAmountRaised.value);
+        }
+  
+        for(let campaign of campaignObjs){
+  
+          if(campaign.id == regionId){
+            if(campaign.id === 566){
+              campaign.fundraisers.pounds = fundraiserCampaignTotalPounds;
+              campaign.total.pounds = totalPounds;
+              campaign.raised.pounds = campaign.total.pounds - campaign.fundraisers.pounds;
+            }
+            else{
+              campaign.raised.pounds = 0;
+              campaign.fundraisers.pounds = fundraiserCampaignTotalPounds;
+              campaign.total.pounds = campaign.raised.pounds + campaign.fundraisers.pounds;
+            }
+          }
+        }
+  
+        fundraiserTotalPounds += fundraiserCampaignTotalPounds;
+      }
     }
   } catch (e) {
     console.log(e);
@@ -139,6 +141,14 @@ async function getSummaryData(env) {
 
   let yogscastDollars = roundAmount(totalDollars - fundraiserTotalDollars);
   let yogscastTotalPounds = roundAmount(totalPounds - fundraiserTotalPounds);
+
+  for(let campaign of campaignObjs){
+    if(campaign.id === 566){
+      campaign.raised.pounds = yogscastTotalPounds;
+      campaign.total.pounds = totalPounds;
+      campaign.fundraisers.pounds = campaign.total.pounds - campaign.raised.pounds;
+    }
+  }
 
   //Update campaigns after creation;
   for (let campaign of campaignObjs) {
