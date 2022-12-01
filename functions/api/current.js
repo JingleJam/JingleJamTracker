@@ -41,6 +41,8 @@ export async function onRequest(context) {
     let query = context.env.GOOGLE_SHEETS_QUERY;
     let year = parseInt(context.env.YEAR);
 
+    return new Response([]);
+
     let data = await getRawData(spreadsheet, query, year);
     return new Response(JSON.stringify(data),
       {

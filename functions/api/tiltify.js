@@ -45,9 +45,7 @@ async function getSummaryData(env) {
 
   //Combine all campaign data
   var campaignObjs = [];
-  var yogscastPounds = 0;
-
-  var slugs = [];
+  let totalPounds = roundAmount(parseFloat(totals.fundraisingEvent.amountRaised.value));
 
   //For all offical campaigns
   for (var i = 0; i < regionIds.length; i++) {
@@ -79,7 +77,6 @@ async function getSummaryData(env) {
   var regionGroups = group(JSON.parse(JSON.stringify(regionIds)), maxSim, Math.ceil(regionIds.length / maxSim));
   var regionResults = {};
 
-  let yogscastTotalPounds = 0;
   let fundraiserTotalPounds = 0;
 
   try {
@@ -104,7 +101,6 @@ async function getSummaryData(env) {
     for (var regionId of Object.keys(regionResults)) {
       let campaigns = regionResults[regionId].data.fundraisingEvent.publishedCampaigns;
 
-      let yogcastCampaignTotalPounds = 0;
       let fundraiserCampaignTotalPounds = 0;
 
       for (var j = 0; j < campaigns.edges.length; j++) {
@@ -114,14 +110,17 @@ async function getSummaryData(env) {
       }
 
       for(let campaign of campaignObjs){
-        if(campaign.id === regionId){
-          campaign.raised.pounds = yogcastCampaignTotalPounds;
-          campaign.fundraisers.pounds = fundraiserCampaignTotalPounds;
-          campaign.total.pounds = campaign.raised.pounds + campaign.fundraisers.pounds;
-        }
-
-        if(campaign.id === 566){
-          campaign.raised.pounds = yogcastCampaignTotalPounds;
+        if(campaign.id == regionId){
+          if(campaign.id === 566){
+            campaign.raised.pounds = totalPounds;
+            campaign.fundraisers.pounds = fundraiserCampaignTotalPounds;
+            campaign.total.pounds = campaign.raised.pounds + campaign.fundraisers.pounds;
+          }
+          else{
+            campaign.raised.pounds = 0;
+            campaign.fundraisers.pounds = fundraiserCampaignTotalPounds;
+            campaign.total.pounds = campaign.raised.pounds + campaign.fundraisers.pounds;
+          }
         }
       }
 
@@ -133,13 +132,12 @@ async function getSummaryData(env) {
 
   var currencyConversion = 1.21;
 
-  let totalPounds = roundAmount(parseFloat(totals.fundraisingEvent.amountRaised.value));
   let totalDollars = roundAmount(totalPounds * currencyConversion);
   
   let fundraiserTotalDollars = roundAmount(fundraiserTotalPounds * currencyConversion);
 
   let yogscastDollars = roundAmount(totalDollars - fundraiserTotalDollars);
-  yogscastTotalPounds = roundAmount(totalPounds - fundraiserTotalPounds);
+  let yogscastTotalPounds = roundAmount(totalPounds - fundraiserTotalPounds);
 
   //Update campaigns after creation;
   for (let campaign of campaignObjs) {
