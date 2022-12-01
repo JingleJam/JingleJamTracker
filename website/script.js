@@ -285,11 +285,12 @@
 
     async function graphLoop(){
         let time = 1000 * 60 * 10;
-        if(new Date('12/01/' + JingleJam.year + ' 18:00:00 GMT') >= new Date(new Date().toLocaleString("en-US", { timeZone: "GMT" })))
+        if(new Date(new Date('12/01/' + JingleJam.year + ' 18:00:00 GMT').toLocaleString("en-US", { timeZone: "GMT" })) >= new Date(new Date().toLocaleString("en-US", { timeZone: "GMT" })))
             time = 1000 * 60;
 
         setTimeout(function(){
             graphLoop();
+            show();
         }, time);
 
         toggleRefresh(true);
@@ -300,6 +301,7 @@
     async function realTimeLoop(){
         setTimeout(function(){
             realTimeLoop();
+            show();
         }, JingleJam.refreshTime);
 
         toggleRefresh(true);
