@@ -283,8 +283,8 @@
 
     async function graphLoop(){
         let time = 1000 * 60 * 10;
-        if(new Date(new Date('12/01/' + JingleJam.year + ' 18:00:00 GMT').toLocaleString("en-US", { timeZone: "GMT" })) >= new Date(new Date().toLocaleString("en-US", { timeZone: "GMT" })))
-            time = 1000 * 60;
+       // if(new Date(new Date('12/01/' + JingleJam.year + ' 18:00:00 GMT').toLocaleString("en-US", { timeZone: "GMT" })) >= new Date(new Date().toLocaleString("en-US", { timeZone: "GMT" })))
+       //     time = 1000 * 60;
 
         setTimeout(function(){
             graphLoop();
