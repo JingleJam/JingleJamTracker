@@ -385,8 +385,6 @@ function getRawData(list){
         row.amountDollars = parseFloat(row.amountDollars.replace('"', '').replace(',', '').replace('$', '').replace('£', ''));
     }
 
-    console.log(list);
-
     return list;
 }
 
