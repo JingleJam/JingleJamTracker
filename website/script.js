@@ -69,9 +69,7 @@
         return window.innerWidth < 675;
     }
 
-    async function fetchWithTimeout(resource, options = { timeout: 10000 }) {
-        const { timeout = 10000 } = options;
-        
+    async function fetchWithTimeout(resource, timeout = 10000) {
         const controller = new AbortController();
         const fetchId = setTimeout(() => controller.abort(), timeout);
         const response = await fetch(resource, {
@@ -372,7 +370,7 @@
 
     async function getCurrent(){
         try{
-            let response = await fetchWithTimeout(JingleJam.domain + '/api/current');
+            let response = await fetchWithTimeout(JingleJam.domain + '/api/current', 30000);
         
             let points = await response.json();
             
@@ -389,7 +387,7 @@
     }
 
     async function getPrevious(){
-        let points = await (await fetchWithTimeout(JingleJam.domain + '/api/previous')).json();
+        let points = await (await fetchWithTimeout(JingleJam.domain + '/api/previous', 60000)).json();
         
         for(let point of points){
             point.time = new Date(point.timestamp);
