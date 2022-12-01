@@ -418,6 +418,24 @@ const points = JSON.stringify(getRawData([
       "year": 2022,
       "amountPounds": "680,592.72",
       "amountDollars": "823,517.19"
+    },
+    {
+      "timestamp": "Dec 1, 20:30",
+      "year": 2022,
+      "amountPounds": "699,848.37",
+      "amountDollars": "846,816.53"
+    },
+    {
+      "timestamp": "Dec 1, 20:40",
+      "year": 2022,
+      "amountPounds": "715,545.37",
+      "amountDollars": "865,809.90"
+    },
+    {
+      "timestamp": "Dec 1, 20:50",
+      "year": 2022,
+      "amountPounds": "728,125.13",
+      "amountDollars": "881,031.41"
     }
    ]));
   
