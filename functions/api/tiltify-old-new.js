@@ -5,22 +5,6 @@ import {
 
 const maxSim = 6; //Maximum number of simultaneous fetches
 
-const regionIds = [
-  { id: 566, name: 'All Charities'},
-  { id: 576, name: 'British Red Cross'},
-  { id: 575, name: 'Campaign Against Living Miserably (CALM)'},
-  { id: 564, name: 'Dogs For Autism'},
-  { id: 565, name: 'The Grand Appeal'},
-  { id: 567, name: "Huntington's Disease Association"},
-  { id: 568, name: 'Kidscape'},
-  { id: 569, name: 'Mermaids'},
-  { id: 570, name: 'Movember'},
-  { id: 571, name: 'RESET Mental Health'},
-  { id: 572, name: 'SpecialEffect'},
-  { id: 573, name: 'Special Olympics Great Britain'},
-  { id: 574, name: 'Whale and Dolphin Conservations'},
-]
-
 //End of 2020 yogscast dollar amount = 2827226.00
 //End of 2021 yogscast dollar amount = 6571211.42
 
@@ -30,18 +14,25 @@ async function getSummaryData(env) {
   };
 
   var requests = [
-    getTeam(env.TEAM_ID, tiltifyHeader), //Only used for getting dollar amount and the username
-    getEvent(env.CAUSE_SLUG, env.FUNDRAISER_SLUG) //Gets list of official yogscast campaigns
+    fetch("https://tiltify.com/api/v3/teams/" + env.TEAM_ID, tiltifyHeader), //Only used for getting dollar amount and the username
+    fetch("https://tiltify.com/api/v3/teams/" + env.TEAM_ID + "/campaigns", tiltifyHeader) //Gets list of official yogscast campaigns
   ];
 
   var retrieveDate = new Date();
 
   //Get All Responses
-  const results = await Promise.all(requests);
+  const responses = await Promise.all(requests);
+
+  var responsesArray = [];
+  for (var i = 0; i < responses.length; i++)
+    responsesArray.push(gatherResponse(responses[i]));
+
+  const results = await Promise.all(responsesArray);
 
   //Individual Results
   var team = results[0].data; //Yogscast Team Data
-  var totals = results[1].data; //List of Yogscast Campaigns
+  var campaigns = results[1].data; //List of Yogscast Campaigns
+  var totals = await getEvent(env.CAUSE_SLUG, env.FUNDRAISER_SLUG); //List of Yogscast Campaigns
 
   //Combine all campaign data
   var campaignObjs = [];
@@ -50,18 +41,32 @@ async function getSummaryData(env) {
   var slugs = [];
 
   //For all offical campaigns
-  for (var i = 0; i < regionIds.length; i++) {
-    var region = regionIds[i];
+  for (var i = 0; i < campaigns.length; i++) {
+    var campaign = campaigns[i];
+
+    //If older campaign, ignore it
+    if (campaign.startsAt < new Date(env.START_DATE).getTime())
+      continue;
+
+    slugs.push(campaign.slug);
 
     //Create individual campaign object
     var obj = {
-      id: region.id,
-      slug: region.id,
-      name: region.name,
-      currency: 'GBP',
+      id: campaign.causeId,
+      slug: campaign.slug,
+      name: null,
+      currency: campaign.causeCurrency,
+      campaign: {
+        id: campaign.id,
+        slug: campaign.slug,
+        name: campaign.name,
+        description: campaign.description,
+        startDate: new Date(campaign.startsAt),
+        endDate: new Date(campaign.endsAt)
+      },
       raised: {
         dollars: 0,
-        pounds: 0
+        pounds: campaign.amountRaised
       },
       fundraisers: {
         dollars: 0,
@@ -70,94 +75,117 @@ async function getSummaryData(env) {
       total: {
         dollars: 0,
         pounds: 0,
+      },
+      goals: {
+        original: {
+          dollars: 0,
+          pounds: campaign.originalFundraiserGoal
+        },
+        current: {
+          dollars: 0,
+          pounds: campaign.fundraiserGoalAmount
+        }
       }
     };
+
+    yogscastPounds += obj.raised.pounds;
 
     campaignObjs.push(obj);
   }
 
-  var regionGroups = group(JSON.parse(JSON.stringify(regionIds)), maxSim, Math.ceil(regionIds.length / maxSim));
-  var regionResults = {};
+  var slugGroups = group(slugs, maxSim, Math.ceil(slugs.length / maxSim));
+  var bundleResults = [];
 
-  let yogscastTotalPounds = 0;
-  let fundraiserTotalPounds = 0;
+  for (var i = 0; i < slugGroups.length; i++) {
+    var slugGroup = slugGroups[i];
+    var bundleRequests = [];
 
-  try {
-
-    for (var i = 0; i < regionGroups.length; i++) {
-      var regionGroup = regionGroups[i];
-      var regionRequests = [];
-
-      for (var j = 0; j < regionGroup.length; j++) {
-        var region = regionGroup[j];
-
-        regionRequests.push(getCampaignsForRegion(env.FUNDRAISER_PUBLIC_ID, region.id));
-      }
-
-      var regionResponses = await Promise.all(regionRequests);
-
-      for(let j = 0; j < regionResponses.length; j++){
-        regionResults[regionGroup[j].id] = regionResponses[j];
-      }
+    for (var j = 0; j < slugGroup.length; j++) {
+      var slug = slugGroup[j];
+      var postMethod = {
+        body: JSON.stringify({
+          "operationName": "get_campaign_by_vanity_and_slug",
+          "variables": {
+            "vanity": "+" + team.slug,
+            "slug": slug
+          },
+          "query": "query get_campaign_by_vanity_and_slug($vanity: String!, $slug: String!) {\r\n  campaign(vanity: $vanity, slug: $slug) {fundraisingEvent { name slug publicId amountRaised { currency value} }    slug     cause { slug name }     rewards { quantity remaining }     }\r\n}\r\n"
+        }),
+        method: "POST",
+        headers: {
+          "content-type": "application/json;charset=UTF-8",
+        },
+      };
+      bundleRequests.push(fetch("https://api.tiltify.com/", postMethod));
     }
 
-    for (var regionId of Object.keys(regionResults)) {
-      let campaigns = regionResults[regionId].data.fundraisingEvent.publishedCampaigns;
+    var bundleResponses = await Promise.all(bundleRequests);
 
-      let yogcastCampaignTotalPounds = 0;
-      let fundraiserCampaignTotalPounds = 0;
-
-      for (var j = 0; j < campaigns.edges.length; j++) {
-        var responseCampaign = campaigns[j];
-
-        if (responseCampaign.team.id === env.TEAM_ID) {
-          yogcastCampaignTotalPounds += parseFloat(responseCampaign.totalAmountRaised.value);
-        }
-        else{
-          fundraiserCampaignTotalPounds += parseFloat(responseCampaign.totalAmountRaised.value);
-        }
-      }
-
-      for(let campaign of campaignObjs){
-        if(campaign.id === regionId){
-          campaign.raised.pounds = yogcastCampaignTotalPounds;
-          campaign.fundraisers.pounds = fundraiserCampaignTotalPounds;
-          campaign.total.pounds = campaign.raised.pounds + campaign.fundraisers.pounds;
-        }
-      }
-
-      yogscastTotalPounds += yogcastCampaignTotalPounds;
-      fundraiserTotalPounds += fundraiserCampaignTotalPounds;
+    var bundleTempResults = [];
+    for (var j = 0; j < bundleResponses.length; j++) {
+      bundleTempResults.push(gatherResponse(bundleResponses[j]));
     }
-  } catch (e) {
-    console.log(e);
+
+    var tempResults = await Promise.all(bundleTempResults);
+
+    bundleResults.push.apply(bundleResults, tempResults);
   }
 
-  var yogscastTotalDollars = team.totalAmountRaised - env.DOLLAR_OFFSET;
+  try {
+    for (var i = 0; i < bundleResults.length; i++) {
+      var bundle = bundleResults[i].data.campaign;
+      for (var j = 0; j < campaignObjs.length; j++) {
+        var campaign = campaignObjs[j];
 
-  var currencyConversion = 1.21;
+        if (bundle.slug === campaign.slug) {
+
+          //Get Cause Info
+          campaign.slug = bundle.cause.slug;
+          campaign.name = bundle.cause.name;
+
+          //Get Fundraising Info
+          campaign.total.pounds = roundAmount(bundle.fundraisingEvent.amountRaised.value);
+          campaign.fundraisers.pounds = roundAmount(campaign.total.pounds - campaign.raised.pounds);
+
+          totalPounds += campaign.total.pounds;
+
+          continue;
+        }
+      }
+    }
+  } catch (e) {
+  }
+
+  var yogscastDollars = team.totalAmountRaised - env.DOLLAR_OFFSET;
+  var currencyConversion = yogscastDollars / yogscastPounds;
+
+  var currencyConversion = 1.205;
 
   try {
-    if (yogscastPounds > .01 && yogscastTotalDollars > .01)
-      currencyConversion = yogscastTotalDollars / yogscastTotalPounds;
+    if (yogscastPounds > .01 && yogscastDollars > .01)
+      currencyConversion = yogscastDollars / yogscastPounds;
   } catch {}
+
 
   //Update campaigns after creation;
   for (let campaign of campaignObjs) {
+    campaign.goals.original.dollars = roundAmount(campaign.goals.original.pounds * currencyConversion);
+    campaign.goals.current.dollars = roundAmount(campaign.goals.current.pounds * currencyConversion);
+
     campaign.total.dollars = roundAmount(campaign.total.pounds * currencyConversion);
     campaign.fundraisers.dollars = roundAmount(campaign.fundraisers.pounds * currencyConversion);
     campaign.raised.dollars = roundAmount(campaign.raised.pounds * currencyConversion);
 
   }
 
-  let totalPounds = roundAmount(parseFloat(totals.fundraisingEvent.amountRaised.value));
+  let totalPounds = roundAmount(parseFloat(totals.data.fundraisingEvent.amountRaised.value));
   let totalDollars = roundAmount(totalPounds * currencyConversion);
   
   let fundraisersPounds = roundAmount(totalPounds - yogscastPounds);
   let fundraiserDollars = roundAmount(fundraisersPounds * currencyConversion);
 
-  let totalBundlesAllocated = totals.fundraisingEvent.rewards[0].quantity;
-  let totalBundlesRemaining = totals.fundraisingEvent.rewards[0].remaining;
+  let totalBundlesAllocated = totals.data.fundraisingEvent.rewards[0].quantity;
+  let totalBundlesRemaining = totals.data.fundraisingEvent.rewards[0].remaining;
   let totalBundlesSold = totalBundlesAllocated - totalBundlesRemaining;
 
   var numberOfDonations = totalBundlesSold + env.DONATION_DIFFERENCE;
@@ -173,7 +201,7 @@ async function getSummaryData(env) {
       date: retrieveDate,
       poundsToDollars: roundAmount(currencyConversion, 8),
       raised: {
-        dollars: roundAmount(yogscastTotalDollars),
+        dollars: roundAmount(yogscastDollars),
         pounds: roundAmount(yogscastPounds)
       },
       fundraisers: {
@@ -221,12 +249,6 @@ async function getSummaryData(env) {
   return response;
 }
 
-async function getTeam(teamId, tiltifyHeader){
-  let response = await  fetch("https://tiltify.com/api/v3/teams/" + teamId, tiltifyHeader)
-
-  return await response.json();
-}
-
 async function getEvent(causeSlug, fundraiserSlug){
   let request = {
     body: JSON.stringify({
@@ -236,28 +258,6 @@ async function getEvent(causeSlug, fundraiserSlug){
         "feSlug": fundraiserSlug
       },
       "query": "query get_cause_and_fe_by_slug($feSlug: String!, $causeSlug: String!) { fundraisingEvent(slug: $feSlug, causeSlug: $causeSlug) { amountRaised { currency value } rewards { quantity remaining } } } "
-    }),
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-    }
-  };
-
-  let response = await fetch("https://api.tiltify.com/", request)
-
-  return await response.json();
-}
-
-async function getCampaignsForRegion(fundraiserPublicId, regionId){
-  let request = {
-    body: JSON.stringify({
-      "operationName": "get_campaigns_by_fundraising_event_id_asc",
-      "variables": {
-        "publicId": fundraiserPublicId,
-        "regionId": regionId,
-        'limit': 50
-      },
-      "query": "query get_campaigns_by_fundraising_event_id_asc($publicId: String!, $limit: Int!, $query: String, $cursor: String, $regionId: Int) { fundraisingEvent(publicId: $publicId) { publishedCampaigns( first: $limit after: $cursor query: $query regionId: $regionId ) { pageInfo { startCursor endCursor hasNextPage hasPreviousPage } edges { cursor node { publicId name slug user { id username slug } team { id name slug } cause { slug name } rewards { quantity remaining } totalAmountRaised { value currency } goal { value currency } } } } } } "
     }),
     method: "POST",
     headers: {
@@ -293,6 +293,20 @@ function getTiltifyHeader(env) {
     "Authorization": "Bearer " + env.TILTIFY_API_TOKEN,
     "Content-Type": "application/json"
   };
+}
+
+//Helpder Functions
+async function gatherResponse(response) {
+  const {
+    headers
+  } = response;
+  const contentType = headers.get("content-type") || "";
+
+  if (contentType.includes("application/json")) {
+    return await response.json();
+  } else {
+    return await response.text();
+  }
 }
 
 function group(arr, chunkSize, maxLength) {

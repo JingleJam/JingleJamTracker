@@ -370,7 +370,7 @@
 
     async function getCurrent(){
         try{
-            let response = await fetchWithTimeout(JingleJam.domain + '/api/current', 30000);
+            let response = await fetchWithTimeout(JingleJam.domain + '/api/current', 5000);
         
             let points = await response.json();
             
