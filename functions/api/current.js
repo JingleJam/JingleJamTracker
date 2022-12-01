@@ -224,86 +224,86 @@ const points = JSON.stringify(getRawData([
     {
       "timestamp": "Dec 1, 17:56",
       "year": 2022,
-      "amountPounds": "444,417.56",
-      "amountDollars": "537,745.25"
+      "amountPounds": "444,522.56",
+      "amountDollars": "537,872.30"
     },
     {
       "timestamp": "Dec 1, 17:57",
       "year": 2022,
-      "amountPounds": "446,625.56",
-      "amountDollars": "540,416.93"
+      "amountPounds": "446,730.56",
+      "amountDollars": "540,543.98"
     },
     {
       "timestamp": "Dec 1, 17:58",
       "year": 2022,
-      "amountPounds": "449,275.88",
-      "amountDollars": "543,623.81"
+      "amountPounds": "449,380.88",
+      "amountDollars": "543,750.86"
     },
     {
       "timestamp": "Dec 1, 17:59",
       "year": 2022,
-      "amountPounds": "451,317.88",
-      "amountDollars": "546,094.63"
+      "amountPounds": "451,422.88",
+      "amountDollars": "546,221.68"
     },
     {
       "timestamp": "Dec 1, 18:00",
       "year": 2022,
-      "amountPounds": "453,497.88",
-      "amountDollars": "548,732.43"
+      "amountPounds": "453,602.88",
+      "amountDollars": "548,859.48"
     },
     {
       "timestamp": "Dec 1, 18:01",
       "year": 2022,
-      "amountPounds": "456,307.88",
-      "amountDollars": "552,132.53"
+      "amountPounds": "456,477.88",
+      "amountDollars": "552,338.23"
     },
     {
       "timestamp": "Dec 1, 18:02",
       "year": 2022,
-      "amountPounds": "457,865.96",
-      "amountDollars": "554,017.81"
+      "amountPounds": "458,105.96",
+      "amountDollars": "554,308.21"
     },
     {
       "timestamp": "Dec 1, 18:03",
       "year": 2022,
-      "amountPounds": "459,785.96",
-      "amountDollars": "556,341.01"
+      "amountPounds": "460,025.96",
+      "amountDollars": "556,631.41"
     },
     {
       "timestamp": "Dec 1, 18:04",
       "year": 2022,
-      "amountPounds": "461,430.96",
-      "amountDollars": "558,331.46"
+      "amountPounds": "461,670.96",
+      "amountDollars": "558,621.86"
     },
     {
       "timestamp": "Dec 1, 18:05",
       "year": 2022,
-      "amountPounds": "463,453.96",
-      "amountDollars": "560,779.29"
+      "amountPounds": "463,693.96",
+      "amountDollars": "561,069.69"
     },
     {
       "timestamp": "Dec 1, 18:06",
       "year": 2022,
-      "amountPounds": "465,066.81",
-      "amountDollars": "562,730.84"
+      "amountPounds": "465,306.81",
+      "amountDollars": "563,021.24"
     },
     {
       "timestamp": "Dec 1, 18:07",
       "year": 2022,
-      "amountPounds": "466,741.81",
-      "amountDollars": "564,757.59"
+      "amountPounds": "466,981.81",
+      "amountDollars": "565,047.99"
     },
     {
       "timestamp": "Dec 1, 18:08",
       "year": 2022,
-      "amountPounds": "468,431.81",
-      "amountDollars": "566,802.49"
+      "amountPounds": "468,671.81",
+      "amountDollars": "567,092.89"
     },
     {
       "timestamp": "Dec 1, 18:09",
       "year": 2022,
-      "amountPounds": "470,095.81",
-      "amountDollars": "568,815.93"
+      "amountPounds": "470,335.81",
+      "amountDollars": "569,106.33"
     },
     {
       "timestamp": "Dec 1, 18:10",
@@ -314,26 +314,26 @@ const points = JSON.stringify(getRawData([
     {
       "timestamp": "Dec 1, 18:11",
       "year": 2022,
-      "amountPounds": "473,330.81",
-      "amountDollars": "572,730.28"
+      "amountPounds": "473,570.81",
+      "amountDollars": "573,020.68"
     },
     {
       "timestamp": "Dec 1, 18:12",
       "year": 2022,
-      "amountPounds": "476,007.83",
-      "amountDollars": "575,969.47"
+      "amountPounds": "476,247.83",
+      "amountDollars": "576,259.87"
     },
     {
       "timestamp": "Dec 1, 18:13",
       "year": 2022,
-      "amountPounds": "478,212.83",
-      "amountDollars": "578,637.52"
+      "amountPounds": "478,452.83",
+      "amountDollars": "578,927.92"
     },
     {
       "timestamp": "Dec 1, 18:14",
       "year": 2022,
-      "amountPounds": "480,707.83",
-      "amountDollars": "581,656.47"
+      "amountPounds": "480,947.83",
+      "amountDollars": "581,946.87"
     },
     {
       "timestamp": "Dec 1, 18:15",
@@ -350,32 +350,74 @@ const points = JSON.stringify(getRawData([
     {
       "timestamp": "Dec 1, 18:30",
       "year": 2022,
-      "amountPounds": "516,971.29",
-      "amountDollars": "625,535.26"
+      "amountPounds": "517,561.29",
+      "amountDollars": "626,249.16"
     },
     {
       "timestamp": "Dec 1, 18:40",
       "year": 2022,
-      "amountPounds": "537,207.98",
-      "amountDollars": "650,021.66"
+      "amountPounds": "537,997.98",
+      "amountDollars": "650,977.56"
     },
     {
       "timestamp": "Dec 1, 18:50",
       "year": 2022,
-      "amountPounds": "553,688.35",
-      "amountDollars": "669,962.90"
+      "amountPounds": "554,798.35",
+      "amountDollars": "671,306.00"
     },
     {
       "timestamp": "Dec 1, 19:00",
       "year": 2022,
-      "amountPounds": "570,550.01",
-      "amountDollars": "690,365.51"
+      "amountPounds": "571,870.01",
+      "amountDollars": "691,962.71"
     },
     {
       "timestamp": "Dec 1, 19:10",
       "year": 2022,
-      "amountPounds": "585,152.57",
-      "amountDollars": "708,034.61"
+      "amountPounds": "586,612.57",
+      "amountDollars": "709,801.21"
+    },
+    {
+      "timestamp": "Dec 1, 19:20",
+      "year": 2022,
+      "amountPounds": "601,455.09",
+      "amountDollars": "727,760.66"
+    },
+    {
+      "timestamp": "Dec 1, 19:30",
+      "year": 2022,
+      "amountPounds": "615,778.71",
+      "amountDollars": "745,092.24"
+    },
+    {
+      "timestamp": "Dec 1, 19:40",
+      "year": 2022,
+      "amountPounds": "627,103.36",
+      "amountDollars": "758,795.07"
+    },
+    {
+      "timestamp": "Dec 1, 19:50",
+      "year": 2022,
+      "amountPounds": "639,643.71",
+      "amountDollars": "773,968.89"
+    },
+    {
+      "timestamp": "Dec 1, 20:00",
+      "year": 2022,
+      "amountPounds": "652,686.24",
+      "amountDollars": "789,750.35"
+    },
+    {
+      "timestamp": "Dec 1, 20:10",
+      "year": 2022,
+      "amountPounds": "667,425.02",
+      "amountDollars": "807,584.27"
+    },
+    {
+      "timestamp": "Dec 1, 20:20",
+      "year": 2022,
+      "amountPounds": "680,592.72",
+      "amountDollars": "823,517.19"
     }
    ]));
   
