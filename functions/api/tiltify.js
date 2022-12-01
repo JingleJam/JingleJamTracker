@@ -80,7 +80,7 @@ async function getSummaryData(env) {
   let fundraiserTotalPounds = 0;
 
   try {
-    if(false){
+    if(true){
 
       for (var i = 0; i < regionGroups.length; i++) {
         var regionGroup = regionGroups[i];
