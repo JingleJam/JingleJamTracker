@@ -2,11 +2,13 @@ async function getRealTimeData(request, spreedsheet, query, year){
 
     const cache = await caches.open("jingle-jam-current");
     
-    const cacheKey = new Request(request.url, request);
+    const cacheKey = new Request(request.url);
 
     let cacheResponse = await cache.match(cacheKey);
     
     if (!cacheResponse) {
+        console.log("Cache not hit");
+
         let sheetResponse = await fetch(`https://docs.google.com/spreadsheets/d/${spreedsheet}/gviz/tq?tq=${query}&headers=0&sheet=${year} Data Set&tqx=out:csv`);
     
         let csv = await sheetResponse.text();
@@ -42,6 +44,7 @@ async function getRealTimeData(request, spreedsheet, query, year){
 
         return response;
     }
+    console.log("Cache hit");
 
     return cacheResponse;
 }
