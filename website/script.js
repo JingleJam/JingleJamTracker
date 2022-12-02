@@ -115,7 +115,6 @@
                 JingleJam.update = !document[hidden];
 
                 updateScreen();
-                updateGraph();
             }, false);
         }
 
