@@ -214,9 +214,12 @@
 
         let sortedCampaigns = JingleJam.model.campaigns.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
         for(let campaign of sortedCampaigns){
-            table += '<tr>'
+            let yogscastAmount = isPounds ? formatCurrency(campaign.raised.pounds, '£', 2) : formatCurrency(campaign.raised.dollars, '$', 2);
+            let isAllCharities = campaign.id === 566;
+
+            table += `<tr class="${isAllCharities ? "light-blue-background" : ""}">`
             table += `<th label="Charity">${campaign.name}</th>`
-            table += `<th label="Yogscast" class="right aligned jj-thin">${isPounds ? formatCurrency(campaign.raised.pounds, '£', 2) : formatCurrency(campaign.raised.dollars, '$', 2)}</th>`
+            table += `<th label="Yogscast" class="right aligned jj-thin">${campaign.id === 566 ? yogscastAmount : '-'}</th>`
             table += `<th label="Fundraisers" class="right aligned jj-thin">${isPounds ? formatCurrency(campaign.fundraisers.pounds, '£', 2) : formatCurrency(campaign.fundraisers.dollars, '$', 2)}</th>`
             table += `<th label="Total" class="right aligned jj-thin">${isPounds ? formatCurrency(campaign.total.pounds, '£', 2) : formatCurrency(campaign.total.dollars, '$', 2)}</th>`
             table += '</tr>'
