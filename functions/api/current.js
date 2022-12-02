@@ -11,13 +11,16 @@ async function getRealTimeData(request, spreedsheet, query, year){
     
         let csv = await sheetResponse.text();
     
+        let rows = csv.split('\n');
+
         let results = [];
-        for(let row of csv.split('\n')){
+        for(let i = 1; i < rows.length; i++){
+            let row = rows[i];
             let rawData = row.split('","');
     
             let data = []
             for(let entry of rawData){
-                data.push(entry.replace('"', '').replace(',', '').replace('$', '').replace('£', ''));
+                data.push(entry.replaceAll('"', '').replaceAll(',', '').replaceAll('$', '').replaceAll('£', ''));
             }
     
             results.push({
@@ -28,15 +31,13 @@ async function getRealTimeData(request, spreedsheet, query, year){
             });
         }
     
-        let response = new Response(JSON.stringify(results), {
-            "content-type": "application/json;charset=UTF-8",
-            'Access-Control-Allow-Origin': '*',
-            'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-            'Access-Control-Max-Age': '86400',
-            'Allow': 'GET, HEAD, OPTIONS',
-            'Vary': 'Origin'
-        });
+        let response = new Response(JSON.stringify(results));
 
+        response.headers.append('content-type', 'application/json;charset=UTF-8');
+        response.headers.append('Access-Control-Allow-Origin', '*');
+        response.headers.append('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+        response.headers.append('Access-Control-Max-Age', '86400');
+        response.headers.append('Allow', 'GET, HEAD, OPTIONS');
         response.headers.append('Cache-Control', 's-maxage=1200');
 
         return response;
@@ -69,6 +70,16 @@ export async function onRequest(context) {
     let query = context.env.GOOGLE_SHEETS_QUERY;
     let year = parseInt(context.env.YEAR);
   
-    return await getRealTimeData(context.request, spreadsheet, query, year);
+    try{
+        let results = await getRealTimeData(context.request, spreadsheet, query, year);
+
+        if(results.length <= 2)
+            throw "Error";
+
+        return results;
+    }
+    catch{
+        return await getOldData();
+    }
   }
      
