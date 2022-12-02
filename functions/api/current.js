@@ -16,6 +16,8 @@ async function getRealTimeData(request, spreedsheet, query, year){
         responseToCache.headers.append('Cache-Control', 's-maxage=1200');
 
         cache.put(cacheKey, responseToCache.clone());
+
+        cacheResponse = responseToCache;
     }
     else{
         console.log("Cache hit");
@@ -50,8 +52,6 @@ async function getRealTimeData(request, spreedsheet, query, year){
     response.headers.append('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
     response.headers.append('Access-Control-Max-Age', '86400');
     response.headers.append('Allow', 'GET, HEAD, OPTIONS');
-
-    console.log(response);
 
     return response;
 }
