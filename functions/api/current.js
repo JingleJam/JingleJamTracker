@@ -1,4 +1,6 @@
-async function getRealTimeData(request, spreedsheet, query, year){
+async function getRealTimeData(event, spreedsheet, query, year){
+
+    let request = event.request;
 
     const cache = await caches.open("jingle-jam-current");
     
@@ -15,7 +17,7 @@ async function getRealTimeData(request, spreedsheet, query, year){
 
         responseToCache.headers.append('Cache-Control', 's-maxage=1200');
 
-        cache.put(cacheKey, responseToCache.clone());
+        event.waitUntil(cache.put(cacheKey, responseToCache.clone()));
 
         cacheResponse = responseToCache;
     }
@@ -81,7 +83,7 @@ export async function onRequest(context) {
     let year = parseInt(context.env.YEAR);
   
     try{
-        let results = await getRealTimeData(context.request, spreadsheet, query, year);
+        let results = await getRealTimeData(context, spreadsheet, query, year);
 
         if(results.length <= 4)
             throw "Error";
