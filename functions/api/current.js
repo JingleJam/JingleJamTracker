@@ -1,6 +1,6 @@
 async function getRealTimeData(request, spreedsheet, query, year){
 
-    const cache = caches.default;
+    const cache = await caches.open("jingle-jam-current");
     
     const cacheKey = new Request(request.url, request);
 
