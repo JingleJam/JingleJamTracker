@@ -18,7 +18,7 @@ const regionIds = [
   { id: 571, name: 'RESET Mental Health'},
   { id: 572, name: 'SpecialEffect'},
   { id: 573, name: 'Special Olympics Great Britain'},
-  { id: 574, name: 'Whale and Dolphin Conservations'},
+  { id: 574, name: 'Whale and Dolphin Conservation'},
 ]
 
 //End of 2020 yogscast dollar amount = 2827226.00
