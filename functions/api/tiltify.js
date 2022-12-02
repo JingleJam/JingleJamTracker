@@ -155,12 +155,7 @@ async function getSummaryData(env) {
   let fundraiserTotalDollars = roundAmount(fundraiserTotalPounds * currencyConversion);
 
   let yogscastDollars = roundAmount(totalDollars - fundraiserTotalDollars);
-
-  console.log(totalPounds);
-  console.log(fundraiserTotalPounds);
-  console.log(allFundraiserTotalPounds);
-  console.log(yogscastTotalPounds);
-
+  
   for(let campaign of campaignObjs){
     if(campaign.id === 566){
       campaign.raised.pounds = yogscastTotalPounds;
