@@ -55,19 +55,21 @@ export default {
 		}
   
 		let data = {};
+		let strData = JSON.stringify(data);
+
 		if(cachedValue){
 			console.log('Retrieved from cache')
 		  	data = JSON.parse(cachedValue);
+			strData = JSON.stringify(data);
 		}
 		else{
 			console.log('Fetch live')
 			
 			data = await getTiltifyData(this.env);
-		}
-
-		let strData = JSON.stringify(data);
+			strData = JSON.stringify(data);
   
-		await this.state.storage.put("cached-value", strData);
+			await this.state.storage.put("cached-value", strData);
+		}
 	
 		return new Response(strData);
 	  }
