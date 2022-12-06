@@ -25,6 +25,9 @@ async function getRealTimeData(event, spreedsheet, query, year){
         console.log("Cache hit");
     }
 
+    if(cacheResponse.status >= 400)
+        throw "Error";
+
     let csv = await cacheResponse.text();
 
     let rows = csv.split('\n');
@@ -91,7 +94,7 @@ export async function onRequest(context) {
         return results;
     }
     catch (e){
-        console.log(e);
+        console.error(e);
         return new Response(await getOldData(), {
             headers: {
             "content-type": "application/json;charset=UTF-8",
