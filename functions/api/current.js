@@ -85,7 +85,7 @@ export async function onRequest(context) {
     try{
         let results = await getRealTimeData(context, spreadsheet, query, year);
 
-        if(results.length <= 4)
+        if(results.length <= 4 || results.length[0].includes('goog-inline-block'))
             throw "Error";
 
         return results;
