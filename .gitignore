@@ -5,3 +5,5 @@ wrangler.toml
 node_modules
 .dev.vars
 jinglejamcouk
+package-lock.json
+package.json

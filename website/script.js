@@ -114,7 +114,7 @@
             document.addEventListener(visibilityChange, function(){
                 JingleJam.update = !document[hidden];
 
-                updateScreen();
+                //updateScreen();
             }, false);
         }
 
