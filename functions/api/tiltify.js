@@ -4,10 +4,7 @@
 async function handleRequest(request) {
   let response = await fetch('https://tiltifycache.no1mann.com/');
 
-  let data = {};
-  if(response.code === 200){
-    data = await response.text();
-  }
+  let data = await response.text();
   
   return new Response(JSON.stringify(data), {
     headers: {
