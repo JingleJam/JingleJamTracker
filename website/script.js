@@ -4,6 +4,8 @@
         previous: [],
         graph: [],
         refreshTime: 15000,
+        waitTime: 3000,
+        graphTime: 1000 * 60 * 10,
         update: true,
         year: 2022,
         domain: '.'
@@ -114,11 +116,16 @@
             document.addEventListener(visibilityChange, function(){
                 JingleJam.update = !document[hidden];
 
-                //updateScreen();
+                //If tab is back in focus and the screen did not refresh, refresh it after 1 second
+                setTimeout(function(){
+                    if(!JingleJam.model.date || (new Date() - new Date(JingleJam.model.date)) > (JingleJam.refreshTime + JingleJam.waitTime)){
+                        updateScreen();
+                    }
+                }, 1000);
             }, false);
         }
 
-        //Upload Speed Slider
+        //Date Range Slider
         $('#dateRange').slider({
             min: 0,
             max: 744-startHour,
@@ -171,7 +178,7 @@
 
         let amount = 0
         if(decimals > 0)
-            amount =  parseFloat(total, 10).toFixed(decimals).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString();
+            amount =  parseFloat(total).toFixed(decimals).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString();
         else
             amount = parseInt(total).toLocaleString("en-US");
 
@@ -193,12 +200,17 @@
         let incAmount = (target-number)/90;
         if(number < target) {
             let interval = setInterval(function() {
-                $(elem).text(format(number));
                 if (number >= target) {
                     clearInterval(interval);
-                    $(elem).text(format(target));
                     $(elem).data('value', target);
+
+                    if(number !== target)
+                        $(elem).text(format(target));
+
                     return;
+                }
+                else{
+                    $(elem).text(format(number));
                 }
                 number+=incAmount;
             }, 17);
@@ -269,7 +281,8 @@
     }
 
     async function updateScreen(){
-        if (JingleJam.update) {
+        //If update flag is set and enough time has passed, refresh the screen
+        if (JingleJam.update && getNextProcessDate() > (JingleJam.refreshTime - JingleJam.waitTime)) {
             JingleJam.model = await getTiltify();
         
             onUpdate();
@@ -283,15 +296,23 @@
         }
     }
 
-    async function graphLoop(){
-        let time = 1000 * 60 * 10;
-       // if(new Date(new Date('12/01/' + JingleJam.year + ' 18:00:00 GMT').toLocaleString("en-US", { timeZone: "GMT" })) >= new Date(new Date().toLocaleString("en-US", { timeZone: "GMT" })))
-       //     time = 1000 * 60;
+    function getNextProcessDate(){
+        let now = new Date();
+        let processedTime = JingleJam.model.date ? new Date(JingleJam.model.date) : new Date();
 
+        let difference = JingleJam.refreshTime - (now.getTime() - processedTime.getTime()) ;
+
+        if(difference < JingleJam.waitTime)
+            difference = JingleJam.refreshTime;
+
+        return Math.max(Math.min(difference + JingleJam.waitTime, JingleJam.refreshTime + JingleJam.waitTime), JingleJam.waitTime + 1000);
+    }
+
+    async function graphLoop(){
         setTimeout(function(){
             graphLoop();
             show();
-        }, time);
+        }, JingleJam.graphTime);
 
         toggleRefresh(true);
         await updateGraph();
@@ -299,14 +320,17 @@
     }
 
     async function realTimeLoop(){
+
+        toggleRefresh(true);
+        try{
+            await updateScreen();
+        } catch{}
+        toggleRefresh(false);
+        
         setTimeout(function(){
             realTimeLoop();
             show();
-        }, JingleJam.refreshTime);
-
-        toggleRefresh(true);
-        await updateScreen();
-        toggleRefresh(false);
+        }, getNextProcessDate());
     }
 
     function groupBy(list, keyGetter) {
@@ -424,7 +448,7 @@
         }
 
         for(let year of JingleJam.previous){
-            if(year[0] < 2017)
+            if(year[0] < 2016)
                 continue;
 
             year[1].forEach(x => data.labels.add(x.x));
@@ -472,7 +496,7 @@
             options: {
                 elements: {
                     line: {
-                        tension: .4
+                        tension: .5
                     }
                 },
                 responsive: true,
@@ -509,7 +533,6 @@
                     },
                     y: {
                         type: 'linear',
-                        min: 0,
                         title: {
                             display: true,
                             text: 'Amount Raised'
@@ -517,12 +540,15 @@
                         ticks: {
                             // Include a dollar sign in the ticks
                             callback: function(value, index, ticks) {
-                                if(value >= 1000000)
-                                    return formatCurrency(value/1000000, isPounds ? '£' : '$', 1, false) + 'm'
-                                else if(value >= 1000)
+                                let tickDiff = ticks[1].value - ticks[0].value;
+                                if(value < 1000000)
                                     return formatCurrency(value/1000, isPounds ? '£' : '$', 0, false) + 'k'
+                                else if(tickDiff < 10000)
+                                    return formatCurrency(value/1000000, isPounds ? '£' : '$', 3, false) + 'm'
+                                else if(tickDiff < 100000)
+                                    return formatCurrency(value/1000000, isPounds ? '£' : '$', 2, false) + 'm'
 
-                                return formatCurrency(value, isPounds ? '£' : '$', 0, false);
+                                return formatCurrency(value/1000000, isPounds ? '£' : '$', 1, false) + 'm'
                             }
                         },
                         grid: {
