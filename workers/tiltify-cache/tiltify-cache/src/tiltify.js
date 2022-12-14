@@ -6,19 +6,19 @@ import {
 const maxSim = 6; //Maximum number of simultaneous fetches
 
 const regionIds = [
-  { id: 566, name: 'All Charities'},
-  { id: 576, name: 'British Red Cross'},
-  { id: 575, name: 'Campaign Against Living Miserably (CALM)'},
-  { id: 564, name: 'Dogs For Autism'},
-  { id: 565, name: 'The Grand Appeal'},
-  { id: 567, name: "Huntington's Disease Association"},
-  { id: 568, name: 'Kidscape'},
-  { id: 569, name: 'Mermaids'},
-  { id: 570, name: 'Movember'},
-  { id: 571, name: 'RESET Mental Health'},
-  { id: 572, name: 'SpecialEffect'},
-  { id: 573, name: 'Special Olympics Great Britain'},
-  { id: 574, name: 'Whale and Dolphin Conservation'},
+  { id: 566, name: 'All Charities', overrideDollars: 0},
+  { id: 576, name: 'British Red Cross', overrideDollars: 0},
+  { id: 575, name: 'Campaign Against Living Miserably (CALM)', overrideDollars: 0},
+  { id: 564, name: 'Dogs For Autism', overrideDollars: 5000},
+  { id: 565, name: 'The Grand Appeal', overrideDollars: 5000},
+  { id: 567, name: "Huntington's Disease Association", overrideDollars: 5000},
+  { id: 568, name: 'Kidscape', overrideDollars: 0},
+  { id: 569, name: 'Mermaids', overrideDollars: 0},
+  { id: 570, name: 'Movember', overrideDollars: 10000},
+  { id: 571, name: 'RESET Mental Health', overrideDollars: 0},
+  { id: 572, name: 'SpecialEffect', overrideDollars: 0},
+  { id: 573, name: 'Special Olympics Great Britain', overrideDollars: 20000},
+  { id: 574, name: 'Whale and Dolphin Conservation', overrideDollars: 5000},
 ];
 const defaultRegionId = 566;
 
@@ -81,8 +81,8 @@ async function getSummaryData(env) {
         pounds: 0
       },
       fundraisers: {
-        dollars: 0,
-        pounds: 0
+        dollars: region.overrideDollars,
+        pounds: region.overrideDollars/currencyConversion
       },
       total: {
         dollars: 0,
