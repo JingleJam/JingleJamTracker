@@ -211,9 +211,7 @@
                 if (number >= target) {
                     clearInterval(interval);
                     $(elem).data('value', target);
-
-                    if(number !== target)
-                        $(elem).text(format(target));
+                    $(elem).text(format(target));
 
                     return;
                 }

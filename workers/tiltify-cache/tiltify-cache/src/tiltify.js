@@ -161,8 +161,13 @@ async function getSummaryData(env) {
     campaign.raised.dollars = roundAmount(campaign.raised.pounds * currencyConversion);
   }
 
-  let totalBundlesAllocated = totals.fundraisingEvent.rewards[0].quantity;
-  let totalBundlesRemaining = totals.fundraisingEvent.rewards[0].remaining;
+  let totalBundlesAllocated = 0;
+  let totalBundlesRemaining = 0;
+
+  if(totals.fundraisingEvent.rewards.length > 0){
+    totalBundlesAllocated = totals.fundraisingEvent.rewards[0].quantity;
+    totalBundlesRemaining = totals.fundraisingEvent.rewards[0].remaining;
+  }
   let totalBundlesSold = totalBundlesAllocated - totalBundlesRemaining;
 
   var numberOfDonations = totalBundlesSold + env.DONATION_DIFFERENCE;
