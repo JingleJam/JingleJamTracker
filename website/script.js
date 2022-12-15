@@ -8,7 +8,8 @@
         graphTime: 1000 * 60 * 10,
         update: true,
         year: 2022,
-        domain: '.'
+        domain: '.',
+        isFinished: true
     };
 
     if(window.location.hostname.includes('jinglejam.co.uk') || 
@@ -21,6 +22,10 @@
     async function onLoad(){
         if(isPounds){
             $('#currencyCheckbox').attr('checked', 'checked')
+        }
+
+        if(JingleJam.isFinished){
+            $('#liveUpdatingRow').parent().addClass('hide-live-update');
         }
 
         Chart.defaults.font.family = 'Montserrat';
@@ -115,6 +120,9 @@
         } else {
             document.addEventListener(visibilityChange, function(){
                 JingleJam.update = !document[hidden];
+
+                if(JingleJam.isFinished)
+                    return;
 
                 //If tab is back in focus and the screen did not refresh, refresh it after 1 second
                 setTimeout(function(){
@@ -257,7 +265,7 @@
         animateCount('#raisedEntireDollars', JingleJam.model.entire.amount.dollars, (x) => formatCurrency(x, '$'));
         animateCount('#raisedEntirePounds', JingleJam.model.entire.amount.pounds, (x) => formatCurrency(x, '£'));
         animateCount('#bundlesSold', JingleJam.model.bundles.sold, formatInt);
-        animateCount('#donationCount', JingleJam.model.donations.count, (amount) => formatInt(amount) + "+");
+        animateCount('#donationCount', JingleJam.model.donations.count, (amount) => formatInt(amount) + (!JingleJam.isFinished ? "+" : ""));
         animateCount('#averageDonationDollars', JingleJam.model.average.dollars, (x) => formatCurrency(x, '$', 2));
         animateCount('#averageDonationPounds', JingleJam.model.average.pounds, (x) => formatCurrency(x, '£', 2));
 
@@ -309,10 +317,12 @@
     }
 
     async function graphLoop(){
-        setTimeout(function(){
-            graphLoop();
-            show();
-        }, JingleJam.graphTime);
+        if(!JingleJam.isFinished){
+            setTimeout(function(){
+                graphLoop();
+                show();
+            }, JingleJam.graphTime);
+        }
 
         toggleRefresh(true);
         await updateGraph();
@@ -327,10 +337,12 @@
         } catch{}
         toggleRefresh(false);
         
-        setTimeout(function(){
-            realTimeLoop();
-            show();
-        }, getNextProcessDate());
+        if(!JingleJam.isFinished){
+            setTimeout(function(){
+                realTimeLoop();
+                show();
+            }, getNextProcessDate());
+        }
     }
 
     function groupBy(list, keyGetter) {

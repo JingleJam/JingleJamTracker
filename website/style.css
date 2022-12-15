@@ -137,6 +137,14 @@
     width: 100%;
 }
 
+#embedContainer .hide-live-update{
+    margin-top: 20px;
+}
+
+#embedContainer .hide-live-update #liveUpdatingRow{
+    display: none;
+}
+
 #embedContainer .stat-row {
     margin-left: 20px;
     margin-right: 20px;
