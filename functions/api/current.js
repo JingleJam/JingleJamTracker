@@ -81,6 +81,18 @@ export async function onRequest(context) {
         });
     }
   
+    if(true){
+        return new Response(await getOldData(), {
+            headers: {
+            "content-type": "application/json;charset=UTF-8",
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+            'Access-Control-Max-Age': '86400',
+            'Allow': 'GET, HEAD, OPTIONS'
+            }
+        });
+    }
+
     let spreadsheet = context.env.GOOGLE_SHEETS_DOCUMENT;
     let query = context.env.GOOGLE_SHEETS_QUERY;
     let year = parseInt(context.env.YEAR);
