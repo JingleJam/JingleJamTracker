@@ -9,6 +9,9 @@ export default {
 	}
   }
 
+  const UPDATE_TIME = 15 * 1000; //Refresh cache every 15 seconds
+  const ENABLE_REFRESH = false;
+
   const finalResults = {
 	"year": 2022,
 	"name": "The Jingle Jam 2022",
@@ -372,7 +375,7 @@ export default {
 		}
 	  }
 	]
-  }
+  };
   
   async function handleRequest(request, env) {
 	let response = '';
@@ -397,12 +400,8 @@ export default {
 		}
 	  });
   }
-  
 
-	const TIME = 15 * 1000;
-
-  // Durable Object
-  
+  // Tiltify Data Object
   export class TiltifyData {
 
 	constructor(state, env) {
@@ -418,15 +417,18 @@ export default {
 
 	  if(url.pathname === '/'){
 
-		let cachedValue = await this.state.storage.get("cached-value");
+		let cachedValue = null;
+		
+		if(ENABLE_REFRESH)
+			cachedValue = await this.state.storage.get("cached-value");
 
 		let currentAlarm = await this.storage.getAlarm();
-		if (currentAlarm == null) {
-			this.storage.setAlarm(Date.now() + TIME);
+		if (currentAlarm == null && ENABLE_REFRESH) {
+			this.storage.setAlarm(Date.now() + UPDATE_TIME);
 		}
   
 		let data = {};
-		let strData = JSON.stringify(data);
+		let strData = '';
 
 		if(cachedValue){
 			console.log('Retrieved from cache')
@@ -434,12 +436,13 @@ export default {
 			strData = JSON.stringify(data);
 		}
 		else{
-			console.log('Fetch live')
+			console.log('Fetched live')
 			
 			data = await getTiltifyData(this.env);
 			strData = JSON.stringify(data);
   
-			await this.state.storage.put("cached-value", strData);
+			if(ENABLE_REFRESH)
+				await this.state.storage.put("cached-value", strData);
 		}
 	
 		return new Response(strData);
@@ -449,14 +452,15 @@ export default {
 	}
 
 	async alarm() {
-		this.storage.setAlarm(Date.now() + TIME);
+		if(ENABLE_REFRESH)
+			this.storage.setAlarm(Date.now() + UPDATE_TIME);
 
 		console.log('Alarm Called, fetching latest...');
 
 		let data = await getTiltifyData(this.env);
 		let strData = JSON.stringify(data);
 
-		console.log('Finished fetching, caching...');
+		console.log('Finished Fetching, caching result...');
   
 		await this.state.storage.put("cached-value", strData);
 	}
