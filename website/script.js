@@ -288,7 +288,8 @@
 
     async function updateScreen(){
         //If update flag is set and enough time has passed, refresh the screen
-        if (JingleJam.update && getNextProcessDate() > (JingleJam.refreshTime - JingleJam.waitTime)) {
+        console.log(getNextProcessDate() + ', ' + (JingleJam.refreshTime + JingleJam.waitTime));
+        if (JingleJam.update && getNextProcessDate() >= (JingleJam.refreshTime + JingleJam.waitTime)) {
             JingleJam.model = await getTiltify();
 
             JingleJam.model.history.reverse();
@@ -309,9 +310,13 @@
         let processedTime = JingleJam.model.date ? new Date(JingleJam.model.date) : new Date();
 
         let difference = JingleJam.refreshTime - (now.getTime() - processedTime.getTime()) ;
+        
+       // console.log(difference + ', ' + JingleJam.waitTime);
 
         if(difference < JingleJam.waitTime)
             difference = JingleJam.refreshTime;
+
+       // console.log(Math.max(Math.min(difference + JingleJam.waitTime, JingleJam.refreshTime + JingleJam.waitTime), JingleJam.waitTime + JingleJam.bufferTime))
 
         return Math.max(Math.min(difference + JingleJam.waitTime, JingleJam.refreshTime + JingleJam.waitTime), JingleJam.waitTime + JingleJam.bufferTime);
     }
