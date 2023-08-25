@@ -2,13 +2,18 @@
     font-family: "Montserrat";
   }
 
-#embedContainer {
-    margin-top: 10px;
-    margin-bottom: 20px;
-    border: 0;
-    width: 100%;
-    height: 100%;
-}
+  #embedContainer {
+      margin-top: 10px;
+      margin-bottom: 20px;
+      border: 0;
+      width: 100%;
+      height: 100%;
+  }
+
+  #embedContainer #historySection {
+      display: flex;
+      justify-content: center;
+  }
 
 #embedContainer #currencySelectorObj{
     position: absolute;
@@ -30,8 +35,11 @@
 }
 
 #embedContainer .section {
-    margin-left: 20px;
-    margin-right: 20px;
+    margin: 20px;
+}
+
+#embedContainer #historySection .section {
+    max-width: 1650px;
 }
 
 #embedContainer .section-center {
@@ -173,6 +181,38 @@
     padding: 10px !important;
 }
 
+#embedContainer .years-section {
+    margin-top: 50px;
+    display: flex;
+    justify-content: center;
+}
+
+#embedContainer .stats-section {
+    justify-content: space-between;
+    display: flex;
+    align-items: center;
+    margin-top: 180px;
+}
+
+#embedContainer .stats-section .ui.statistics {
+    margin: 0px 100px;
+    width: 40%;
+}
+
+#embedContainer .stats-section .stats-section-text, #embedContainer #historySection p {
+    width: 100%;
+    line-height: 1.6;
+    font-size: 1.3em;
+}
+
+#embedContainer .stats-section .stats-section-text-right {
+    text-align: right;
+}
+
+#embedContainer .stats-section .stats-section-text-left {
+    text-align: left;
+}
+
 @media screen and (max-width: 1160px) {
     #embedContainer #headerName {
         display: none !important;
@@ -203,11 +243,11 @@
         margin-bottom: 12px !important;
     }
     
-    #embedContainer table thead {
+    #embedContainer #charitiesTable thead {
         display: none;
     }
     
-    #embedContainer table tbody th::before {
+    #embedContainer #charitiesTable tbody th::before {
         content: attr(label);
         font-weight: bold;
         width: 120px;
@@ -216,7 +256,7 @@
         text-align: left;
     }
 
-    #embedContainer tbody th {
+    #embedContainer #charitiesTable tbody th {
         display: flex !important;
     }
 
@@ -227,6 +267,25 @@
     #embedContainer .ui.statistics.small .statistic {
         min-width: 100vw !important;
     } 
+}
+
+@media screen and (max-width: 350px) {
+    #embedContainer #yearsTable thead {
+        display: none;
+    }
+    
+    #embedContainer #yearsTable tbody th::before {
+        content: attr(label);
+        font-weight: bold;
+        width: 120px;
+        min-width: 120px;
+        margin-right: 10px;
+        text-align: left;
+    }
+
+    #embedContainer #yearsTable tbody th {
+        display: flex !important;
+    }
 }
 
 @media screen and (max-width: 500px) {

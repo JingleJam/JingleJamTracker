@@ -1,0 +1,3 @@
+wrangler dev --name tiltify-cache
+
+wrangler pages dev ./website --kv=JINGLE_JAM_DATA=6a08d74af525475baefa19a93f0ba136 --do TILTIFY_CACHE=TiltifyData@tiltify-cache

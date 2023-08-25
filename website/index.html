@@ -1,158 +1,199 @@
 <div id="embedContainer">
-    <div class="ui segment" id="loader">
-      <div class="ui active inverted dimmer" style="background-color: #1b1c1d00">
-         <div class="ui massive text loader">Loading</div>
-      </div>
-      <p></p>
+  <div class="ui segment" id="loader">
+    <div class="ui active inverted dimmer" style="background-color: #1b1c1d00">
+      <div class="ui massive text loader">Loading</div>
     </div>
-    <div id="content" style="display: none;">
-      <div class="ui compact huge segment" id="currencySelectorObj">
-        <label style="margin-right: 11px;">$</label>
-        <div class="ui slider checkbox">
-          <input type="checkbox" id="currencyCheckbox">
-          <label>£</label>
-        </div>
+    <p></p>
+  </div>
+  <div id="content" style="display: none;">
+    <div class="ui compact huge segment" id="currencySelectorObj">
+      <label style="margin-right: 11px;">$</label>
+      <div class="ui slider checkbox">
+        <input type="checkbox" id="currencyCheckbox">
+        <label>£</label>
       </div>
-      <div class="ui large statistics" id="firstRow">
-        <div class="statistic dollarComponent">
-          <div class="value jj-pink" id="raisedTotalDollars"> $ 0 </div>
-          <div class="label">Final Total For 2022</div>
-        </div>
-        <div class="statistic poundComponent">
-          <div class="value jj-pink" id="raisedTotalPounds"> £ 0 </div>
-          <div class="label">Final Total For 2022</div>
-        </div>
+    </div>
+    <div class="ui large statistics" id="firstRow">
+      <div class="statistic dollarComponent">
+        <div class="value jj-pink" id="raisedTotalDollars"> $ 0 </div>
+        <div class="label">Final Total For 2022</div>
       </div>
-      <div class="ui small statistics custom-grid">
-        <div class="statistic dollarComponent custom-grid-column-3">
-          <div class="value jj-pink" id="raisedYogscastDollars"> $ 0 </div>
-          <div class="label">Raised By The Yogscast</div>
-        </div>
-        <div class="statistic dollarComponent custom-grid-column-3">
-          <div class="value jj-pink" id="raisedFundraisersDollars"> $ 0 </div>
-          <div class="label">Raised From Fundraisers</div>
-        </div>
-        <div class="statistic poundComponent custom-grid-column-3">
-          <div class="value jj-pink" id="raisedYogscastPounds"> £ 0 </div>
-          <div class="label">Raised By The Yogscast</div>
-        </div>
-        <div class="statistic poundComponent custom-grid-column-3">
-          <div class="value jj-pink" id="raisedFundraisersPounds"> £ 0 </div>
-          <div class="label">Raised From Fundraisers</div>
-        </div>
-        <div class="statistic dollarComponent custom-grid-column-3">
-          <div class="value jj-pink" id="raisedEntireDollars"> $ 0 </div>
-          <div class="label">Raised Since 2011</div>
-        </div>
-        <div class="statistic poundComponent custom-grid-column-3">
-          <div class="value jj-pink" id="raisedEntirePounds"> £ 0 </div>
-          <div class="label">Raised Since 2011</div>
-        </div>
+      <div class="statistic poundComponent">
+        <div class="value jj-pink" id="raisedTotalPounds"> £ 0 </div>
+        <div class="label">Final Total For 2022</div>
       </div>
-      <div class="ui small statistics custom-grid">
-        <div class="statistic custom-grid-column-3">
-          <div class="value jj-pink" id="bundlesSold"> 0 </div>
-          <div class="label">Collections Distributed</div>
-        </div>
-        <div class="statistic custom-grid-column-3">
-          <div class="value jj-pink" id="donationCount"> 0 </div>
-          <div class="label">Donations</div>
-        </div>
-        <div class="statistic dollarComponent custom-grid-column-3">
-          <div class="value jj-pink" id="averageDonationDollars"> $ 0.00 </div>
-          <div class="label">Average Donation</div>
-        </div>
-        <div class="statistic poundComponent custom-grid-column-3">
-          <div class="value jj-pink" id="averageDonationPounds"> £ 0.00 </div>
-          <div class="label">Average Donation</div>
-        </div>
+    </div>
+    <div class="ui small statistics custom-grid">
+      <div class="statistic dollarComponent custom-grid-column-3">
+        <div class="value jj-pink" id="raisedYogscastDollars"> $ 0 </div>
+        <div class="label">Raised By The Yogscast</div>
       </div>
-      <div class="center-row">
-        <div class="diving-row">
-          <div id="liveUpdatingRow">
-            <label class="subtext-label" id="updatingRealTime">
-              <div class="ui active slow loader mini"></div>
-              <div class="loading-circle">
-                <i class="live-icon icon circle"></i>
-              </div> Updating Live
-            </label>
-            <label class="subtext-label" id="labelDate" style="float: right;"> Last Updated: N/A </label>
+      <div class="statistic dollarComponent custom-grid-column-3">
+        <div class="value jj-pink" id="raisedFundraisersDollars"> $ 0 </div>
+        <div class="label">Raised From Fundraisers</div>
+      </div>
+      <div class="statistic poundComponent custom-grid-column-3">
+        <div class="value jj-pink" id="raisedYogscastPounds"> £ 0 </div>
+        <div class="label">Raised By The Yogscast</div>
+      </div>
+      <div class="statistic poundComponent custom-grid-column-3">
+        <div class="value jj-pink" id="raisedFundraisersPounds"> £ 0 </div>
+        <div class="label">Raised From Fundraisers</div>
+      </div>
+      <div class="statistic dollarComponent custom-grid-column-3">
+        <div class="value jj-pink" id="raisedEntireDollars"> $ 0 </div>
+        <div class="label">Raised Since 2011</div>
+      </div>
+      <div class="statistic poundComponent custom-grid-column-3">
+        <div class="value jj-pink" id="raisedEntirePounds"> £ 0 </div>
+        <div class="label">Raised Since 2011</div>
+      </div>
+    </div>
+    <div class="ui small statistics custom-grid">
+      <div class="statistic custom-grid-column-3">
+        <div class="value jj-pink" id="bundlesSold"> 0 </div>
+        <div class="label">Collections Distributed</div>
+      </div>
+      <div class="statistic custom-grid-column-3">
+        <div class="value jj-pink" id="donationCount"> 0 </div>
+        <div class="label">Donations</div>
+      </div>
+      <div class="statistic dollarComponent custom-grid-column-3">
+        <div class="value jj-pink" id="averageDonationDollars"> $ 0.00 </div>
+        <div class="label">Average Donation</div>
+      </div>
+      <div class="statistic poundComponent custom-grid-column-3">
+        <div class="value jj-pink" id="averageDonationPounds"> £ 0.00 </div>
+        <div class="label">Average Donation</div>
+      </div>
+    </div>
+    <div class="center-row">
+      <div class="diving-row">
+        <div id="liveUpdatingRow">
+          <label class="subtext-label" id="updatingRealTime">
+            <div class="ui active slow loader mini"></div>
+            <div class="loading-circle">
+              <i class="live-icon icon circle"></i>
+            </div> Updating Live
+          </label>
+          <label class="subtext-label" id="labelDate" style="float: right;"> Last Updated: N/A </label>
+        </div>
+        <hr size="1" class="divider">
+      </div>
+    </div>
+    <div class="section-center">
+      <div class="stat-row">
+        <canvas id="comparisonChart"></canvas>
+      </div>
+    </div>
+    <div class="section-center bottom-margin">
+      <div class="ui labeled ticked range slider bottom aligned" id="dateRange"></div>
+    </div>
+    <div class="section">
+      <table class="ui large celled striped table unstackable" id="charitiesTable">
+        <thead>
+          <tr>
+            <th rowspan="2" style="width: 365px;">Charities</th>
+            <th colspan="3" style="width: 600px; min-width: 230px;" class="center aligned">Amount Raised</th>
+          </tr>
+          <tr>
+            <th class="center aligned" style="width: 200px; min-width: 93px; border-left: 1px solid rgba(34,36,38,.1);">
+              The Yogscast</th>
+            <th class="center aligned" style="width: 200px; min-width: 93px;">Fundraisers</th>
+            <th class="center aligned" style="width: 200px; min-width: 93px;">Total</th>
+          </tr>
+        <tbody></tbody>
+      </table>
+    </div>
+    <div class="section">
+      <hr size="1" class="divider">
+    </div>
+    <div id="historySection">
+      <div class="history-section">
+        <div class="section">
+          <h1>Over The Years</h1>
+          <p>
+            The Jingle Jam began back in 2011 when Lewis and Simon of The Yogscast asked fans to donate to Oxfam instead of sending them presents. It has
+            since grown to a yearly event where a community of volunteers, content creators, games companies, and gamers from around the world
+            raise money for various causes, including those focused on sustainability, conservation, war relief, 
+            accessibility in gaming and sport, cancer research, LGBTQ+ issues, combating racism, and much more.
+          </p>
+        </div>
+        <div class="section">
+          <div class="stats-section">
+            <div class="ui statistics">
+              <div class="statistic">
+                <div class="value jj-pink" id="totalRaised"><i class="pound sign icon"></i> 22 million </div>
+                <div class="label">Raised To Date</div>
+              </div>
+            </div>
+            <div class="stats-section-text stats-section-text-right">
+              , over <strong>£22 million</strong>
+              has been contributed over the course of the Jingle Jam's existence.
+            </div>
           </div>
-          <hr size="1" class="divider">
         </div>
-      </div>
-      <div class="ui tiny statistics custom-grid" style="margin-top: 7px !important; margin-bottom: 20px !important;">
-        <div class="custom-grid-column-6 statistic dollarComponent">
-          <div class="value jj-pink" id="dollars2016"> $ 0 </div>
-          <div class="label">2016</div>
+        <div class="section">
+          <div class="stats-section">
+            <div class="stats-section-text stats-section-text-left">
+              The Jingle Jam is supported by everyday people, like you, looking to support a wide range of causes and to make an impact on the world. Since we began in 2011, 
+              gamers and viewers have sent over <strong>795 thousand</strong> individual donations.
+            </div>
+            <div class="ui statistics">
+              <div class="statistic">
+                <div class="value jj-pink" id="totalDonations"><i class="user icon"></i> 795,000 </div>
+                <div class="label">Individual Donations</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="custom-grid-column-6 statistic dollarComponent">
-          <div class="value jj-pink" id="dollars2017"> $ 0 </div>
-          <div class="label">2017</div>
+        <div class="section">
+          <div class="stats-section">
+            <div class="ui large statistics">
+              <div class="statistic">
+                <div class="value jj-pink" id="totalDonations"><i class="handshake icon"></i> 37 </div>
+                <div class="label">Causes Supported</div>
+              </div>
+            </div>
+            <div class="stats-section-text stats-section-text-right">
+              We seek to represent a wide range of causes, including improving physical and mental health, supporting diversity and inclusion,
+              enhancing equality of opportunity, protecting the planet, contributing to disaster and emergency aid, and much more. Our mission has lead to 
+              <strong>37 causes</strong> from across the world being supported by the Jingle Jam.
+            </div>
+          </div>
         </div>
-        <div class="custom-grid-column-6 statistic dollarComponent">
-          <div class="value jj-pink" id="dollars2018"> $ 0 </div>
-          <div class="label"> 2018</div>
+        <div class="section">
+          <div class="stats-section">
+            <div class="stats-section-text stats-section-text-left">
+              Being the World's Biggest Charity Gaming Event, we incentivise donations by live streaming gaming content throughout the first half of December.  
+              Viewers from around the world tune in live, resulting in over <strong>100 million</strong> live views since the Jingle Jam's inception, 
+              with over <strong>30 million</strong> video views.
+            </div>
+            <div class="ui statistics">
+              <div class="statistic">
+                <div class="value jj-pink" id="totalGamesInCollections"><i class="users icon"></i> 130 million </div>
+                <div class="label">Views Since 2011</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="custom-grid-column-6 statistic dollarComponent">
-          <div class="value jj-pink" id="dollars2019"> $ 0 </div>
-          <div class="label"> 2019</div>
+        <div class="section" style="margin-top: 180px;">
+          <p>
+            Since 
+          </p>
         </div>
-        <div class="custom-grid-column-6 statistic dollarComponent">
-          <div class="value jj-pink" id="dollars2020"> $ 0 </div>
-          <div class="label"> 2020</div>
+        <div class="section years-section">
+          <table class="ui large celled striped table unstackable" id="yearsTable" style="max-width: 500px;">
+            <thead>
+              <tr>
+                <th class="center aligned" style="min-width: 60px; border-left: 1px solid rgba(34,36,38,.1);">Year</th>
+                <th class="center aligned" style="min-width: 60px;">Donations</th>
+                <th class="center aligned" style="min-width: 60px;">Final Total</th>
+              </tr>
+            <tbody></tbody>
+          </table>
         </div>
-        <div class="custom-grid-column-6 statistic dollarComponent">
-          <div class="value jj-pink" id="dollars2021"> $ 0 </div>
-          <div class="label"> 2021</div>
-        </div>
-        <div class="custom-grid-column-6 statistic poundComponent">
-          <div class="value jj-pink" id="pounds2016"> £ 0 </div>
-          <div class="label"> 2016</div>
-        </div>
-        <div class="custom-grid-column-6 statistic poundComponent">
-          <div class="value jj-pink" id="pounds2017"> £ 0 </div>
-          <div class="label"> 2017</div>
-        </div>
-        <div class="custom-grid-column-6 statistic poundComponent">
-          <div class="value jj-pink" id="pounds2018"> £ 0 </div>
-          <div class="label"> 2018</div>
-        </div>
-        <div class="custom-grid-column-6 statistic poundComponent">
-          <div class="value jj-pink" id="pounds2019"> £ 0 </div>
-          <div class="label"> 2019</div>
-        </div>
-        <div class="custom-grid-column-6 statistic poundComponent">
-          <div class="value jj-pink" id="pounds2020"> £ 0 </div>
-          <div class="label"> 2020</div>
-        </div>
-        <div class="custom-grid-column-6 statistic poundComponent">
-          <div class="value jj-pink" id="pounds2021"> £ 0 </div>
-          <div class="label"> 2021</div>
-        </div>
-      </div>
-      <div class="section-center">
-        <div class="stat-row">
-          <canvas id="comparisonChart"></canvas>
-        </div>
-      </div>
-      <div class="section-center bottom-margin">
-        <div class="ui labeled ticked range slider bottom aligned" id="dateRange"></div>
-      </div>
-      <div class="section">
-        <table class="ui large celled striped table unstackable" id="charitiesTable">
-          <thead>
-            <tr>
-              <th rowspan="2" style="width: 365px;">Charities</th>
-              <th colspan="3" style="width: 600px; min-width: 230px;" class="center aligned">Amount Raised</th>
-            </tr>
-            <tr>
-              <th class="center aligned" style="width: 200px; min-width: 93px; border-left: 1px solid rgba(34,36,38,.1);">The Yogscast</th>
-              <th class="center aligned" style="width: 200px; min-width: 93px;">Fundraisers</th>
-              <th class="center aligned" style="width: 200px; min-width: 93px;">Total</th>
-            </tr>
-          <tbody></tbody>
-        </table>
       </div>
     </div>
-</div>  
+  </div>
+</div>
