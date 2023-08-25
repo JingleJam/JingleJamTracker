@@ -4,7 +4,7 @@
         previous: [],
         graph: [],
         refreshTime: 10000,
-        waitTime: 4000,
+        waitTime: 5000,
         graphTime: 1000 * 60 * 10,
         update: true,
         year: 2022,

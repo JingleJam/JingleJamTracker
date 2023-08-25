@@ -62,9 +62,11 @@ export class TiltifyData {
 
 		console.log('Alarm Called, fetching latest...');
 
+		let startTime = new Date();
 		let data = await getTiltifyData(this.env);
+		let endTime = new Date();
 
-		console.log('Finished Fetching, caching result...');
+		console.log(`Finished Fetching, caching result... (${endTime - startTime}ms)`);
 
 		await this.state.storage.put(DO_CACHE_KEY, data);
 	}
