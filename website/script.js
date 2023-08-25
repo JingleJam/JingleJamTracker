@@ -5,7 +5,6 @@
         graph: [],
         refreshTime: 10000,
         waitTime: 2000,
-        bufferTime: 2000,
         graphTime: 1000 * 60 * 10,
         update: true,
         year: 2022,
@@ -286,15 +285,18 @@
         $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.date).toLocaleString());
     }
 
+    var first = true;
+
     async function updateScreen(){
         //If update flag is set and enough time has passed, refresh the screen
-        console.log(getNextProcessDate() + ', ' + (JingleJam.refreshTime + JingleJam.waitTime));
-        if (JingleJam.update && getNextProcessDate() >= (JingleJam.refreshTime + JingleJam.waitTime)) {
+        //console.log(getNextProcessDate() + ', ' + (JingleJam.refreshTime + JingleJam.waitTime));
+        if ((JingleJam.update && getNextProcessDate() <= 0) || first) {
             JingleJam.model = await getTiltify();
 
             JingleJam.model.history.reverse();
         
             onUpdate();
+            first = false;
         }
     }
 
@@ -307,18 +309,13 @@
 
     function getNextProcessDate(){
         let now = new Date();
-        let processedTime = JingleJam.model.date ? new Date(JingleJam.model.date) : new Date();
+        let modelUpdateTime = JingleJam.model.date ? new Date(JingleJam.model.date) : new Date();
 
-        let difference = JingleJam.refreshTime - (now.getTime() - processedTime.getTime()) ;
-        
-       // console.log(difference + ', ' + JingleJam.waitTime);
-
-        if(difference < JingleJam.waitTime)
-            difference = JingleJam.refreshTime;
+        let timeLeftTillRefresh = JingleJam.refreshTime - (now.getTime() - modelUpdateTime.getTime()) + JingleJam.waitTime;
 
        // console.log(Math.max(Math.min(difference + JingleJam.waitTime, JingleJam.refreshTime + JingleJam.waitTime), JingleJam.waitTime + JingleJam.bufferTime))
 
-        return Math.max(Math.min(difference + JingleJam.waitTime, JingleJam.refreshTime + JingleJam.waitTime), JingleJam.waitTime + JingleJam.bufferTime);
+        return timeLeftTillRefresh;
     }
 
     async function graphLoop(){
@@ -346,7 +343,7 @@
             setTimeout(function(){
                 realTimeLoop();
                 show();
-            }, getNextProcessDate());
+            }, JingleJam.waitTime - getNextProcessDate());
         }
     }
 
