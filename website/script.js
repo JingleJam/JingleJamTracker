@@ -289,7 +289,7 @@
 
     async function updateScreen(){
         //If update flag is set and enough time has passed, refresh the screen
-        console.log(getNextProcessDate() + ', ' + (JingleJam.refreshTime + JingleJam.waitTime));
+        //console.log(getNextProcessDate() + ', ' + (JingleJam.refreshTime + JingleJam.waitTime));
         if ((JingleJam.update && getNextProcessDate() <= 0) || first) {
             JingleJam.model = await getTiltify();
 
@@ -343,7 +343,7 @@
             setTimeout(function(){
                 realTimeLoop();
                 show();
-            }, JingleJam.waitTime - getNextProcessDate());
+            }, getNextProcessDate());
         }
     }
 
