@@ -344,7 +344,7 @@
             setTimeout(function(){
                 realTimeLoop();
                 show();
-            }, getNextProcessDate());
+            }, getNextProcessDate() + JingleJam.waitTime);
         }
     }
 
