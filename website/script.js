@@ -4,7 +4,8 @@
         previous: [],
         graph: [],
         refreshTime: 10000,
-        waitTime: 5000,
+        waitTime: 2000,
+        bufferTime: 2000,
         graphTime: 1000 * 60 * 10,
         update: true,
         year: 2022,
@@ -312,7 +313,7 @@
         if(difference < JingleJam.waitTime)
             difference = JingleJam.refreshTime;
 
-        return Math.max(Math.min(difference + JingleJam.waitTime, JingleJam.refreshTime + JingleJam.waitTime), JingleJam.waitTime + 1000);
+        return Math.max(Math.min(difference + JingleJam.waitTime, JingleJam.refreshTime + JingleJam.waitTime), JingleJam.waitTime + JingleJam.bufferTime);
     }
 
     async function graphLoop(){
