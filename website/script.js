@@ -5,6 +5,7 @@
         graph: [],
         refreshTime: 10000,
         waitTime: 2000,
+        bufferTime: 200,
         graphTime: 1000 * 60 * 10,
         update: true,
         year: 2022,
@@ -340,11 +341,11 @@
         toggleRefresh(false);
         
         if(!JingleJam.isFinished){
-            console.log(JingleJam.refreshTime + ", " + getNextProcessDate())
+            console.log(JingleJam.refreshTime + ", " + (getNextProcessDate() + JingleJam.waitTime + JingleJam.bufferTime))
             setTimeout(function(){
                 realTimeLoop();
                 show();
-            }, getNextProcessDate() + JingleJam.waitTime);
+            }, getNextProcessDate() + JingleJam.waitTime + JingleJam.bufferTime);
         }
     }
 
