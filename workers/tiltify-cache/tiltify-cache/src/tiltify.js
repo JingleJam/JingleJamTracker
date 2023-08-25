@@ -85,66 +85,69 @@ async function getSummaryData(env) {
     /*
         CHARITY DATA
     */
+    var campaigns = [];
     try {
       let offset = 0;
       let end = false;
-      var campaigns = [];
 
-      // Lookup all the fundraiser campaigns
-      while (offset <= 20 * 48 && !end) {
-        let requests = [];
+      if (env.FUNDRAISER_PUBLIC_ID) {
+        // Lookup all the fundraiser campaigns
+        while (offset <= 20 * 48 && !end) {
+          let requests = [];
 
-        for (var j = 0; j < maxSim; j++) {
-          requests.push(getCampaigns(env.FUNDRAISER_PUBLIC_ID, offset));
-          offset += 20;
-        }
+          for (var j = 0; j < maxSim; j++) {
+            requests.push(getCampaigns(env.FUNDRAISER_PUBLIC_ID, offset));
+            offset += 20;
+          }
 
-        var regionResponses = await Promise.all(requests);
+          var regionResponses = await Promise.all(requests);
 
-        for (let j = 0; j < regionResponses.length; j++) {
-          let response = regionResponses[j].data.fundraisingEvent.publishedCampaigns;
+          for (let j = 0; j < regionResponses.length; j++) {
+            let response = regionResponses[j].data.fundraisingEvent.publishedCampaigns;
 
-          campaigns = campaigns.concat(response.edges);
+            campaigns = campaigns.concat(response.edges);
 
-          if (!response.pagination.hasNextPage) {
-            end = true;
-            break;
+            if (!response.pagination.hasNextPage) {
+              end = true;
+              break;
+            }
           }
         }
-      }
 
-      // Go through each campaign from the lookup and combine with the charity object
-      for (let campaign of campaigns) {
-        //Get needed data from the lookup
-        let region = campaign.node.region;
-        let regionId = region ? region.id : 0;
-        let userSlug = campaign.node.user.slug;
-        let isYogscast = userSlug === env.YOGSCAST_USERNAME_SLUG;
+        // Go through each campaign from the lookup and combine with the charity object
+        for (let campaign of campaigns) {
+          //Get needed data from the lookup
+          let region = campaign.node.region;
+          let regionId = region ? region.id : 0;
+          let userSlug = campaign.node.user.slug;
+          let isYogscast = userSlug === env.YOGSCAST_USERNAME_SLUG;
 
-        let amount = parseFloat(campaign.node.totalAmountRaised.value);
+          let amount = parseFloat(campaign.node.totalAmountRaised.value);
 
-        if (isYogscast) {
-          amount /= defaultResponse.causes.length;
-        }
+          if (isYogscast) {
+            amount /= defaultResponse.causes.length;
+          }
 
-        amount = roundAmount(amount);
+          amount = roundAmount(amount);
 
-        //Find the associated charity object
-        for (let charityObject of defaultResponse.causes) {
-          if (charityObject.id == regionId || isYogscast) {
-            //If a yogscast charity
-            if (isYogscast)
-              charityObject.raised.yogscast += amount;
-            else
-              charityObject.raised.fundraisers += amount;
+          //Find the associated charity object
+          for (let charityObject of defaultResponse.causes) {
+            if (charityObject.id == regionId || isYogscast) {
+              //If a yogscast charity
+              if (isYogscast)
+                charityObject.raised.yogscast += amount;
+              else
+                charityObject.raised.fundraisers += amount;
+            }
           }
         }
+
+        for (let cause of defaultResponse.causes) {
+          cause.raised.fundraisers = roundAmount(cause.raised.fundraisers);
+          cause.raised.yogscast = roundAmount(cause.raised.yogscast);
+        }
       }
 
-      for (let cause of defaultResponse.causes) {
-        cause.raised.fundraisers = roundAmount(cause.raised.fundraisers);
-        cause.raised.yogscast = roundAmount(cause.raised.yogscast);
-      }
     } catch (e) {
       console.log(e);
     }
@@ -207,7 +210,6 @@ function getDefaultResponse(env, causes = [], summary = [], defaultConversionRat
 
   return {
     year: env.YEAR,
-    name: env.NAME,
     date: date,
     avgConversionRate: defaultConversionRate,
     raised: {
@@ -216,7 +218,7 @@ function getDefaultResponse(env, causes = [], summary = [], defaultConversionRat
     },
     collections: {
       redeemed: 0,
-      total: env.KEYS_AVAILABLE
+      total: env.COLLECTIONS_AVAILABLE
     },
     donations: {
       count: 0
@@ -314,7 +316,7 @@ function sortByKey(array, key) {
 async function getTiltifyData(env) {
   env.DONATION_DIFFERENCE = parseInt(env.DONATION_DIFFERENCE);
   env.DOLLAR_OFFSET = parseFloat(env.DOLLAR_OFFSET);
-  env.KEYS_AVAILABLE = parseInt(env.KEYS_AVAILABLE);
+  env.COLLECTIONS_AVAILABLE = parseInt(env.COLLECTIONS_AVAILABLE);
   env.YEAR = parseInt(env.YEAR);
 
   return await getSummaryData(env);
