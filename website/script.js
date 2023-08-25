@@ -290,7 +290,6 @@
 
     async function updateScreen(){
         //If update flag is set and enough time has passed, refresh the screen
-        //console.log(getNextProcessDate() + ', ' + (JingleJam.refreshTime + JingleJam.waitTime));
         if ((JingleJam.update && getNextProcessDate() <= 0) || first) {
             JingleJam.model = await getTiltify();
 
@@ -341,11 +340,10 @@
         toggleRefresh(false);
         
         if(!JingleJam.isFinished){
-            console.log(JingleJam.refreshTime + ", " + (getNextProcessDate() + JingleJam.waitTime + JingleJam.bufferTime))
             setTimeout(function(){
                 realTimeLoop();
                 show();
-            }, getNextProcessDate() + JingleJam.waitTime + JingleJam.bufferTime);
+            }, Math.max(getNextProcessDate() + JingleJam.waitTime + JingleJam.bufferTime, JingleJam.bufferTime));
         }
     }
 
