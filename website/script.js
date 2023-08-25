@@ -340,6 +340,7 @@
         toggleRefresh(false);
         
         if(!JingleJam.isFinished){
+            console.log(JingleJam.refreshTime + ", " + getNextProcessDate())
             setTimeout(function(){
                 realTimeLoop();
                 show();
