@@ -6,6 +6,7 @@
         refreshTime: 10000,
         waitTime: 2000,
         bufferTime: 200,
+        minRefreshTime: 1000,
         graphTime: 1000 * 60 * 10,
         update: true,
         year: 2022,
@@ -313,8 +314,6 @@
 
         let timeLeftTillRefresh = JingleJam.refreshTime - (now.getTime() - modelUpdateTime.getTime()) + JingleJam.waitTime;
 
-       // console.log(Math.max(Math.min(difference + JingleJam.waitTime, JingleJam.refreshTime + JingleJam.waitTime), JingleJam.waitTime + JingleJam.bufferTime))
-
         return timeLeftTillRefresh;
     }
 
@@ -343,7 +342,7 @@
             setTimeout(function(){
                 realTimeLoop();
                 show();
-            }, Math.max(getNextProcessDate() + JingleJam.waitTime + JingleJam.bufferTime, JingleJam.bufferTime));
+            }, Math.max(getNextProcessDate() + JingleJam.waitTime + JingleJam.bufferTime, JingleJam.minRefreshTime));
         }
     }
 

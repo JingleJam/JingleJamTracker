@@ -6,8 +6,6 @@ import {
 const UPDATE_TIME = 10 * 1000; //Refresh cache every 15 seconds
 const DO_CACHE_KEY = 'cached-value'; //Key to store the cache
 
-const ENABLE_REFRESH = true;
-
 // Tiltify Data Object
 export class TiltifyData {
 
@@ -30,7 +28,7 @@ export class TiltifyData {
 
 			//Start the alarm if it is currently not started
 			let currentAlarm = await this.storage.getAlarm();
-			if (currentAlarm == null && ENABLE_REFRESH) {
+			if (currentAlarm == null && this.env.ENABLE_REFRESH) {
 				this.storage.setAlarm(Date.now() + UPDATE_TIME);
 			}
 
@@ -57,7 +55,7 @@ export class TiltifyData {
 	}
 
 	async alarm() {
-		if (ENABLE_REFRESH)
+		if (this.env.ENABLE_REFRESH)
 			this.storage.setAlarm(Date.now() + UPDATE_TIME);
 
 		console.log('Alarm Called, fetching latest...');
