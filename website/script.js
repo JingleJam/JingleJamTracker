@@ -243,8 +243,6 @@
 
             table += `<tr>`
             table += `<th label="Charity">${cause.name}</th>`
-            table += `<th label="Yogscast" class="right aligned jj-thin">${isPounds ? formatCurrency(cause.raised.yogscast, '£') : formatCurrency(yogDollars, '$')}</th>`
-            table += `<th label="Fundraisers" class="right aligned jj-thin">${isPounds ? formatCurrency(cause.raised.fundraisers, '£') : formatCurrency(fundDollars, '$')}</th>`
             table += `<th label="Total" class="right aligned jj-thin">${isPounds ? formatCurrency(cause.raised.fundraisers + cause.raised.yogscast, '£') : formatCurrency(yogDollars + fundDollars, '$')}</th>`
             table += '</tr>'
         }
@@ -269,10 +267,6 @@
         let totalPounds = JingleJam.model.history.reduce((sum, a) => sum + a.total.pounds, 0) + JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers;
         let totalDollars = JingleJam.model.history.reduce((sum, a) => sum + a.total.pounds, 0) + yogsDollars + fundDollars;
 
-        animateCount('#raisedYogscastDollars', yogsDollars, formatCurrency);
-        animateCount('#raisedYogscastPounds', JingleJam.model.raised.yogscast, (x) => formatCurrency(x, '£'));
-        animateCount('#raisedFundraisersDollars', fundDollars, formatCurrency);
-        animateCount('#raisedFundraisersPounds', JingleJam.model.raised.fundraisers, (x) => formatCurrency(x, '£'));
         animateCount('#raisedTotalDollars', yogsDollars + fundDollars, formatCurrency);
         animateCount('#raisedTotalPounds', JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers, (x) => formatCurrency(x, '£'));
         animateCount('#raisedEntireDollars', totalDollars, (x) => formatCurrency(x, '$'));
