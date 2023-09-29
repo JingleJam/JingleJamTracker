@@ -16,39 +16,37 @@
     <div class="ui large statistics" id="firstRow">
       <div class="statistic dollarComponent">
         <div class="value jj-pink" id="raisedTotalDollars"> $ 0 </div>
-        <div class="label">Final Total For 2022</div>
+        <div class="label">Raised For <span class="jj-year"></span></div>
       </div>
       <div class="statistic poundComponent">
         <div class="value jj-pink" id="raisedTotalPounds"> £ 0 </div>
-        <div class="label">Final Total For 2022</div>
+        <div class="label">Raised For <span class="jj-year"></span></div>
       </div>
     </div>
     <div class="ui small statistics custom-grid">
-      <div class="statistic dollarComponent custom-grid-column-3">
-        <div class="value jj-pink" id="averageDonationDollars"> $ 0.00 </div>
-        <div class="label">Average Donation</div>
-      </div>
-      <div class="statistic poundComponent custom-grid-column-3">
-        <div class="value jj-pink" id="averageDonationPounds"> £ 0.00 </div>
-        <div class="label">Average Donation</div>
-      </div>
-      <div class="statistic dollarComponent custom-grid-column-3">
-        <div class="value jj-pink" id="raisedEntireDollars"> $ 0 </div>
-        <div class="label">Raised Since 2011</div>
-      </div>
-      <div class="statistic poundComponent custom-grid-column-3">
-        <div class="value jj-pink" id="raisedEntirePounds"> £ 0 </div>
-        <div class="label">Raised Since 2011</div>
-      </div>
-    </div>
-    <div class="ui small statistics custom-grid">
-      <div class="statistic custom-grid-column-3">
+      <div class="statistic custom-grid-column-4">
         <div class="value jj-pink" id="bundlesSold"> 0 </div>
         <div class="label">Collections Distributed</div>
       </div>
-      <div class="statistic custom-grid-column-3">
+      <div class="statistic custom-grid-column-4">
         <div class="value jj-pink" id="donationCount"> 0 </div>
         <div class="label">Donations</div>
+      </div>
+      <div class="statistic dollarComponent custom-grid-column-4">
+        <div class="value jj-pink" id="averageDonationDollars"> $ 0.00 </div>
+        <div class="label">Average Donation</div>
+      </div>
+      <div class="statistic poundComponent custom-grid-column-4">
+        <div class="value jj-pink" id="averageDonationPounds"> £ 0.00 </div>
+        <div class="label">Average Donation</div>
+      </div>
+      <div class="statistic dollarComponent custom-grid-column-4">
+        <div class="value jj-pink" id="raisedEntireDollars"> $ 0 </div>
+        <div class="label">Raised Since <span class="jj-start-year"></span></div>
+      </div>
+      <div class="statistic poundComponent custom-grid-column-4">
+        <div class="value jj-pink" id="raisedEntirePounds"> £ 0 </div>
+        <div class="label">Raised Since <span class="jj-start-year"></span></div>
       </div>
     </div>
     <div class="center-row">
@@ -65,6 +63,22 @@
         <hr size="1" class="divider">
       </div>
     </div>
+    <div class="section">
+      <h1 style="text-align: center; margin-bottom: 2px;">Charities</h1>
+      <p style="text-align: center; margin-bottom: 35px;">
+        The <span class="jj-year"></span> Jingle Jam is raising funds for <span class="jj-cause-count"></span> important causes, 
+        ranging from physcial and mental health, diversity and inclusion, equality of opportunity, and protecting the planet.
+      </p>
+      <div style="width: 100%; display: flex; justify-content: center; align-items: center;">
+        <div class="ui horizontal raised doubling cards" id="charityCards" style="max-width: 1050px; margin-bottom: 20px;">
+        </div>
+      </div>
+    </div>
+    <div class="center-row">
+      <div class="diving-row">
+        <hr size="1" class="divider">
+      </div>
+    </div>
     <div class="section-center">
       <div class="stat-row">
         <canvas id="comparisonChart"></canvas>
@@ -73,27 +87,21 @@
     <div class="section-center bottom-margin">
       <div class="ui labeled ticked range slider bottom aligned" id="dateRange"></div>
     </div>
-    <div class="section">
-      <table class="ui large celled striped table unstackable" id="charitiesTable">
-        <thead>
-          <tr>
-            <th class="center aligned" style="width: 200px; min-width: 93px;">Charity</th>
-            <th class="center aligned" style="width: 80px; min-width: 93px;">Raised</th>
-          </tr>
-        <tbody></tbody>
-      </table>
-    </div>
-    <div class="section">
-      <hr size="1" class="divider">
+    <div class="center-row">
+      <div class="diving-row">
+        <hr size="1" class="divider">
+      </div>
     </div>
     <div id="historySection">
       <div class="history-section">
         <div class="section">
           <h1>Over The Years</h1>
           <p>
-            The Jingle Jam began back in 2011 when Lewis and Simon of The Yogscast asked fans to donate to Oxfam instead of sending them presents. It has
-            since grown to a yearly event where a community of volunteers, content creators, games companies, and gamers from around the world
-            raise money for various causes, including those focused on sustainability, conservation, war relief, 
+            The Jingle Jam began back in <span class="jj-start-year"></span> when Lewis and Simon of The Yogscast asked fans to donate to Oxfam instead
+            of sending them presents. It has
+            since grown to a yearly event where a community of volunteers, content creators, games companies, and gamers
+            from around the world
+            raise money for various causes, including those focused on sustainability, conservation, war relief,
             accessibility in gaming and sport, cancer research, LGBTQ+ issues, combating racism, and much more.
           </p>
         </div>
@@ -114,7 +122,8 @@
         <div class="section">
           <div class="stats-section">
             <div class="stats-section-text stats-section-text-left">
-              The Jingle Jam is supported by everyday people, like you, looking to support a wide range of causes and to make an impact on the world. Since we began in 2011, 
+              The Jingle Jam is supported by everyday people, like you, looking to support a wide range of causes and to
+              make an impact on the world. Since we began in <span class="jj-start-year"></span>,
               gamers and viewers have sent over <strong>795 thousand</strong> individual donations.
             </div>
             <div class="ui statistics">
@@ -134,8 +143,10 @@
               </div>
             </div>
             <div class="stats-section-text stats-section-text-right">
-              We seek to represent a wide range of causes, including improving physical and mental health, supporting diversity and inclusion,
-              enhancing equality of opportunity, protecting the planet, contributing to disaster and emergency aid, and much more. Our mission has lead to 
+              We seek to represent a wide range of causes, including improving physical and mental health, supporting
+              diversity and inclusion,
+              enhancing equality of opportunity, protecting the planet, contributing to disaster and emergency aid, and
+              much more. Our mission has lead to
               <strong>37 causes</strong> from across the world being supported by the Jingle Jam.
             </div>
           </div>
@@ -143,8 +154,10 @@
         <div class="section">
           <div class="stats-section">
             <div class="stats-section-text stats-section-text-left">
-              Being the World's Biggest Charity Gaming Event, we incentivise donations by live streaming gaming content throughout the first half of December.  
-              Viewers from around the world tune in live, resulting in over <strong>100 million</strong> live views since the Jingle Jam's inception, 
+              Being the World's Biggest Charity Gaming Event, we incentivise donations by live streaming gaming content
+              throughout the first half of December.
+              Viewers from around the world tune in live, resulting in over <strong>100 million</strong> live views
+              since the Jingle Jam's inception,
               with over <strong>30 million</strong> video views.
             </div>
             <div class="ui statistics">
@@ -157,7 +170,7 @@
         </div>
         <div class="section" style="margin-top: 180px;">
           <p>
-            Since 
+            Since
           </p>
         </div>
         <div class="section years-section">

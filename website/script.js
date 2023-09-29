@@ -9,7 +9,8 @@
         minRefreshTime: 1000,
         graphTime: 1000 * 60 * 10,
         update: true,
-        year: 2022,
+        startYear: 2011,
+        year: 2023,
         domain: '.',
         isFinished: false
     };
@@ -44,8 +45,17 @@
 
         await graphLoop();
 
+        setContent();
+
         show();
     };
+
+    function setContent(){
+        $('.jj-start-year').text(JingleJam.startYear);
+        $('.jj-year').text(JingleJam.year);
+        $('.jj-cause-count').text(JingleJam.model.causes.length);
+
+    }
 
     function show(){
         $('#loader').hide();
@@ -231,22 +241,42 @@
         $(elem).data('value', target);
         $(elem).text(format(target));
     }
-
-    function setTables(){
+    
+    function createCards(){
         let table = ''
         let conversion = JingleJam.model.avgConversionRate;
 
         let sortedCauses = JingleJam.model.causes.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
+        let causesCards = '';
         for(let cause of sortedCauses){
             let yogDollars = cause.raised.yogscast * conversion;
             let fundDollars = cause.raised.fundraisers * conversion;
-
-            table += `<tr>`
-            table += `<th label="Charity">${cause.name}</th>`
-            table += `<th label="Total" class="right aligned jj-thin">${isPounds ? formatCurrency(cause.raised.fundraisers + cause.raised.yogscast, '£') : formatCurrency(yogDollars + fundDollars, '$')}</th>`
-            table += '</tr>'
+            
+            causesCards += `
+            <a class="card" style="max-width: 1100px; width: 100%; padding: 10px;" href="${cause.url}" target="_blank" id="card${cause.id}">
+              <div class="image">
+                <img src="${cause.logo}">
+              </div>
+              <div class="content">
+                <div class="header">${cause.name}</div>
+                <hr size="1" class="divider" style="margin: 3px 0px 8px 0px; width: calc(100% - 10px); opacity: .5;">
+                <div class="description">
+                    ${cause.description}
+                </div>
+              </div>
+              <div class="total">
+                <div class="extra content total-bold jj-pink">
+                    <span class="raised-total">
+                        ${isPounds ? formatCurrency(cause.raised.fundraisers + cause.raised.yogscast, '£') : formatCurrency(yogDollars + fundDollars, '$')}
+                    </span>
+                    <div class="raised-label">
+                        raised
+                    </div>
+                </div>
+              </div>
+            </a>`;
         }
-        $('#charitiesTable tbody').html(table);
+        $('#charityCards').html(causesCards);
         
         table = ''
         for(let year of JingleJam.model.history){
@@ -259,13 +289,38 @@
         $('#yearsTable tbody').html(table);
     }
 
+    function setTables(first = false){
+        let table = ''
+        let conversion = JingleJam.model.avgConversionRate;
+
+        let sortedCauses = JingleJam.model.causes.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+        for(let cause of sortedCauses){
+            let yogDollars = cause.raised.yogscast * conversion;
+            let fundDollars = cause.raised.fundraisers * conversion;
+            
+            $(`#charityCards #card${cause.id} .raised-total`).text(isPounds ? formatCurrency(cause.raised.fundraisers + cause.raised.yogscast, '£') : formatCurrency(yogDollars + fundDollars, '$'));
+        }
+        
+        table = ''
+        for(let year of JingleJam.model.history){
+            table += `<tr>`
+            table += `<th label="Year" class="center aligned">${year.year}</th>`
+            table += `<th label="Donations" class="right aligned jj-thin">${formatInt(year.donations)}</th>`
+            table += `<th label="Final Total" class="right aligned jj-thin">${isPounds ? formatCurrency(year.total.pounds, '£') : formatCurrency(year.total.dollars, '$')}</th>`
+            table += '</tr>'
+        }
+        $('#yearsTable tbody').html(table);
+    }
+
+    let firstUpdate = true;
+
     function onUpdate(){
         let conversion = JingleJam.model.avgConversionRate;
         let yogsDollars = JingleJam.model.raised.yogscast * conversion;
         let fundDollars = JingleJam.model.raised.fundraisers * conversion;
 
         let totalPounds = JingleJam.model.history.reduce((sum, a) => sum + a.total.pounds, 0) + JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers;
-        let totalDollars = JingleJam.model.history.reduce((sum, a) => sum + a.total.pounds, 0) + yogsDollars + fundDollars;
+        let totalDollars = JingleJam.model.history.reduce((sum, a) => sum + a.total.dollars, 0) + yogsDollars + fundDollars;
 
         animateCount('#raisedTotalDollars', yogsDollars + fundDollars, formatCurrency);
         animateCount('#raisedTotalPounds', JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers, (x) => formatCurrency(x, '£'));
@@ -275,6 +330,11 @@
         animateCount('#donationCount', JingleJam.model.donations.count, (x) => formatInt(x) + (!JingleJam.isFinished ? "+" : ""));
         animateCount('#averageDonationDollars', (yogsDollars + fundDollars)/JingleJam.model.donations.count, (x) => formatCurrency(x, '$', 2));
         animateCount('#averageDonationPounds', (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers)/JingleJam.model.donations.count, (x) => formatCurrency(x, '£', 2));
+
+        if(firstUpdate){
+            createCards();
+            firstUpdate = false;
+        }
 
         setTables();
 
