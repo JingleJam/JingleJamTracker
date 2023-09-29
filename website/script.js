@@ -64,12 +64,12 @@
 
     function toggleDollars(type){
         if(type){
-            $('.poundComponent').hide();
-            $('.dollarComponent').show();
+            $('.pound-component').hide();
+            $('.dollar-component').show();
         }
         else{
-            $('.dollarComponent').hide();
-            $('.poundComponent').show();
+            $('.dollar-component').hide();
+            $('.pound-component').show();
         }
     }
 
@@ -259,7 +259,7 @@
               </div>
               <div class="content">
                 <div class="header">${cause.name}</div>
-                <hr size="1" class="divider" style="margin: 3px 0px 8px 0px; width: calc(100% - 10px); opacity: .5;">
+                <hr size="1" class="divider" style="margin: 3px 0px 8px 0px; width: calc(100% - 10px); opacity: .5; display: none;">
                 <div class="description">
                     ${cause.description}
                 </div>
@@ -277,16 +277,6 @@
             </a>`;
         }
         $('#charityCards').html(causesCards);
-        
-        table = ''
-        for(let year of JingleJam.model.history){
-            table += `<tr>`
-            table += `<th label="Year" class="center aligned">${year.year}</th>`
-            table += `<th label="Donations" class="right aligned jj-thin">${formatInt(year.donations)}</th>`
-            table += `<th label="Final Total" class="right aligned jj-thin">${isPounds ? formatCurrency(year.total.pounds, '£') : formatCurrency(year.total.dollars, '$')}</th>`
-            table += '</tr>'
-        }
-        $('#yearsTable tbody').html(table);
     }
 
     function setTables(first = false){
@@ -305,7 +295,6 @@
         for(let year of JingleJam.model.history){
             table += `<tr>`
             table += `<th label="Year" class="center aligned">${year.year}</th>`
-            table += `<th label="Donations" class="right aligned jj-thin">${formatInt(year.donations)}</th>`
             table += `<th label="Final Total" class="right aligned jj-thin">${isPounds ? formatCurrency(year.total.pounds, '£') : formatCurrency(year.total.dollars, '$')}</th>`
             table += '</tr>'
         }
@@ -601,7 +590,7 @@
                     y: {
                         type: 'linear',
                         title: {
-                            display: true,
+                            display: false,
                             text: 'Amount Raised'
                         },
                         ticks: {
@@ -625,7 +614,7 @@
                 },
                 plugins: {
                     title: {
-                        display: true,
+                        display: false,
                         text: 'Amount Raised Over Time'
                     },
                     tooltip: {
