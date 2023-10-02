@@ -312,12 +312,42 @@ function sortByKey(array, key) {
   });
 }
 
+async function getDebugData(env){
+  let causes = JSON.parse(await env.JINGLE_JAM_DATA.get('causes'));
+  let defaultConversionRate = parseFloat(await env.JINGLE_JAM_DATA.get('conversion-rate'));
+  let summary = JSON.parse(await env.JINGLE_JAM_DATA.get('summary'));
+
+  let defaultResponse = getDefaultResponse(env, causes, summary, defaultConversionRate);
+
+  let amount = (new Date().getTime()/50 % 5000000);// + getRandomFloat(-100, 1000)
+
+  defaultResponse.raised.yogscast = amount*.8;
+  defaultResponse.raised.fundraisers = amount*.2;
+
+  defaultResponse.collections.redeemed = parseInt(amount/40.84);
+  defaultResponse.donations.count = defaultResponse.collections.redeemed + 945;
+
+  for(let cause of defaultResponse.causes){
+    cause.raised.yogscast = amount/defaultResponse.causes.length * .8;
+    cause.raised.fundraisers = amount/defaultResponse.causes.length * .2;
+  }
+
+  return defaultResponse;
+}
+
+function getRandomFloat(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
 //Gets the Latest Tiltify Data
 async function getTiltifyData(env) {
   env.DONATION_DIFFERENCE = parseInt(env.DONATION_DIFFERENCE);
   env.DOLLAR_OFFSET = parseFloat(env.DOLLAR_OFFSET);
   env.COLLECTIONS_AVAILABLE = parseInt(env.COLLECTIONS_AVAILABLE);
   env.YEAR = parseInt(env.YEAR);
+
+  if(env.ENABLE_DEBUG)
+    return await getDebugData(env);
 
   return await getSummaryData(env);
 }
