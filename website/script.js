@@ -320,7 +320,7 @@
         for (let year of JingleJam.model.history) {
             table += `<tr>`
             table += `<th label="Year" class="center aligned">${year.year}</th>`
-            table += `<th label="Final Total" class="right aligned jj-thin">${isPounds ? formatCurrency(year.total.pounds) : formatCurrency(year.total.dollars)}</th>`
+            table += `<th label="Raised" class="right aligned jj-thin">${isPounds ? formatCurrency(year.total.pounds) : formatCurrency(year.total.dollars)}</th>`
             table += '</tr>'
         }
         $('#yearsTable tbody').html(table);

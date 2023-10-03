@@ -319,7 +319,7 @@ async function getDebugData(env){
 
   let defaultResponse = getDefaultResponse(env, causes, summary, defaultConversionRate);
 
-  let amount = (new Date().getTime()/50 % 5000000);// + getRandomFloat(-100, 1000)
+  let amount = (new Date().getTime()/10 % 5000000);// + getRandomFloat(-100, 1000)
 
   defaultResponse.raised.yogscast = amount*.8;
   defaultResponse.raised.fundraisers = amount*.2;

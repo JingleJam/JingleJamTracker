@@ -187,6 +187,10 @@
     align-items: center;
 }
 
+#embedContainer .ui.cards .card .total .content {
+    margin-top: 6px;
+}
+
 #embedContainer .raised-total {
     font-weight: 600;
     text-transform: uppercase;
@@ -228,7 +232,7 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 18px;
 }
 
 #embedContainer .ui.segment {
@@ -334,7 +338,7 @@
 @media screen and (max-width: 650px) {
     #embedContainer .ui.cards .card .total {
         width: 100% !important;
-        margin: 20px 10px 5px 10px !important;
+        margin: 16px 10px 5px 10px !important;
     }
 
     #embedContainer .ui.segment.stat .value {
@@ -344,6 +348,10 @@
 
     #embedContainer .ui.segment.stat.full-width .body {
         margin-top: 8px !important;
+    }
+
+    #embedContainer .ui.cards .card .total .content {
+        margin-top: 0px;
     }
 }
 
@@ -364,4 +372,13 @@
 
 #embedContainer .comma-value {
     margin: 0px 3px 0px 1px;
+}
+
+#embedContainer .card img {
+    height: 100px;
+    width: 100px;
+}
+
+#embedContainer .card .image {
+    width: 100px;
 }
