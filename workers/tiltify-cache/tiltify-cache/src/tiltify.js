@@ -209,8 +209,12 @@ function getDefaultResponse(env, causes = [], summary = [], defaultConversionRat
   }
 
   return {
-    year: env.YEAR,
     date: date,
+    event: {
+      year: env.YEAR,
+      start: new Date(Date.UTC(2023, 11, 1, 17, 0, 0)),
+      end: new Date(Date.UTC(2023, 11, 15, 0, 0, 0))
+    },
     avgConversionRate: defaultConversionRate,
     raised: {
       yogscast: 0,
@@ -319,7 +323,7 @@ async function getDebugData(env){
 
   let defaultResponse = getDefaultResponse(env, causes, summary, defaultConversionRate);
 
-  let amount = (new Date().getTime()/10 % 5000000);// + getRandomFloat(-100, 1000)
+  let amount = (new Date().getTime()/9 % 5000000);// + getRandomFloat(-100, 1000)
 
   defaultResponse.raised.yogscast = amount*.8;
   defaultResponse.raised.fundraisers = amount*.2;

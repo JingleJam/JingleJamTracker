@@ -288,6 +288,8 @@
     font-weight: bold;
     font-size: 3.6em;
     font-feature-settings: 'tnum';
+    line-height: 1;
+    text-align: center;
 }
 
 #embedContainer .ui.segment.stat .value {
@@ -300,6 +302,10 @@
 
 #embedContainer .ui.segment.stat .value.small {
     font-size: 2.3em;
+}
+
+#embedContainer .ui.segment.stat .value.tiny {
+    font-size: 1.8em;
 }
 
 @media screen and (max-width: 1100px) {
