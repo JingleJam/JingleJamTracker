@@ -38,14 +38,13 @@
         await tiltifyLoop();
 
         afterLoadSetup();
+        hideLoader();
 
         await getPrevious();
         await graphLoop(true);
 
         //Start the timed loop
         timedLoop();
-
-        hideLoader();
     };
 
     //Runs before the initial data is loaded

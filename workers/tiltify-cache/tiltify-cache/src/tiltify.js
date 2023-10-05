@@ -212,7 +212,7 @@ function getDefaultResponse(env, causes = [], summary = [], defaultConversionRat
     date: date,
     event: {
       year: env.YEAR,
-      start: new Date(Date.UTC(2023, 11, 1, 17, 0, 0)),
+      start: new Date(Date.UTC(2023, 9, 1, 17, 0, 0)), //new Date(Date.UTC(2023, 11, 1, 17, 0, 0)),
       end: new Date(Date.UTC(2023, 11, 15, 0, 0, 0))
     },
     avgConversionRate: defaultConversionRate,
