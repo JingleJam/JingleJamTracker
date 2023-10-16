@@ -772,7 +772,7 @@
                             // Include a dollar sign in the ticks
                             callback: function (value, index, ticks) {
                                 let tickDiff = ticks[1].value - ticks[0].value;
-                                if (value < 1000000)
+                                if (Math.abs(value) < 1000000)
                                     return formatCurrency(value / 1000, 0, false) + 'k'
                                 else if (tickDiff < 10000)
                                     return formatCurrency(value / 1000000, 3, false) + 'm'

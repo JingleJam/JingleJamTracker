@@ -63,14 +63,24 @@ export class TiltifyData {
 
 		console.log('Alarm Called, fetching latest Tiltify data...');
 
+		//Get the current stored data
+		let data = await this.state.storage.get(DO_CACHE_KEY);
+
 		//Fetch the latest Tiltify data and cache it
 		let startTime = new Date();
-		let data = await getTiltifyData(this.env);
+		let newData = await getTiltifyData(this.env);
 		let endTime = new Date();
+
+		let dataToStore = newData;
+		//If previous cached data exists, check if the new data has a higher values. If not, keep the old data and update the date
+		if(data && (data.raised.yogscast > newData.raised.yogscast || data.raised.fundraisers > newData.raised.fundraisers)){
+			data.date = newData.date;
+			dataToStore = data;
+		}
 
 		console.log(`Finished Fetching, caching result Tiltify data... (${endTime - startTime}ms)`);
 
-		await this.state.storage.put(DO_CACHE_KEY, data);
+		await this.state.storage.put(DO_CACHE_KEY, dataToStore);
 	}
 }
 
