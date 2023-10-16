@@ -1,3 +1,9 @@
+import {
+	roundAmount,
+  sortByKey,
+  getRandomFloat
+} from "./utils";
+
 const maxSim = 6; //Maximum number of simultaneous fetches
 const maxNumOfCampaigns = 100;
 const maxDescriptionLength = 1024;
@@ -199,6 +205,7 @@ function getDefaultResponse(env, causes = [], summary = [], defaultConversionRat
       logo: cause.logo,
       description: cause.description,
       url: cause.url,
+      donateUrl: cause.donateUrl,
       raised: {
         yogscast: 0,
         fundraisers: 0
@@ -212,8 +219,8 @@ function getDefaultResponse(env, causes = [], summary = [], defaultConversionRat
     date: date,
     event: {
       year: env.YEAR,
-      start: new Date(Date.UTC(2023, 9, 1, 17, 0, 0)), //new Date(Date.UTC(2023, 11, 1, 17, 0, 0)),
-      end: new Date(Date.UTC(2023, 11, 15, 0, 0, 0))
+      start: new Date(Date.UTC(env.YEAR, 11, 1, 17, 0, 0)),
+      end: new Date(Date.UTC(env.YEAR, 11, 15, 0, 0, 0))
     },
     avgConversionRate: defaultConversionRate,
     raised: {
@@ -304,17 +311,8 @@ async function getCampaigns(fundraiserPublicId, offset) {
   return data;
 }
 
-function roundAmount(val, decimals = 2) {
-  return +(Math.round(val + "e+" + decimals) + ("e-" + decimals));
-}
-
-function sortByKey(array, key) {
-  return array.sort(function (a, b) {
-    var x = a[key];
-    var y = b[key];
-    return ((x < y) ? 1 : ((x > y) ? -1 : 0));
-  });
-}
+const debugStartDate = new Date(2023, 9, 14, 17, 19, 40)
+const debugEndDate = new Date(2023, 10, 13, 22, 10, 0)
 
 async function getDebugData(env){
   let causes = JSON.parse(await env.JINGLE_JAM_DATA.get('causes'));
@@ -323,7 +321,10 @@ async function getDebugData(env){
 
   let defaultResponse = getDefaultResponse(env, causes, summary, defaultConversionRate);
 
-  let amount = (new Date().getTime()/9 % 5000000);// + getRandomFloat(-100, 1000)
+  defaultResponse.event.start = debugStartDate;
+  defaultResponse.event.end = debugEndDate;
+
+  let amount = 1 * Math.max(((new Date().getTime() - debugStartDate.getTime())/3.5913 % 5000000), 0);
 
   defaultResponse.raised.yogscast = amount*.8;
   defaultResponse.raised.fundraisers = amount*.2;
@@ -337,10 +338,6 @@ async function getDebugData(env){
   }
 
   return defaultResponse;
-}
-
-function getRandomFloat(min, max) {
-  return Math.random() * (max - min) + min;
 }
 
 //Gets the Latest Tiltify Data

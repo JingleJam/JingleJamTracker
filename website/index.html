@@ -18,12 +18,17 @@
         <div class="flexable">
           <div class="ui segment jj-pink-border-top large centered stat full-width" style="height: 180px;">
             <div class="header">
-              <h2 id="mainCounterHeader">Raised In <span class="jj-year"></span></h2>
+              <h2 id="mainCounterHeader"></h2>
             </div>
             <div class="body" style="margin-top: 0px;">
-              <div class="value jj-pink" id="mainCounter"> £ 0 </div>
+              <div class="change-counter-div">
+                <div class="change-counter hide">
+                  <div class="change-counter-text" id="mainCounterChange"></div>
+                </div>
+              </div>
+              <div class="value jj-pink" id="mainCounter"> </div>
             </div>
-            <div id="liveUpdatingRow">
+            <div id="liveUpdatingRow" class="hide-live-update">
               <label class="subtext-label left" id="updatingRealTime">
                 <div class="ui active slow loader mini"></div>
                 <div class="loading-circle">
@@ -71,12 +76,12 @@
                 <h3>Previous Years</h3>
               </div>
               <div class="body">
-                <table class="ui large celled striped table unstackable" id="yearsTable">
+                <table class="ui large celled striped table unstackable" style="min-width: 250px !important;" id="yearsTable">
                   <thead>
                     <tr>
-                      <th class="center aligned" style="min-width: 60px; border-left: 1px solid rgba(34,36,38,.1);">Year
+                      <th class="center aligned six wide" style="min-width: 60px; border-left: 1px solid rgba(34,36,38,.1);">Year
                       </th>
-                      <th class="center aligned" style="min-width: 60px;">Raised</th>
+                      <th class="center aligned ten wide" style="min-width: 60px;">Raised</th>
                     </tr>
                   <tbody></tbody>
                 </table>
