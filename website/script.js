@@ -1,107 +1,207 @@
-(function(){
+(function () {
     let JingleJam = {
-        model: {},
+        model: null,
+        oldModel: null,
+        current: [],
         previous: [],
-        graph: [],
-        refreshTime: 15000,
-        waitTime: 3000,
-        graphTime: 1000 * 60 * 10,
-        update: true,
-        year: 2022,
+        refreshTime: 10000,         //How often to wait for an API refresh
+        waitTime: 2000,             //How long to wait for the data on the backend to be updated
+        minRefreshTime: 5000,       //Minimum refresh time for the API
+        graphTime: 1000 * 60 * 10,  //Graph should update every 10 minutes
+        pageIsVisible: true,
+        startYear: 2011,
         domain: '.',
-        isFinished: true
+        graphDates: {
+            minDate: null,
+            maxDate: null
+        },
+        settings: {
+            isPounds: true,
+        },
+        timeLeft: null,
+        isLive: function () {
+            return !JingleJam.isWaiting() && !JingleJam.hasEnded();
+        },
+        isWaiting: function () {
+            return new Date() <= JingleJam.model.event.start;
+        },
+        hasEnded: function () {
+            return new Date() >= JingleJam.model.event.end;
+        }
     };
 
-    if(window.location.hostname.includes('jinglejam.co.uk') || 
-        window.location.hostname.includes('squarespace.com')  || 
-        window.location.hostname.includes('yogscast.com'))
-        JingleJam.domain = 'https://dashboard.jinglejam.co.uk';
+    //On page setup
+    async function onLoad() {
+        beforeLoadSetup();
 
-    let isPounds = localStorage.getItem('currency') !== 'false';
+        //Start loops
+        await tiltifyLoop();
 
-    async function onLoad(){
-        if(isPounds){
+        afterLoadSetup();
+        hideLoader();
+
+        await getPrevious();
+        await graphLoop(true);
+
+        //Start the timed loop
+        timedLoop();
+    };
+
+    //Runs before the initial data is loaded
+    function beforeLoadSetup() {
+        //Get the currency stored in session
+        JingleJam.settings.isPounds = localStorage.getItem('currency') !== 'false';
+
+        //Check checkbox if the isPounds
+        if (JingleJam.settings.isPounds) {
             $('#currencyCheckbox').attr('checked', 'checked')
         }
 
-        if(JingleJam.isFinished){
-            $('#liveUpdatingRow').parent().addClass('hide-live-update');
-        }
-
+        //Set Chart Defaults
         Chart.defaults.font.family = 'Montserrat';
         Chart.defaults.font.size = 14;
 
-        toggleDollars(!isPounds);
-        createEvents();
-        toggleRefresh(true);
+        //Domain lookup
+        if (window.location.hostname.includes('jinglejam.co.uk') ||
+            window.location.hostname.includes('squarespace.com') ||
+            window.location.hostname.includes('yogscast.com'))
+            JingleJam.domain = 'https://dashboard.jinglejam.co.uk';
 
-        await Promise.all([
-            realTimeLoop(),
-            getPrevious()
-        ]);
+        //Enable the updating live spinner
+        setUpdatingLiveSpinner(true);
+    }
 
-        await graphLoop();
+    //Runs after the initial data is loaded
+    function afterLoadSetup() {
 
-        show();
-    };
+        //Set some compouted data
+        JingleJam.graphDates.minDate = JingleJam.model.event.start;//Date.parse('12/01/' + JingleJam.model.event.year + ' 17:00 GMT');
+        JingleJam.graphDates.maxDate = Date.parse('01/01/' + (JingleJam.model.event.year + 1) + ' 00:00 GMT');
+        JingleJam.timeLeft = getTimeLeft();
 
-    function show(){
+        //Setup components
+        setupComponents();
+
+        //Replace HTML components with model data
+        $('.jj-start-year').text(JingleJam.startYear);
+        $('.jj-year').text(JingleJam.model.event.year);
+        $('.jj-cause-count').text(JingleJam.model.causes.length);
+
+        //Replace HTML tables with model data
+        setTables();
+
+        //Create the charity cards
+        createCards();
+
+        //Set the data on load
+        updateCounts();
+    }
+
+    //Loop to update data on the page as needed
+    function timedLoop() {
+        var x = setInterval(function () {
+            mainComponent();
+        }, 1000);
+        mainComponent();
+    }
+
+    function mainComponent() {
+        //Remove the Live Updating Row if no longer updating live
+        toggleLiveRow();
+
+        //Time Left Calculations
+        JingleJam.timeLeft = getTimeLeft();
+        if (!JingleJam.isWaiting() || JingleJam.timeLeft.totalTime < 0) {
+            $('#mainCounterHeader').text('Raised For ' + JingleJam.model.event.year);
+            if ($('#mainCounter').text().includes('h')) {
+                updateGraph();
+                updateCounts(true);
+            }
+        }
+        else {
+            $('#mainCounter').html(JingleJam.timeLeft.days + "d " + JingleJam.timeLeft.hours + "h " + JingleJam.timeLeft.minutes + "m " + JingleJam.timeLeft.seconds + "s ");
+            $('#mainCounterHeader').text('Countdown')
+        }
+    }
+
+    //Gets the current time left until the JingleJame starts
+    function getTimeLeft() {
+        var now = new Date().getTime();
+        var totalTime = JingleJam.model.event.start - now;
+
+        var days = Math.floor(totalTime / (1000 * 60 * 60 * 24));
+        var hours = Math.floor((totalTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        var minutes = Math.floor((totalTime % (1000 * 60 * 60)) / (1000 * 60));
+        var seconds = Math.floor((totalTime % (1000 * 60)) / 1000);
+
+        hours = String(hours).padStart(2, '0');
+        minutes = String(minutes).padStart(2, '0');
+        seconds = String(seconds).padStart(2, '0');
+
+        return {
+            seconds,
+            minutes,
+            hours,
+            days,
+            totalTime
+        }
+    }
+
+    //Hide the main page loader
+    function hideLoader() {
         $('#loader').hide();
-        $('#content').show()
+        $('#content').show();
     }
 
-    function toggleDollars(type){
-        if(type){
-            $('.poundComponent').hide();
-            $('.dollarComponent').show();
+    //Toggle the Live Row
+    function toggleLiveRow() {
+        if (!JingleJam.isLive()) {
+            $('#liveUpdatingRow').parent().addClass('hide-live-update');
         }
-        else{
-            $('.dollarComponent').hide();
-            $('.poundComponent').show();
+        else {
+            $('#liveUpdatingRow').parent().removeClass('hide-live-update');
         }
     }
 
-    function toggleRefresh(bool){
-        if(bool){
+    //Toggles the updating live spinner
+    function setUpdatingLiveSpinner(bool) {
+        if (bool) {
             $('#liveUpdatingRow .loader').show();
             $('#liveUpdatingRow .loading-circle').hide();
         }
-        else{
+        else {
             $('#liveUpdatingRow .loader').hide();
             $('#liveUpdatingRow .loading-circle').show();
         }
     }
 
-    function isMobileChart(){
-        return window.innerWidth < 675;
-    }
-
-    async function fetchWithTimeout(resource, timeout = 10000) {
+    //Fetchs an endpoint with a required timeout
+    async function fetchWithTimeout(resource, timeout = 5000) {
         const controller = new AbortController();
         const fetchId = setTimeout(() => controller.abort(), timeout);
         const response = await fetch(resource, {
-          signal: controller.signal  
+            signal: controller.signal
         });
         clearTimeout(fetchId);
         return response;
-      }
+    }
 
-    const startHour = 17;
-    const startDate = new Date('Dec 01 ' + JingleJam.year + ' ' + startHour + ':00:00');
-
-    function createEvents(){
+    //Setup components on the page
+    function setupComponents() {
+        //Event when the currency checkbox is toggled
         $('#currencyCheckbox').checkbox({
-            onChange: function(){
-                let val = $('#currencyCheckbox').is(':checked');
-                isPounds = val;
-                localStorage.setItem('currency', val);
-                
-                toggleDollars(!val);
-                setTable();
+            onChange: function () {
+                JingleJam.settings.isPounds = $('#currencyCheckbox').is(':checked');
+                localStorage.setItem('currency', JingleJam.settings.isPounds);
+
+                updateCounts(true);
+                updateCards(true);
+                setTables();
                 createGraph();
             }
         });
 
+        //Handle when tabbed out of the page
         let hidden;
         let visibilityChange;
         if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and later support
@@ -116,18 +216,18 @@
         }
 
         if (typeof document.addEventListener === "undefined" || hidden === undefined) {
-
         } else {
-            document.addEventListener(visibilityChange, function(){
-                JingleJam.update = !document[hidden];
+            document.addEventListener(visibilityChange, function () {
+                JingleJam.pageIsVisible = !document[hidden];
 
-                if(JingleJam.isFinished)
+                //If the loops are not active, ignore this
+                if (!JingleJam.isLive())
                     return;
 
                 //If tab is back in focus and the screen did not refresh, refresh it after 1 second
-                setTimeout(function(){
-                    if(!JingleJam.model.date || (new Date() - new Date(JingleJam.model.date)) > (JingleJam.refreshTime + JingleJam.waitTime)){
-                        updateScreen();
+                setTimeout(function () {
+                    if (!JingleJam.model.date || (new Date() - new Date(JingleJam.model.date)) > (JingleJam.refreshTime + JingleJam.waitTime)) {
+                        updateModel();
                     }
                 }, 1000);
             }, false);
@@ -136,18 +236,18 @@
         //Date Range Slider
         $('#dateRange').slider({
             min: 0,
-            max: 744-startHour,
+            max: Math.abs(JingleJam.graphDates.maxDate - JingleJam.graphDates.minDate) / 36e5,
             start: 0,
-            end: 744-startHour,
+            end: Math.abs(JingleJam.graphDates.maxDate - JingleJam.graphDates.minDate) / 36e5,
             step: 1,
             smooth: true,
             labelDistance: 24,
-            interpretLabel: function(value) {
-                let date = addHours(startDate, value);
+            interpretLabel: function (value) {
+                let date = addHours(JingleJam.model.event.start, value);
 
-                if(date.getHours() === 0) {
-                    if(isMobileChart()){
-                        if(date.getDate() % 2 === 0){
+                if (date.getHours() === 0) {
+                    if (window.innerWidth < 675) {
+                        if (date.getDate() % 2 === 0) {
                             return date.getDate();
                         }
                     }
@@ -156,191 +256,331 @@
                 }
                 return "";
             },
-            onChange: function(e, min, max){
-                let minDate = addHours(startDate, min);
-                let maxDate = addHours(startDate, max);
+            onChange: function (e, min, max) {
+                let minDate = addHours(JingleJam.model.event.start, min);
+                let maxDate = addHours(JingleJam.model.event.start, max);
                 updateStep(minDate.getTime(), maxDate.getTime());
             }
         });
     }
 
+    //Add hours to a date
     function addHours(date, hours) {
         const dateCopy = new Date(date);
         dateCopy.setHours(dateCopy.getHours() + hours);
         return dateCopy;
     }
-    
 
-    async function getTiltify(){
-        const response = await fetchWithTimeout(JingleJam.domain + '/api/tiltify');
-
-        return await response.json();
+    //Add seconds to a date
+    function addSeconds(date, seconds) {
+        const dateCopy = new Date(date);
+        dateCopy.setSeconds(dateCopy.getHours() + seconds);
+        return dateCopy;
     }
 
-    function formatCurrency(total, currency = '$', decimals = 0, includeSpace = true) {
+    //Formats a currency value
+    function formatCurrency(total, decimals = 0, includeSpace = true) {
         let neg = false;
-        if(total < 0) {
+        if (total < 0) {
             neg = true;
             total = Math.abs(total);
         }
 
+        let currency = JingleJam.settings.isPounds ? '£' : '$';
+
         let amount = 0
-        if(decimals > 0)
-            amount =  parseFloat(total).toFixed(decimals).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString();
+        if (decimals > 0)
+            amount = parseFloat(total).toFixed(decimals).replace(/(\d)(?=(\d{3})+\.)/g, "$1,").toString();
         else
             amount = parseInt(total).toLocaleString("en-US");
 
         return (neg ? ("-" + currency) : currency) + (includeSpace ? " " : "") + amount;
     }
 
+    //Formats an integer value
     function formatInt(x) {
         return parseInt(x).toLocaleString();
     }
 
-    function animateCount(elem, target, format) {
+    //Animates a counter (targetPrimary = pounds, tagetSecondary = dollars for currency values)
+    function animateCount(elem, format, targetPrimary, targetSecondary = null) {
         let number = parseFloat($(elem).data('value'));
-        if(isNaN(number))
+        let target = targetSecondary === null ? targetPrimary : (JingleJam.settings.isPounds ? targetPrimary : targetSecondary)
+
+        if (isNaN(number))
             number = 0;
 
-        if(!target)
+        if (!target)
             target = 0;
 
-        let incAmount = (target-number)/90;
-        if(number < target) {
-            let interval = setInterval(function() {
-                if (number >= target) {
+        let index = 90;
+        let diff = Math.abs(target - number);
+        let startCurrency = JingleJam.settings.isPounds;
+
+        let direction = 1;
+        if(target < number)
+            direction = -1;
+
+        if (number !== target) {
+            let interval = setInterval(function () {
+                if ((direction === 1 && number >= target) || (direction === -1 && number <= target)
+                || index === 300 || (startCurrency !== JingleJam.settings.isPounds)) {
+                    if ((startCurrency !== JingleJam.settings.isPounds) && targetSecondary !== null) {
+                        target = JingleJam.settings.isPounds ? targetPrimary : targetSecondary;
+                    }
                     clearInterval(interval);
-                    $(elem).data('value', target);
-                    $(elem).text(format(target));
+                    setCount(elem, target, format);
 
                     return;
                 }
-                else{
-                    $(elem).text(format(number));
+                else {
+                    formatNumberText(elem, format(number));
                 }
-                number+=incAmount;
-            }, 17);
+                number += direction * incAount(++index, diff)
+            }, 20);
         }
-        else{
-            $(elem).data('value', target);
-            $(elem).text(format(target));
+        else {
+            setCount(elem, target, format);
         }
     }
 
-    function setTable(){
+    //Formats a number counter so that it's displayed properly (for evenly-spaced text)
+    function formatNumberText(ele, val) {
+        let spans = '';
+        for (let digit of val.toString().split('')) {
+            let isComma = digit === ',' || digit === '.' || digit === '$' || digit === '£';
+            spans += isComma ? `<span class="comma-value">${digit}</span>` : digit;
+        }
+        $(ele).html(spans);
+    }
+
+    //Calculates the increment amount for a animated number
+    function incAount(x, diff) {
+        let mean = 100;
+        let std = 35;
+        return Math.max((1.648 * calculateNormalDistribution(x, mean, std)) * diff, .03)
+    }
+
+    //Reset Animations
+    function resetAnimation() {
+        for(let el of document.getElementsByClassName('change-counter')){
+            el.classList.remove('hide');
+            el.style.animation = 'none';
+            el.offsetHeight; /* trigger reflow */
+            el.style.animation = null;
+        }
+    }
+
+    //Calculates a normal distribution value
+    function calculateNormalDistribution(x, mean, stdDev) {
+        const variance = stdDev ** 2;
+        const numerator = Math.exp(-((x - mean) ** 2) / (2 * variance));
+        const denominator = Math.sqrt(2 * Math.PI * variance);
+        return numerator / denominator;
+    }
+
+    //Sets the count of an object (including the data component)
+    function setCount(elem, target, format) {
+        $(elem).data('value', target);
+        formatNumberText(elem, format(target))
+    }
+
+    //Creates the card components
+    function createCards() {
+        let conversion = JingleJam.model.avgConversionRate;
+
+        let sortedCauses = JingleJam.model.causes.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
+        let causesCards = '';
+        for (let cause of sortedCauses) {
+            let yogDollars = cause.raised.yogscast * conversion;
+            let fundDollars = cause.raised.fundraisers * conversion;
+
+            causesCards += `
+            <a class="card" style="max-width: 1100px; width: 100%; padding: 10px;" href="${(JingleJam.isLive() ? cause.donateUrl : cause.url)}" target="_blank" id="card${cause.id}">
+              <div class="image">
+                <img src="${cause.logo}">
+              </div>
+              <div class="content">
+                <div class="header">${cause.name}</div>
+                <hr size="1" class="divider" style="margin: 3px 0px 8px 0px; width: calc(100% - 10px); opacity: .5; display: none;">
+                <div class="description">
+                    ${cause.description}
+                </div>
+              </div>
+              <div class="total">
+                <div class="extra content total-bold jj-pink">
+                    <span class="raised-total">
+                        ${JingleJam.settings.isPounds ? formatCurrency(cause.raised.fundraisers + cause.raised.yogscast) : formatCurrency(yogDollars + fundDollars)}
+                    </span>
+                    <div class="raised-label">
+                        raised
+                    </div>
+                </div>
+              </div>
+            </a>`;
+        }
+        $('#charityCards').html(causesCards);
+    }
+
+    //Update the totals on the charities cards
+    function updateCards(instant = false) {
+        let conversion = JingleJam.model.avgConversionRate;
+
+        let sortedCauses = JingleJam.model.causes.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+        for (let cause of sortedCauses) {
+            let yogDollars = cause.raised.yogscast * conversion;
+            let fundDollars = cause.raised.fundraisers * conversion;
+
+            let totalFund = (cause.raised.fundraisers + cause.raised.yogscast);
+            let totalFundDollar = (yogDollars + fundDollars);
+
+            if (JingleJam.isWaiting())
+                setCount(`#charityCards #card${cause.id} .raised-total`, 0, formatCurrency);
+            else if (instant)
+                setCount(`#charityCards #card${cause.id} .raised-total`, (JingleJam.settings.isPounds ? totalFund : totalFundDollar), formatCurrency);
+            else
+                animateCount(`#charityCards #card${cause.id} .raised-total`, formatCurrency, totalFund, totalFundDollar);
+        }
+    }
+
+    //Set the previous years table with the previous year data
+    function setTables() {
         let table = ''
-
-        let sortedCampaigns = JingleJam.model.campaigns.sort((a,b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
-        for(let campaign of sortedCampaigns){
-            let yogscastAmount = isPounds ? formatCurrency(campaign.raised.pounds, '£', 2) : formatCurrency(campaign.raised.dollars, '$', 2);
-            let isAllCharities = campaign.id === 566;
-
-            table += `<tr class="${isAllCharities ? "light-blue-background" : ""}">`
-            table += `<th label="Charity">${campaign.name}</th>`
-            table += `<th label="Yogscast" class="right aligned jj-thin">${campaign.id === 566 ? yogscastAmount : '-'}</th>`
-            table += `<th label="Fundraisers" class="right aligned jj-thin">${isPounds ? formatCurrency(campaign.fundraisers.pounds, '£', 2) : formatCurrency(campaign.fundraisers.dollars, '$', 2)}</th>`
-            table += `<th label="Total" class="right aligned jj-thin">${isPounds ? formatCurrency(campaign.total.pounds, '£', 2) : formatCurrency(campaign.total.dollars, '$', 2)}</th>`
+        for (let year of JingleJam.model.history) {
+            table += `<tr>`
+            table += `<th label="Year" class="center aligned">${year.year}</th>`
+            table += `<th label="Raised" class="right aligned jj-thin">${JingleJam.settings.isPounds ? formatCurrency(year.total.pounds) : formatCurrency(year.total.dollars)}</th>`
             table += '</tr>'
         }
-        $('#charitiesTable tbody').html(table);
+        $('#yearsTable tbody').html(table);
     }
 
-    function getYear(year){
-        for(let item of JingleJam.model.years){
-            if(item.year === year)
-                return item;
+    function updateCounts(instant = false) {
+        //Get the current data
+        let conversion = JingleJam.model.avgConversionRate;
+        let yogsDollars = JingleJam.model.raised.yogscast * conversion;
+        let fundDollars = JingleJam.model.raised.fundraisers * conversion;
+
+        let totalPounds = JingleJam.model.history.reduce((sum, a) => sum + a.total.pounds, 0) + JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers;
+        let totalDollars = JingleJam.model.history.reduce((sum, a) => sum + a.total.dollars, 0) + yogsDollars + fundDollars;
+
+        let avgDollars = (yogsDollars + fundDollars) / JingleJam.model.donations.count;
+        let avgPounds = (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) / JingleJam.model.donations.count;
+
+        //Update the components instantly
+        if (instant) {
+            if (!JingleJam.isWaiting()) {
+                setCount('#mainCounter', (JingleJam.settings.isPounds ? (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) : (yogsDollars + fundDollars)), formatCurrency);
+                setCount('#bundlesSold', JingleJam.model.collections.redeemed, formatInt);
+                setCount('#donationCount', JingleJam.model.donations.count, (x) => formatInt(x) + (JingleJam.isLive() ? "+" : ""));
+                setCount('#averageDonation', (JingleJam.settings.isPounds ? avgPounds : avgDollars), (x) => formatCurrency(x, 2));
+            }
+            else {
+                setCount('#bundlesSold', 0, formatInt);
+                setCount('#donationCount', 0, (x) => formatInt(x) + (JingleJam.isLive() ? "+" : ""));
+                setCount('#averageDonation', 0, (x) => formatCurrency(x, 2));
+            }
+
+            setCount('#raisedEntire', (JingleJam.settings.isPounds ? totalPounds : totalDollars), formatCurrency);
         }
-        return {};
-    }
+        //Update the components by counting up
+        else {
+            if (!JingleJam.isWaiting()) {
+                animateCount('#mainCounter', formatCurrency, JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers, yogsDollars + fundDollars);
+                animateCount('#bundlesSold', formatInt, JingleJam.model.collections.redeemed);
+                animateCount('#donationCount', (x) => formatInt(x) + (JingleJam.isLive() ? "+" : ""), JingleJam.model.donations.count);
+                animateCount('#averageDonation', (x) => formatCurrency(x, 2), avgPounds, avgDollars);
 
-    function onUpdate(){
-        animateCount('#raisedYogscastDollars', JingleJam.model.raised.dollars, formatCurrency);
-        animateCount('#raisedYogscastPounds', JingleJam.model.raised.pounds, (x) => formatCurrency(x, '£'));
-        animateCount('#raisedFundraisersDollars', JingleJam.model.fundraisers.dollars, formatCurrency);
-        animateCount('#raisedFundraisersPounds', JingleJam.model.fundraisers.pounds, (x) => formatCurrency(x, '£'));
-        animateCount('#raisedTotalDollars', JingleJam.model.total.dollars, formatCurrency);
-        animateCount('#raisedTotalPounds', JingleJam.model.total.pounds, (x) => formatCurrency(x, '£'));
-        animateCount('#raisedEntireDollars', JingleJam.model.entire.amount.dollars, (x) => formatCurrency(x, '$'));
-        animateCount('#raisedEntirePounds', JingleJam.model.entire.amount.pounds, (x) => formatCurrency(x, '£'));
-        animateCount('#bundlesSold', JingleJam.model.bundles.sold, formatInt);
-        animateCount('#donationCount', JingleJam.model.donations.count, (amount) => formatInt(amount) + (!JingleJam.isFinished ? "+" : ""));
-        animateCount('#averageDonationDollars', JingleJam.model.average.dollars, (x) => formatCurrency(x, '$', 2));
-        animateCount('#averageDonationPounds', JingleJam.model.average.pounds, (x) => formatCurrency(x, '£', 2));
+                if(JingleJam.oldModel){
+                    let oldYogsDollars = JingleJam.oldModel.raised.yogscast * conversion;
+                    let oldFundDollars = JingleJam.oldModel.raised.fundraisers * conversion;
 
-        animateCount('#dollars2016', getYear(2016).total.dollars, (x) => formatCurrency(x, '$'));
-        animateCount('#dollars2017', getYear(2017).total.dollars, (x) => formatCurrency(x, '$'));
-        animateCount('#dollars2018', getYear(2018).total.dollars, (x) => formatCurrency(x, '$'));
-        animateCount('#dollars2019', getYear(2019).total.dollars, (x) => formatCurrency(x, '$'));
-        animateCount('#dollars2020', getYear(2020).total.dollars, (x) => formatCurrency(x, '$'));
-        animateCount('#dollars2021', getYear(2021).total.dollars, (x) => formatCurrency(x, '$'));
-        
-        animateCount('#pounds2016', getYear(2016).total.pounds, (x) => formatCurrency(x, '£'));
-        animateCount('#pounds2017', getYear(2017).total.pounds, (x) => formatCurrency(x, '£'));
-        animateCount('#pounds2018', getYear(2018).total.pounds, (x) => formatCurrency(x, '£'));
-        animateCount('#pounds2019', getYear(2019).total.pounds, (x) => formatCurrency(x, '£'));
-        animateCount('#pounds2020', getYear(2020).total.pounds, (x) => formatCurrency(x, '£'));
-        animateCount('#pounds2021', getYear(2021).total.pounds, (x) => formatCurrency(x, '£'));
+                    let amount = (JingleJam.settings.isPounds ? (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) : (yogsDollars + fundDollars));
+                    let oldAmount = (JingleJam.settings.isPounds ? (JingleJam.oldModel.raised.yogscast + JingleJam.oldModel.raised.fundraisers) : (oldYogsDollars + oldFundDollars));
+                    let difference = amount - oldAmount;
+                    if(difference > 0){
+                        setCount(`#mainCounterChange`, amount - oldAmount, (x) => "+ " + formatCurrency(x));
+                        
+                        resetAnimation();
+                    }
+                }
+            }
+            else {
+                animateCount('#bundlesSold', formatInt, 0);
+                animateCount('#donationCount', (x) => formatInt(x) + (JingleJam.isLive() ? "+" : ""), 0);
+                animateCount('#averageDonation', (x) => formatCurrency(x, 2), 0, 0);
+            }
 
-        setTable();
+            animateCount('#raisedEntire', formatCurrency, totalPounds, totalDollars);
+        }
+
+        updateCards(instant);
 
         $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.date).toLocaleString());
     }
 
-    async function updateScreen(){
-        //If update flag is set and enough time has passed, refresh the screen
-        if (JingleJam.update && getNextProcessDate() > (JingleJam.refreshTime - JingleJam.waitTime)) {
+    //Update the model
+    async function updateModel() {
+        //If the model does not exist or updating is enabled
+        //Also check if the next update time is less than 0 because of the browser tab check
+        if (!JingleJam.model || (JingleJam.pageIsVisible && JingleJam.isLive() && getNextUpdateTime() <= 0)) {
+            JingleJam.oldModel = JingleJam.model;
             JingleJam.model = await getTiltify();
-        
-            onUpdate();
+
+            JingleJam.model.history.reverse();
+
+            if (JingleJam.isLive()){
+                await updateCounts();
+                await createGraph();
+            }
         }
     }
 
-    async function updateGraph(){
-        if (JingleJam.update) {
+    //Update the graph
+    async function updateGraph() {
+        if (JingleJam.pageIsVisible) {
             await getCurrent();
             await createGraph();
         }
     }
 
-    function getNextProcessDate(){
+    //Gets the next update time based on the model update date
+    function getNextUpdateTime() {
         let now = new Date();
-        let processedTime = JingleJam.model.date ? new Date(JingleJam.model.date) : new Date();
+        let modelUpdateTime = JingleJam.model.date ? new Date(JingleJam.model.date) : new Date();
 
-        let difference = JingleJam.refreshTime - (now.getTime() - processedTime.getTime()) ;
-
-        if(difference < JingleJam.waitTime)
-            difference = JingleJam.refreshTime;
-
-        return Math.max(Math.min(difference + JingleJam.waitTime, JingleJam.refreshTime + JingleJam.waitTime), JingleJam.waitTime + 1000);
+        return JingleJam.refreshTime - (now.getTime() - modelUpdateTime.getTime()) + JingleJam.waitTime;
     }
 
-    async function graphLoop(){
-        if(!JingleJam.isFinished){
-            setTimeout(function(){
-                graphLoop();
-                show();
-            }, JingleJam.graphTime);
-        }
+    //Run the graph update loop
+    async function graphLoop(force = false) {
+        //Restart the loop
+        setTimeout(function () {
+            graphLoop();
+        }, JingleJam.graphTime);
 
-        toggleRefresh(true);
+        //If the Jingle Jam is not live, ignore the update
+        if (!JingleJam.isLive() && !force)
+            return;
+
+        setUpdatingLiveSpinner(true);
         await updateGraph();
-        toggleRefresh(false);
+        setUpdatingLiveSpinner(false);
     }
 
-    async function realTimeLoop(){
+    //Run the Tiltify update loop
+    async function tiltifyLoop() {
 
-        toggleRefresh(true);
-        try{
-            await updateScreen();
-        } catch{}
-        toggleRefresh(false);
-        
-        if(!JingleJam.isFinished){
-            setTimeout(function(){
-                realTimeLoop();
-                show();
-            }, getNextProcessDate());
-        }
+        setUpdatingLiveSpinner(true);
+        try {
+            await updateModel();
+        } catch { }
+        setUpdatingLiveSpinner(false);
+
+        //Restart the loop
+        setTimeout(function () {
+            tiltifyLoop();
+        }, Math.max(getNextUpdateTime(), JingleJam.minRefreshTime));
     }
 
     function groupBy(list, keyGetter) {
@@ -357,64 +597,32 @@
         return map;
     }
 
-    function getInterpolatedValue(year, date = new Date(JingleJam.model.date)){
-        let items = JingleJam.previous.get(year);
-        let closeLess = null, closeGreater = null;
+    //Get the current model data
+    async function getTiltify() {
+        const response = await fetchWithTimeout(JingleJam.domain + '/api/tiltify');
 
-        for(let item of items){
-            if(!closeLess && item.time <= date)
-                closeLess = item
-            else if(closeLess && item.time <= date && closeLess.time <= item.time)
-                closeLess = item;
-                
-            if(!closeGreater && item.time >= date)
-                closeGreater = item
-            else if(closeGreater && item.time >= date && closeGreater.time >= item.time)
-                closeGreater = item;
-        }
+        let data = await response.json();
 
-        let response = {
-            closeLess,
-            closeGreater
-        }
+        data.date = new Date(data.date);
+        data.event.start = new Date(data.event.start);
+        data.event.end = new Date(data.event.end);
 
-        if(!closeGreater){
-            response.interpolated = {
-                percent: 0,
-                amountDollars: closeLess.amountDollars,
-                amountPounds: closeLess.amountPounds
-            }
-        }
-        else if(!closeLess){
-            response.interpolated = {
-                percent: 1,
-                amountDollars: closeGreater.amountDollars,
-                amountPounds: closeGreater.amountPounds
-            }
-        }
-        else if(closeLess && closeGreater){
-            let percent = (closeGreater.time - closeLess.time === 0) ? 0 : (date - closeLess.time)/(closeGreater.time - closeLess.time);
-            response.interpolated = {
-                percent: percent,
-                amountDollars: (percent * (closeGreater.amountDollars - closeLess.amountDollars)) + closeLess.amountDollars,
-                amountPounds: (percent * (closeGreater.amountPounds - closeLess.amountPounds)) + closeLess.amountPounds
-            }
-        }
-
-        return response;
+        return data;
     }
 
-    async function getCurrent(){
-        try{
-            let response = await fetchWithTimeout(JingleJam.domain + '/api/current', 5000);
-        
+    //Get the current year graph data
+    async function getCurrent() {
+        try {
+            let response = await fetchWithTimeout(JingleJam.domain + '/api/graph/current');
+
             let points = await response.json();
-            
-            for(let point of points){
-                point.time = new Date(Date.parse(point.timestamp + ' ' + JingleJam.year));
+
+            for (let point of points) {
+                point.time = new Date(point.date);
                 point.x = point.time.getTime();
+                point.year = point.time.getFullYear();
             }
-        
+
             JingleJam.current = groupBy(points, x => x.year);
         }
         catch {
@@ -422,19 +630,26 @@
         }
     }
 
-    async function getPrevious(){
-        let points = await (await fetchWithTimeout(JingleJam.domain + '/api/previous', 60000)).json();
-        
-        for(let point of points){
-            point.time = new Date(point.timestamp);
+    //Get the previous year graph data
+    async function getPrevious() {
+        let points = await (await fetchWithTimeout(JingleJam.domain + '/api/graph/previous')).json();
 
-            if(point.time.getMonth() < 10)
-                point.x = point.time.setFullYear(JingleJam.year+1);
+        for (let point of points) {
+            point.time = new Date(point.timestamp + " GMT");
+
+            if (point.time.getMonth() < 10)
+                point.x = point.time.setFullYear(JingleJam.model.event.year + 1);
             else
-                point.x = point.time.setFullYear(JingleJam.year);
+                point.x = point.time.setFullYear(JingleJam.model.event.year);
         }
 
         JingleJam.previous = groupBy(points, x => x.year);
+    }
+
+    function getClientTimezone() {
+        return new Intl.DateTimeFormat('en', {
+            timeZoneName: 'short',
+        }).formatToParts(new Date()).find(part => part.type === 'timeZoneName').value;
     }
 
     const colors = {
@@ -444,21 +659,20 @@
         '2019': '#71f437',
         '2020': '#ff0081',
         '2021': '#6967ff',
-        '2022': '#6ba950'
+        '2022': '#6ba950',
+        '2023': '#d64538'
     }
     let myChart;
-    let minDate = Date.parse('12/01/' + JingleJam.year + ' 17:00');
-    let maxDate = Date.parse('01/01/' + (JingleJam.year+1) + ' 00:00');
 
-    async function createGraph(){
+    async function createGraph() {
         let data = {
             type: 'line',
             labels: new Set(),
             datasets: []
         }
 
-        for(let year of JingleJam.previous){
-            if(year[0] < 2016)
+        for (let year of JingleJam.previous) {
+            if (year[0] < 2016)
                 continue;
 
             year[1].forEach(x => data.labels.add(x.x));
@@ -473,12 +687,19 @@
                 pointHoverRadius: 3,
                 order: 2,
                 borderDash: [2],
-                data: year[1].filter(x => x.time.getMonth() >= 11).map(function(m) { return {x: m.x, y: m[isPounds ? 'amountPounds' : 'amountDollars']}; })
+                data: year[1].filter(x => x.time.getMonth() >= 11).map(function (m) { return { x: m.x, y: m[JingleJam.settings.isPounds ? 'amountPounds' : 'amountDollars'] }; })
             })
         }
-        
-        for(let year of JingleJam.current){
+
+        for (let year of JingleJam.current) {
             year[1].forEach(x => data.labels.add(x.x));
+
+            let currentData =  year[1].map(function (m) { return { x: m.x, y: m[JingleJam.settings.isPounds ? 'p' : 'd'] }; });
+            currentData.push({
+                x: JingleJam.model.date.getTime(),
+                y: JingleJam.settings.isPounds ? JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers : (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) * JingleJam.model.avgConversionRate
+            })
+
             data.datasets.push({
                 label: year[0],
                 showLine: true,
@@ -489,11 +710,11 @@
                 pointRadius: 0,
                 pointHoverRadius: 3,
                 order: 1,
-                data: year[1].map(function(m) { return {x: m.x, y: m[isPounds ? 'amountPounds' : 'amountDollars']}; })
+                data: currentData
             })
         }
 
-        if(myChart){
+        if (myChart) {
             myChart.data = data;
             myChart.update('none');
             return;
@@ -533,10 +754,10 @@
                         },
                         title: {
                             display: true,
-                            text: 'Day (GMT)'
+                            text: `Day (${getClientTimezone()})`
                         },
-                        min: minDate,
-                        max: maxDate,
+                        min: JingleJam.graphDates.minDate,
+                        max: JingleJam.graphDates.maxDate,
                         grid: {
                             color: '#d4d4d4'
                         }
@@ -544,21 +765,21 @@
                     y: {
                         type: 'linear',
                         title: {
-                            display: true,
+                            display: false,
                             text: 'Amount Raised'
                         },
                         ticks: {
                             // Include a dollar sign in the ticks
-                            callback: function(value, index, ticks) {
+                            callback: function (value, index, ticks) {
                                 let tickDiff = ticks[1].value - ticks[0].value;
-                                if(value < 1000000)
-                                    return formatCurrency(value/1000, isPounds ? '£' : '$', 0, false) + 'k'
-                                else if(tickDiff < 10000)
-                                    return formatCurrency(value/1000000, isPounds ? '£' : '$', 3, false) + 'm'
-                                else if(tickDiff < 100000)
-                                    return formatCurrency(value/1000000, isPounds ? '£' : '$', 2, false) + 'm'
+                                if (Math.abs(value) < 1000000)
+                                    return formatCurrency(value / 1000, 0, false) + 'k'
+                                else if (tickDiff < 10000)
+                                    return formatCurrency(value / 1000000, 3, false) + 'm'
+                                else if (tickDiff < 100000)
+                                    return formatCurrency(value / 1000000, 2, false) + 'm'
 
-                                return formatCurrency(value/1000000, isPounds ? '£' : '$', 1, false) + 'm'
+                                return formatCurrency(value / 1000000, 1, false) + 'm'
                             }
                         },
                         grid: {
@@ -568,13 +789,13 @@
                 },
                 plugins: {
                     title: {
-                        display: true,
+                        display: false,
                         text: 'Amount Raised Over Time'
                     },
                     tooltip: {
                         callbacks: {
-                            label: function(tooltipItem, data) {
-                                return ' ' + tooltipItem.dataset.label + ' - ' + formatCurrency(tooltipItem.raw.y, isPounds ? '£' : '$', 0, false) + ' (' + tooltipItem.label + ')';
+                            label: function (tooltipItem, data) {
+                                return ' ' + tooltipItem.dataset.label + ' - ' + formatCurrency(tooltipItem.raw.y, 0, false) + ' (' + tooltipItem.label + ')';
                             }
                         }
                     }
@@ -588,9 +809,9 @@
         min = parseInt(min);
         max = parseInt(max);
 
-        minDate = new Date(min);
-        maxDate = new Date(max);
-        
+        JingleJam.graphDates.minDate = new Date(min);
+        JingleJam.graphDates.maxDate = new Date(max);
+
         myChart.options.scales.x.min = min
         myChart.options.scales.x.max = max
         myChart.update();

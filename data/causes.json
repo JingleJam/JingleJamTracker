@@ -1,0 +1,110 @@
+[
+    {
+      "id": 576,
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/autistica.png",
+      "name": "Autistica",
+      "description": "Creating a Mental Health and Wellbeing Tips Hub for young autistic people.",
+      "url": "https://www.autistica.org.uk/",
+      "donateUrl": "https://jinglejam.tiltify.com/",
+      "overrideDollars": 0
+    },
+    {
+      "id": 575,
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/calm.png",
+      "name": "Campaign Against Living Miserably (CALM)",
+      "description": "Providing urgent mental health services for young people at risk of suicide.",
+      "url": "https://www.thecalmzone.net/",
+      "donateUrl": "https://jinglejam.tiltify.com/",
+      "overrideDollars": 0
+    },
+    {
+      "id": 564,
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/comic-relief.png",
+      "name": "Comic Relief",
+      "description": "Tackling food insecurity by providing 920,000 meals across the UK in winter 2023/24.",
+      "url": "https://www.comicrelief.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/",
+      "overrideDollars": 0
+    },
+    {
+      "id": 565,
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/coppafeel.png",
+      "name": "Coppafeel",
+      "description": "Raising awareness of the signs and symptoms of breast cancer amongst young people, and driving relevancy amongst under represented groups that it can affect ANY body, regardless of age, gender or race.",
+      "url": "https://coppafeel.org/",
+      "donateUrl": "https://jinglejam.tiltify.com/",
+      "overrideDollars": 0
+    },
+    {
+      "id": 567,
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/galop.png",
+      "name": "Galop",
+      "description": "Unlocking a better future for LGBT+ youth with a national abuse and violence service.",
+      "url": "https://galop.org.uk/",
+      "donateUrl": "https://jinglejam.tiltify.com/",
+      "overrideDollars": 0
+    },
+    {
+      "id": 568,
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/movember.png",
+      "name": "Movember",
+      "description": "Working towards a future where men and their communities live happier and longer lives, by solving some of the most complex issues facing men today such as prostate and testicular cancer.",
+      "url": "https://uk.movember.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/",
+      "overrideDollars": 0
+    },
+    {
+      "id": 569,
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/hello-world.png",
+      "name": "Hello World",
+      "description": "Closing the digital divide for marginalised children and young people globally.",
+      "url": "https://www.projecthelloworld.org/",
+      "donateUrl": "https://jinglejam.tiltify.com/",
+      "overrideDollars": 0
+    },
+    {
+      "id": 570,
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/justdiggit.png",
+      "name": "Justdiggit",
+      "description": "Regreening African landscapes by using indigenous techniques, (mobile) technology and communication to inspire farmers to restore their land.",
+      "url": "https://justdiggit.org/",
+      "donateUrl": "https://jinglejam.tiltify.com/",
+      "overrideDollars": 0
+    },
+    {
+      "id": 571,
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/rnib.png",
+      "name": "Royal National Institute of Blind People (RNIB)",
+      "description": "Transforming the lives of children and young people with vision impairment through education, social support, and the joy of accessible video-gaming.",
+      "url": "https://www.rnib.org.uk/",
+      "donateUrl": "https://jinglejam.tiltify.com/",
+      "overrideDollars": 0
+    },
+    {
+      "id": 572,
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/war-child.png",
+      "name": "War Child",
+      "description": "To protect, educate, and advocate for the rights of children impacted by the ongoing conflict in Ukraine.",
+      "url": "https://www.warchild.org.uk/",
+      "donateUrl": "https://jinglejam.tiltify.com/",
+      "overrideDollars": 0
+    },
+    {
+      "id": 573,
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/grand-appeal.png",
+      "name": "Wallace & Gromit's Grand Appeal",
+      "description": "The creation of a unique facility for Bristol Children’s Hospital which will be named the Jingle Jam Building.",
+      "url": "https://www.grandappeal.org.uk/",
+      "donateUrl": "https://jinglejam.tiltify.com/",
+      "overrideDollars": 0
+    },
+    {
+      "id": 574,
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/whale.png",
+      "name": "Whale and Dolphin Conservation",
+      "description": "Helping to end whaling and hunting for good so that whales and dolphins can keep performing their vital role in the ocean to help us fight climate and biodiversity breakdown.",
+      "url": "https://uk.whales.org/",
+      "donateUrl": "https://jinglejam.tiltify.com/",
+      "overrideDollars": 0
+    }
+  ]
