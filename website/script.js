@@ -38,10 +38,10 @@
         await tiltifyLoop();
 
         afterLoadSetup();
-        hideLoader();
 
         await getPrevious();
         await graphLoop(true);
+        hideLoader();
 
         //Start the timed loop
         timedLoop();
