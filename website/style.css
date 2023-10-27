@@ -255,7 +255,7 @@
 
 #embedContainer .ui.segment.stat {
     min-width: 350px;
-    max-width: 350px;
+    max-width: 330px;
     height: 140px;
     margin: 0px;
 }
@@ -335,6 +335,10 @@
         margin: 16px 10px 5px 10px !important;
     }
 
+    #embedContainer .ui.segment.stat {
+        min-width: 100%;
+    }
+
     #embedContainer .ui.segment.stat .value {
         font-weight: bold;
         font-size: 2.7em;
@@ -350,6 +354,12 @@
 
     #embedContainer .change-counter-div .change-counter {
         margin-left: 230px !important;
+    }
+}
+
+@media screen and (max-width: 450px) {
+    div[data-status="countdown"] #mainCounter {
+        font-size: 2.1em !important;
     }
 }
 

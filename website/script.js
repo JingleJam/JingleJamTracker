@@ -112,6 +112,7 @@
         //Time Left Calculations
         JingleJam.timeLeft = getTimeLeft();
         if (!JingleJam.isWaiting() || JingleJam.timeLeft.totalTime < 0) {
+            $('[data-status]').attr('data-status', 'live')
             $('#mainCounterHeader').text('Raised For ' + JingleJam.model.event.year);
             if ($('#mainCounter').text().includes('h')) {
                 updateGraph();
@@ -119,8 +120,9 @@
             }
         }
         else {
+            $('[data-status]').attr('data-status', 'countdown')
             $('#mainCounter').html(JingleJam.timeLeft.days + "d " + JingleJam.timeLeft.hours + "h " + JingleJam.timeLeft.minutes + "m " + JingleJam.timeLeft.seconds + "s ");
-            $('#mainCounterHeader').text('Countdown')
+            $('#mainCounterHeader').text('Countdown to 2023')
         }
     }
 
