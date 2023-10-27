@@ -357,8 +357,8 @@
     //Calculates the increment amount for a animated number
     function incAount(x, diff) {
         let mean = 100;
-        let std = 25;
-        return Math.max((1.5433 * calculateNormalDistribution(x, mean, std)) * diff, .03)
+        let std = 35;
+        return Math.max((1.648 * calculateNormalDistribution(x, mean, std)) * diff, .03)
     }
 
     //Reset Animations
@@ -632,7 +632,7 @@
 
     //Get the previous year graph data
     async function getPrevious() {
-        let points = await (await fetchWithTimeout(JingleJam.domain + '/api/previous')).json();
+        let points = await (await fetchWithTimeout(JingleJam.domain + '/api/graph/previous')).json();
 
         for (let point of points) {
             point.time = new Date(point.timestamp + " GMT");

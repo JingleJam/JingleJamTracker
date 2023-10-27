@@ -1,5 +1,5 @@
 import {
-	roundAmount,
+  roundAmount,
   sortByKey,
   getRandomFloat
 } from "./utils";
@@ -311,10 +311,10 @@ async function getCampaigns(fundraiserPublicId, offset) {
   return data;
 }
 
-const debugStartDate = new Date(2023, 9, 14, 17, 19, 40)
+const debugStartDate = new Date(2023, 9, 17, 20, 20, 10)
 const debugEndDate = new Date(2023, 10, 13, 22, 10, 0)
 
-async function getDebugData(env){
+async function getDebugData(env) {
   let causes = JSON.parse(await env.JINGLE_JAM_DATA.get('causes'));
   let defaultConversionRate = parseFloat(await env.JINGLE_JAM_DATA.get('conversion-rate'));
   let summary = JSON.parse(await env.JINGLE_JAM_DATA.get('summary'));
@@ -324,17 +324,17 @@ async function getDebugData(env){
   defaultResponse.event.start = debugStartDate;
   defaultResponse.event.end = debugEndDate;
 
-  let amount = 1 * Math.max(((new Date().getTime() - debugStartDate.getTime())/3.5913 % 5000000), 0);
+  let amount = 1 * Math.max(((new Date().getTime() - debugStartDate.getTime()) / 3.5913 % 5000000), 0);
 
-  defaultResponse.raised.yogscast = amount*.8;
-  defaultResponse.raised.fundraisers = amount*.2;
+  defaultResponse.raised.yogscast = amount * .8;
+  defaultResponse.raised.fundraisers = amount * .2;
 
-  defaultResponse.collections.redeemed = parseInt(amount/40.84);
+  defaultResponse.collections.redeemed = parseInt(amount / 40.84);
   defaultResponse.donations.count = defaultResponse.collections.redeemed + 945;
 
-  for(let cause of defaultResponse.causes){
-    cause.raised.yogscast = amount/defaultResponse.causes.length * .8;
-    cause.raised.fundraisers = amount/defaultResponse.causes.length * .2;
+  for (let cause of defaultResponse.causes) {
+    cause.raised.yogscast = amount / defaultResponse.causes.length * .8;
+    cause.raised.fundraisers = amount / defaultResponse.causes.length * .2;
   }
 
   return defaultResponse;
@@ -347,7 +347,7 @@ async function getTiltifyData(env) {
   env.COLLECTIONS_AVAILABLE = parseInt(env.COLLECTIONS_AVAILABLE);
   env.YEAR = parseInt(env.YEAR);
 
-  if(env.ENABLE_DEBUG)
+  if (env.ENABLE_DEBUG)
     return await getDebugData(env);
 
   return await getSummaryData(env);

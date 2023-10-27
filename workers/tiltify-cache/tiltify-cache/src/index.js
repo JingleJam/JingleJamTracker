@@ -9,11 +9,13 @@ import {
 
 const UPDATE_TIME = 		10 * 1000; 	//Refresh cache every 10 seconds
 const UPDATE_TIME_GRAPH = 	60 * 1000; 	//Refresh cache every 60 seconds
-const UPDATE_TIME_FREQ = 	1; 		//Refresh graph every 10 minutes
+const UPDATE_TIME_FREQ = 	10; 		//Refresh graph every 10 minutes
 
 const DO_CACHE_KEY = 		'tiltify-cache'; 		//Key to store the cache
 const CACHE_NAME = 			'tiltify-cache-2023'; 	//Cache Object Name
-const TILTIFY_API_PATH = 	'/api/tiltify'; 		//API Path for the Tiltify Cache
+
+const TILTIFY_API_PATH = 		'/api/tiltify'; 				//API Path for the Tiltify Cache
+const TILTIFY_CLEAR_API_PATH = 	'/api/tiltifyClearData'; 		//API Path for clearing the Tiltify Cache
 
 // Tiltify Data Object
 export class TiltifyData {
@@ -51,6 +53,15 @@ export class TiltifyData {
 
 			return new Response(JSON.stringify(data));
 		}
+		//Clear the current Tiltify data
+		else if (url.pathname === TILTIFY_CLEAR_API_PATH){
+			//Get the default object
+			let data = await getTiltifyData(this.env);
+
+			await this.state.storage.put(DO_CACHE_KEY, data);
+
+			return new Response("Clear Success", { status: 200 });
+		}
 
 		//Invalid API Endpoint
 		return new Response("Not found", { status: 404 });
@@ -72,8 +83,11 @@ export class TiltifyData {
 		let endTime = new Date();
 
 		let dataToStore = newData;
+
+		let isLive = newData.event.start <= Date.now() && newData.event.end >= Date.now();
+
 		//If previous cached data exists, check if the new data has a higher values. If not, keep the old data and update the date
-		if(data && (data.raised.yogscast > newData.raised.yogscast || data.raised.fundraisers > newData.raised.fundraisers)){
+		if(data && isLive && (data.raised.yogscast > newData.raised.yogscast || data.raised.fundraisers > newData.raised.fundraisers)){
 			data.date = newData.date;
 			dataToStore = data;
 		}
@@ -103,7 +117,15 @@ export class GraphData {
 		//Get the current graph data
 		if (url.pathname === '/api/graph/current') {
 			//Get the current cached value
-			let data = await this.state.storage.get(DO_CACHE_KEY) || [];
+			let data = await this.state.storage.get(DO_CACHE_KEY) || null;
+
+			//If the data has not been cached yet, get the latest data from the Tiltify cache and create a default object of $0 for the start of the event
+			if(!data){
+				//Get the default object
+				data = await this.defaultObject();
+
+				await this.state.storage.put(DO_CACHE_KEY, data);
+			}
 
 			//Start the alarm if it is currently not started
 			let currentAlarm = await this.storage.getAlarm();
@@ -115,7 +137,10 @@ export class GraphData {
 		}
 		//Clear the current graph data
 		else if (url.pathname === '/api/graph/currentClearData'){
-			await this.state.storage.put(DO_CACHE_KEY, []);
+			//Get the default object
+			let data = await this.defaultObject();
+
+			await this.state.storage.put(DO_CACHE_KEY, data);
 
 			return new Response("Clear Success", { status: 200 });
 		}
@@ -133,7 +158,7 @@ export class GraphData {
 
 		//Get the cached graph data and update it
 		let startTime = new Date();
-		let graphData = await this.updateGraph();
+		let graphData = await this.getLatestGraphData();
 		let endTime = new Date();
 
 		console.log(`Finished Fetching, caching result graph data... (${endTime - startTime}ms)`);
@@ -143,15 +168,12 @@ export class GraphData {
 			await this.state.storage.put(DO_CACHE_KEY, graphData);
 	}
 
-	async updateGraph() {
+	async getLatestGraphData() {
 		//Get the latest data from the Tiltify cache
-		let id = this.env.TILTIFY_DATA.idFromName(CACHE_NAME);
-		let obj = this.env.TILTIFY_DATA.get(id);
-		let resp = await obj.fetch("http://127.0.0.1" + TILTIFY_API_PATH);
-		let tiltifyData = await resp.json();
+		let tiltifyData = await this.getTiltifyData();
 
-		//If the minutes are not a multiple of the update frequency, return null
-		if(new Date(tiltifyData.date).getMinutes() % UPDATE_TIME_FREQ !== 0)
+		//If UPDATE_TIME_FREQ amount of minutes has not passed, don't add the point
+		if(!tiltifyData || new Date(tiltifyData.date).getMinutes() % UPDATE_TIME_FREQ !== 0)
 			return null;
 
 		let date = new Date(tiltifyData.date);
@@ -167,9 +189,11 @@ export class GraphData {
 		try {
 			graphData = await this.state.storage.get(DO_CACHE_KEY);
 		}
-		catch (e){
-			graphData = [];
-		}
+		catch (e){}
+
+		//If the graph data is empty, create a default object with a start value of $0
+		if(graphData.length === 0)
+			graphData = await this.defaultObject(tiltifyData);
 
 		//Add the latest data to the object
 		let pounds = roundAmount(tiltifyData.raised.yogscast + tiltifyData.raised.fundraisers);
@@ -180,6 +204,33 @@ export class GraphData {
 		})
 
 		return graphData;
+	}
+
+	//Get the default cached object
+	async defaultObject(data){
+		//If data is not specified, set it to the latest data from the Tiltify cache
+		if(!data)
+			data = await this.getTiltifyData();
+
+		//If the tiltify data is null, return a default object
+		if(!data)
+			return [];
+
+		return [{
+			"date": new Date(data.event.start).getTime(),
+			"p": 0,
+			"d": 0
+		}]
+	}
+
+	//Get the latest data from the Tiltify cache
+	async getTiltifyData(){
+		let id = this.env.TILTIFY_DATA.idFromName(CACHE_NAME);
+		let obj = this.env.TILTIFY_DATA.get(id);
+		let resp = await obj.fetch("http://127.0.0.1" + TILTIFY_API_PATH);
+		let tiltifyData = await resp.json();
+
+		return tiltifyData;
 	}
 }
 
