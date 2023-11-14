@@ -3,7 +3,6 @@
     "version": "1.0.0",
     "description": "JingleJam Tracker Site & API",
     "main": "src/index.js",
-    "type": "module",
     "private": true,
     "scripts": {
       "dev": "wrangler dev",
