@@ -3,5 +3,3 @@ jingle-jam-tracker/node_modules/*
 .wrangler
 node_modules
 .dev.vars
-package-lock.jsons
-package.json
