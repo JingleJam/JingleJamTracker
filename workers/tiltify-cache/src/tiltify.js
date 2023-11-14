@@ -17,13 +17,7 @@ const maxDescriptionLength = 1024;
 //End of 2022 yogscast dollar amount = 3368996.43
 
 async function getSummaryData(env) {
-  let tiltifyHeader = {
-    headers: {
-      "Authorization": "Bearer " + env.TILTIFY_API_TOKEN,
-      "Content-Type": "application/json"
-    }
-  };
-
+  
   let defaultResponse = getDefaultResponse(env);
   var campaignsComputed = [];
 

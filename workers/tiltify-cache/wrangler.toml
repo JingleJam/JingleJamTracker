@@ -1,0 +1,59 @@
+name = "tiltify-cache"
+main = "src/index.js"
+compatibility_date = "2023-08-14"
+workers_dev = true
+kv_namespaces = [
+  { binding = "JINGLE_JAM_DATA", id = "9d285e05684c4887acb7731de7a41a4e", preview_id = "6a08d74af525475baefa19a93f0ba136" }
+]
+
+[durable_objects]
+bindings = [{name = "TILTIFY_DATA", class_name = "TiltifyData"}, {name = "GRAPH_DATA", class_name = "GraphData"}]
+compatibility_flags = ["durable_object_alarms"]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["TiltifyData"]
+
+[[migrations]]
+tag = "v2"
+new_classes = ["GraphData"]
+
+[vars]
+YEAR=2023
+COLLECTIONS_AVAILABLE=100000
+DOLLAR_OFFSET=0
+DONATION_DIFFERENCE=0
+CAUSE_SLUG="jingle-jam"
+FUNDRAISER_SLUG="jingle-jam-2023"
+FUNDRAISER_PUBLIC_ID="8601c634-c8a4-4a90-ac64-da037c683b46"
+YOGSCAST_CAMPAIGN_SLUG="jingle-jam-2023"
+YOGSCAST_USERNAME_SLUG="yogscast"
+ENABLE_REFRESH=true
+ENABLE_DEBUG=false
+
+
+
+
+
+[env.development]
+kv_namespaces = [
+  { binding = "JINGLE_JAM_DATA", id = "c9634f49deeb4618b3c3f1980f777f7a", preview_id = "6a08d74af525475baefa19a93f0ba136" }
+]
+
+[env.development.durable_objects]
+bindings = [{name = "TILTIFY_DATA", class_name = "TiltifyData"}, {name = "GRAPH_DATA", class_name = "GraphData"}]
+compatibility_flags = ["durable_object_alarms"]
+
+[env.development.vars]
+YEAR=2023
+COLLECTIONS_AVAILABLE=100000
+DOLLAR_OFFSET=36023.96
+DONATION_DIFFERENCE=6787
+CAUSE_SLUG="jingle-jam"
+FUNDRAISER_SLUG="jingle-jam-2022"
+FUNDRAISER_PUBLIC_ID="50f4c6e9-3879-4dbf-bbbe-5f804bbb82d6"
+YOGSCAST_CAMPAIGN_SLUG="jingle-jam-2022"
+YOGSCAST_USERNAME_SLUG="yogscast"
+ENABLE_REFRESH=false
+ENABLE_DEBUG=false
+

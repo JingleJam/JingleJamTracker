@@ -1,7 +1,4 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
         {
@@ -17,7 +14,7 @@
             "name": "Debug API",
             "type": "f5anything",
             "request": "launch",
-            "command": "cd ${workspaceFolder}/workers/tiltify-cache/tiltify-cache/ ; wrangler dev --name tiltify-cache",
+            "command": "cd ${workspaceFolder}/workers/tiltify-cache/ ; wrangler dev --name tiltify-cache",
             "terminalName": "API",
             "terminalIndex": 2,
             "showTerminal": true
@@ -26,25 +23,7 @@
             "name": "Add Local KV's",
             "type": "f5anything",
             "request": "launch",
-            "command": "wrangler kv:bulk put ${workspaceFolder}/workers/tiltify-cache/tiltify-cache/kv_setup.json --namespace-id=6a08d74af525475baefa19a93f0ba136 --preview --local ; cd ${workspaceFolder}/workers/tiltify-cache/tiltify-cache/ ; wrangler kv:bulk put ./kv_setup.json --namespace-id=6a08d74af525475baefa19a93f0ba136 --preview --local",
-            "terminalName": "Other",
-            "terminalIndex": 0,
-            "showTerminal": true
-        },
-        {
-            "name": "Deploy DEV API",
-            "type": "f5anything",
-            "request": "launch",
-            "command": "cd ${workspaceFolder}/workers/tiltify-cache/tiltify-cache/ ; wrangler deploy --env=development",
-            "terminalName": "Other",
-            "terminalIndex": 0,
-            "showTerminal": true
-        },
-        {
-            "name": "Deploy Production API",
-            "type": "f5anything",
-            "request": "launch",
-            "command": "cd ${workspaceFolder}/workers/tiltify-cache/tiltify-cache/ ; wrangler deploy",
+            "command": "wrangler kv:bulk put ${workspaceFolder}/workers/tiltify-cache/kv_setup.json --namespace-id=6a08d74af525475baefa19a93f0ba136 --preview --local ; cd ${workspaceFolder}/workers/tiltify-cache/ ; wrangler kv:bulk put ./kv_setup.json --namespace-id=6a08d74af525475baefa19a93f0ba136 --preview --local",
             "terminalName": "Other",
             "terminalIndex": 0,
             "showTerminal": true
