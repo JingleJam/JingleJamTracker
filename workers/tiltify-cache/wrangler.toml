@@ -1,5 +1,6 @@
 name = "tiltify-cache"
 main = "src/index.js"
+account_id = "b5ef135c0a2feed17e7ba1c44698c5f4"
 compatibility_date = "2023-08-14"
 workers_dev = true
 kv_namespaces = [
