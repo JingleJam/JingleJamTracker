@@ -1,0 +1,17 @@
+{
+    "name": "jingle-jam-tracker",
+    "version": "1.0.0",
+    "description": "JingleJam Tracker Site & API",
+    "main": "src/index.js",
+    "private": true,
+    "scripts": {
+      "dev": "wrangler dev",
+      "deploy:production": "wrangler deploy",
+      "deploy:development": "wrangler deploy -e development"
+    },
+    "dependencies": {
+    },
+    "devDependencies": {
+      "wrangler": "^3.15.0"
+    }
+  }

@@ -1,0 +1,30 @@
+name: Deploy to DEV
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  deploy:
+    name: Deploy to DEV
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+            node-version: '20'
+
+      - name: Install dependencies
+        working-directory: ./workers/tiltify-cache
+        run: npm install
+
+      - name: Publish to Development
+        run: npm run deploy:development
+        working-directory: ./workers/tiltify-cache
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

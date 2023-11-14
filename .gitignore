@@ -1,9 +1,5 @@
 jingle-jam-tracker/node_modules/*
 .env
-wrangler.toml
 .wrangler
 node_modules
 .dev.vars
-jinglejamcouk
-package-lock.json
-package.json

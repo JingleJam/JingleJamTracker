@@ -1,21 +1,16 @@
 
-import {
-	getTiltifyData
-} from "./tiltify";
+import { getTiltifyData } from "./tiltify";
+import { roundAmount } from "./utils";
 
-import {
-	roundAmount
-} from "./utils";
+const UPDATE_TIME = 10 * 1000; //Refresh cache every 10 seconds
+const UPDATE_TIME_GRAPH = 60 * 1000; //Refresh cache every 60 seconds
+const UPDATE_TIME_FREQ = 10; //Refresh graph every 10 minutes
 
-const UPDATE_TIME = 		10 * 1000; 	//Refresh cache every 10 seconds
-const UPDATE_TIME_GRAPH = 	60 * 1000; 	//Refresh cache every 60 seconds
-const UPDATE_TIME_FREQ = 	10; 		//Refresh graph every 10 minutes
+const DO_CACHE_KEY = 'tiltify-cache'; //Key to store the cache
+const CACHE_NAME = 'tiltify-cache-2023'; //Cache Object Name
 
-const DO_CACHE_KEY = 		'tiltify-cache'; 		//Key to store the cache
-const CACHE_NAME = 			'tiltify-cache-2023'; 	//Cache Object Name
-
-const TILTIFY_API_PATH = 		'/api/tiltify'; 				//API Path for the Tiltify Cache
-const TILTIFY_CLEAR_API_PATH = 	'/api/tiltifyClearData'; 		//API Path for clearing the Tiltify Cache
+const TILTIFY_API_PATH = '/api/tiltify'; //API Path for the Tiltify Cache
+const TILTIFY_CLEAR_API_PATH = '/api/tiltifyClearData'; //API Path for clearing the Tiltify Cache
 
 // Tiltify Data Object
 export class TiltifyData {

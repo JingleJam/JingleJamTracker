@@ -17,13 +17,7 @@ const maxDescriptionLength = 1024;
 //End of 2022 yogscast dollar amount = 3368996.43
 
 async function getSummaryData(env) {
-  let tiltifyHeader = {
-    headers: {
-      "Authorization": "Bearer " + env.TILTIFY_API_TOKEN,
-      "Content-Type": "application/json"
-    }
-  };
-
+  
   let defaultResponse = getDefaultResponse(env);
   var campaignsComputed = [];
 
@@ -55,9 +49,9 @@ async function getSummaryData(env) {
         SUMMARY DATA
     */
     //Gets donation amounts
-    let totalPounds = parseFloat(eventData.fundraisingEvent.totalAmountRaised.value);
-    let yogscastPounds = parseFloat(yogscastCampaign.totalAmountRaised.value);
-    let yogscastDollars = roundAmount(parseFloat(yogscastCampaign.user.totalAmountRaised.value) - env.DOLLAR_OFFSET);
+    let totalPounds = parseFloat(eventData.fundraisingEvent?.totalAmountRaised.value ?? 0);
+    let yogscastPounds = parseFloat(yogscastCampaign?.totalAmountRaised.value ?? 0);
+    let yogscastDollars = roundAmount(parseFloat(yogscastCampaign?.user.totalAmountRaised.value ?? 0) - env.DOLLAR_OFFSET);
     let fundraiserPounds = roundAmount(totalPounds - yogscastPounds);
 
     defaultResponse.raised.yogscast = yogscastPounds;
@@ -70,10 +64,15 @@ async function getSummaryData(env) {
       defaultResponse.avgConversionRate = roundAmount(division, 10);
 
     //Gets collections counts
-    let rewards = (eventData.fundraisingEvent.rewards && eventData.fundraisingEvent.rewards.length > 0) ? eventData.fundraisingEvent.rewards : yogscastCampaign.rewards;
-    if (rewards && rewards.length > 0) {
-      defaultResponse.collections.total = rewards[0].quantity;
-      defaultResponse.collections.redeemed = defaultResponse.collections.total - rewards[0].remaining;
+    try {
+      let rewards = (eventData.fundraisingEvent.rewards && eventData.fundraisingEvent.rewards.length > 0) ? eventData.fundraisingEvent.rewards : yogscastCampaign.rewards;
+      if (rewards && rewards.length > 0) {
+        defaultResponse.collections.total = rewards[0].quantity;
+        defaultResponse.collections.redeemed = defaultResponse.collections.total - rewards[0].remaining;
+      }
+    } catch (e) {
+      defaultResponse.collections.total = env.COLLECTIONS_AVAILABLE;
+      defaultResponse.collections.redeemed = 0;
     }
 
     defaultResponse.donations.count = defaultResponse.collections.redeemed + env.DONATION_DIFFERENCE;
@@ -123,14 +122,15 @@ async function getSummaryData(env) {
         // Go through each campaign from the lookup and combine with the charity object
         for (let campaign of campaigns) {
           //Get needed data from the lookup
-          let region = campaign.node.region;
-          let regionId = region ? region.id : 0;
-          let userSlug = campaign.node.user.slug;
-          let isYogscast = userSlug === env.YOGSCAST_USERNAME_SLUG;
+          let regionId = campaign.node.region?.id ?? 0;
+          let allCharitiesRegionId = 566;
+          let isYogscast = campaign.node.user.slug === env.YOGSCAST_USERNAME_SLUG;
+          let isAllCharities = !regionId || regionId === allCharitiesRegionId;
 
           let amount = parseFloat(campaign.node.totalAmountRaised.value);
 
-          if (isYogscast) {
+          //If the charity is for all charities, divide it by the number of charities
+          if (isAllCharities) {
             amount /= defaultResponse.causes.length;
           }
 
@@ -138,7 +138,7 @@ async function getSummaryData(env) {
 
           //Find the associated charity object
           for (let charityObject of defaultResponse.causes) {
-            if (charityObject.id == regionId || isYogscast) {
+            if (charityObject.id == regionId || isAllCharities) {
               //If a yogscast charity
               if (isYogscast)
                 charityObject.raised.yogscast += amount;

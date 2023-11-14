@@ -1,3 +1,0 @@
-wrangler kv:bulk put .\kv_setup.json --namespace-id=6a08d74af525475baefa19a93f0ba136 --preview --local
-
-wrangler kv:bulk put .\workers\tiltify-cache\tiltify-cache\kv_setup.json --namespace-id=6a08d74af525475baefa19a93f0ba136 --preview --local
