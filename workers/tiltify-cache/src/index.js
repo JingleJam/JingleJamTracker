@@ -1,5 +1,5 @@
 
-import { getTiltifyData } from "./tiltify";
+import { getLatestData } from "./api";
 import { roundAmount } from "./utils";
 
 const UPDATE_TIME = 10 * 1000; //Refresh cache every 10 seconds
@@ -40,7 +40,7 @@ export class TiltifyData {
 
 			//If the cached value is null, fetch the latest data and save it to the cache
 			if (!data) {
-				data = await getTiltifyData(this.env);
+				data = await getLatestData(this.env);
 
 				if (this.env.ENABLE_REFRESH)
 					await this.state.storage.put(DO_CACHE_KEY, data);
@@ -51,7 +51,7 @@ export class TiltifyData {
 		//Clear the current Tiltify data
 		else if (url.pathname === TILTIFY_CLEAR_API_PATH){
 			//Get the default object
-			let data = await getTiltifyData(this.env);
+			let data = await getLatestData(this.env);
 
 			await this.state.storage.put(DO_CACHE_KEY, data);
 
@@ -74,7 +74,7 @@ export class TiltifyData {
 
 		//Fetch the latest Tiltify data and cache it
 		let startTime = new Date();
-		let newData = await getTiltifyData(this.env);
+		let newData = await getLatestData(this.env);
 		let endTime = new Date();
 
 		let dataToStore = newData;
@@ -165,7 +165,7 @@ export class GraphData {
 
 	async getLatestGraphData() {
 		//Get the latest data from the Tiltify cache
-		let tiltifyData = await this.getTiltifyData();
+		let tiltifyData = await this.getLatestData();
 
 		//If UPDATE_TIME_FREQ amount of minutes has not passed, don't add the point
 		if(!tiltifyData || new Date(tiltifyData.date).getMinutes() % UPDATE_TIME_FREQ !== 0)
@@ -205,7 +205,7 @@ export class GraphData {
 	async defaultObject(data){
 		//If data is not specified, set it to the latest data from the Tiltify cache
 		if(!data)
-			data = await this.getTiltifyData();
+			data = await this.getLatestData();
 
 		//If the tiltify data is null, return a default object
 		if(!data)
@@ -219,7 +219,7 @@ export class GraphData {
 	}
 
 	//Get the latest data from the Tiltify cache
-	async getTiltifyData(){
+	async getLatestData(){
 		let id = this.env.TILTIFY_DATA.idFromName(CACHE_NAME);
 		let obj = this.env.TILTIFY_DATA.get(id);
 		let resp = await obj.fetch("http://127.0.0.1" + TILTIFY_API_PATH);
