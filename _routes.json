@@ -1,5 +1,5 @@
 {
     "version": 1,
-    "include": ["/api/previous", "/api/current"],
+    "include": ["/api/tiltify", "/api/graph/current", "/api/graph/previous"],
     "exclude": []
  }
