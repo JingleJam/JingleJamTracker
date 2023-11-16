@@ -19,10 +19,13 @@ new_classes = ["TiltifyData"]
 tag = "v2"
 new_classes = ["GraphData"]
 
+[placement]
+mode = "smart"
+
 [vars]
 YEAR=2023
 COLLECTIONS_AVAILABLE=100000
-DOLLAR_OFFSET=0
+DOLLAR_OFFSET=3371741.16
 DONATION_DIFFERENCE=0
 CAUSE_SLUG="jingle-jam"
 FUNDRAISER_SLUG="jingle-jam-2023"
