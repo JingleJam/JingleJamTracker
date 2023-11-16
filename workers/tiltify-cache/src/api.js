@@ -25,7 +25,7 @@ const allCharitiesRegionId = 566;
 //Pre-2023 Jingle Jam dollar amount = 3371741.16
 
 async function getSummaryData(env) {
-  
+
   let apiResponse = getDefaultResponse(env);
   var campaignsComputed = [];
 
