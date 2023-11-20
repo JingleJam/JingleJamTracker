@@ -10,6 +10,8 @@ const CACHE_NAME = 'tiltify-cache-2023'; //Cache Object Name
 
 const TILTIFY_API_PATH = '/api/tiltify'; //API Path for the Tiltify Cache
 const TILTIFY_CLEAR_API_PATH = '/api/tiltifyClearData'; //API Path for clearing the Tiltify Cache
+const GRAPH_API_PATH = '/api/graph/current'; //API Path for the Graph Data
+const GRAPH_CLEAR_API_PATH = '/api/graph/currentClearData'; //API Path for clearing the Graph Data
 
 // Tiltify Data Object
 export class TiltifyData {
@@ -109,7 +111,7 @@ export class GraphData {
 		console.log('Called ' + url.pathname);
 
 		//Get the current graph data
-		if (url.pathname === '/api/graph/current') {
+		if (url.pathname === GRAPH_API_PATH) {
 			//Get the current cached value
 			let data = await this.state.storage.get(DO_CACHE_KEY) || null;
 
@@ -130,7 +132,7 @@ export class GraphData {
 			return new Response(JSON.stringify(data));
 		}
 		//Clear the current graph data
-		else if (url.pathname === '/api/graph/currentClearData'){
+		else if (url.pathname === GRAPH_CLEAR_API_PATH){
 			//Get the default object
 			let data = await this.defaultObject();
 
