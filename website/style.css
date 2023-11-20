@@ -46,7 +46,7 @@
     margin-right: 20px;
 }
 
-#updatingRealTime .ui.loader {
+#embedContainer #updatingRealTime .ui.loader {
     position: relative;
     left: 0;
     display: inline-block;
@@ -72,6 +72,11 @@
 #embedContainer .stat-row {
     height: 600px;
     width: 100%;
+}
+
+#embedContainer .year-raised {
+    font-feature-settings: 'tnum';
+    letter-spacing: -1px;
 }
 
 #embedContainer #dateRange {
