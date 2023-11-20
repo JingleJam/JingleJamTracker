@@ -23,7 +23,7 @@ jobs:
         working-directory: ./workers/tiltify-cache
         run: npm install
 
-      - name: Publish to Production
+      - name: Publish Worker to Production
         run: npm run deploy:production
         working-directory: ./workers/tiltify-cache
         env:
