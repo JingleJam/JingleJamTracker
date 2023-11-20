@@ -2,7 +2,6 @@
 import { getLatestData } from "./api";
 import { roundAmount } from "./utils";
 
-const UPDATE_TIME = 10 * 1000; //Refresh cache every 10 seconds
 const UPDATE_TIME_GRAPH = 60 * 1000; //Refresh cache every 60 seconds
 const UPDATE_TIME_FREQ = 10; //Refresh graph every 10 minutes
 
@@ -35,7 +34,7 @@ export class TiltifyData {
 			//Start the alarm if it is currently not started
 			let currentAlarm = await this.storage.getAlarm();
 			if (currentAlarm == null && this.env.ENABLE_REFRESH) {
-				this.storage.setAlarm(Date.now() + UPDATE_TIME);
+				this.storage.setAlarm(Date.now() + (this.env.REFRESH_TIME * 1000));
 			}
 
 			//If the cached value is null, fetch the latest data and save it to the cache
@@ -65,7 +64,7 @@ export class TiltifyData {
 	async alarm() {
 		//Enable the alarm again
 		if (this.env.ENABLE_REFRESH)
-			this.storage.setAlarm(Date.now() + UPDATE_TIME);
+			this.storage.setAlarm(Date.now() + (this.env.REFRESH_TIME * 1000));
 
 		console.log('Alarm Called, fetching latest Tiltify data...');
 
