@@ -2,7 +2,6 @@
 import { getLatestData } from "./api";
 import { roundAmount } from "./utils";
 
-const UPDATE_TIME = 10 * 1000; //Refresh cache every 10 seconds
 const UPDATE_TIME_GRAPH = 60 * 1000; //Refresh cache every 60 seconds
 const UPDATE_TIME_FREQ = 10; //Refresh graph every 10 minutes
 
@@ -11,6 +10,8 @@ const CACHE_NAME = 'tiltify-cache-2023'; //Cache Object Name
 
 const TILTIFY_API_PATH = '/api/tiltify'; //API Path for the Tiltify Cache
 const TILTIFY_CLEAR_API_PATH = '/api/tiltifyClearData'; //API Path for clearing the Tiltify Cache
+const GRAPH_API_PATH = '/api/graph/current'; //API Path for the Graph Data
+const GRAPH_CLEAR_API_PATH = '/api/graph/currentClearData'; //API Path for clearing the Graph Data
 
 // Tiltify Data Object
 export class TiltifyData {
@@ -35,7 +36,7 @@ export class TiltifyData {
 			//Start the alarm if it is currently not started
 			let currentAlarm = await this.storage.getAlarm();
 			if (currentAlarm == null && this.env.ENABLE_REFRESH) {
-				this.storage.setAlarm(Date.now() + UPDATE_TIME);
+				this.storage.setAlarm(Date.now() + (this.env.REFRESH_TIME * 1000));
 			}
 
 			//If the cached value is null, fetch the latest data and save it to the cache
@@ -65,7 +66,7 @@ export class TiltifyData {
 	async alarm() {
 		//Enable the alarm again
 		if (this.env.ENABLE_REFRESH)
-			this.storage.setAlarm(Date.now() + UPDATE_TIME);
+			this.storage.setAlarm(Date.now() + (this.env.REFRESH_TIME * 1000));
 
 		console.log('Alarm Called, fetching latest Tiltify data...');
 
@@ -110,7 +111,7 @@ export class GraphData {
 		console.log('Called ' + url.pathname);
 
 		//Get the current graph data
-		if (url.pathname === '/api/graph/current') {
+		if (url.pathname === GRAPH_API_PATH) {
 			//Get the current cached value
 			let data = await this.state.storage.get(DO_CACHE_KEY) || null;
 
@@ -131,7 +132,7 @@ export class GraphData {
 			return new Response(JSON.stringify(data));
 		}
 		//Clear the current graph data
-		else if (url.pathname === '/api/graph/currentClearData'){
+		else if (url.pathname === GRAPH_CLEAR_API_PATH){
 			//Get the default object
 			let data = await this.defaultObject();
 

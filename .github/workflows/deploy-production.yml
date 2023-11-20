@@ -23,8 +23,18 @@ jobs:
         working-directory: ./workers/tiltify-cache
         run: npm install
 
-      - name: Publish to Production
+      - name: Publish Worker to Production
         run: npm run deploy:production
+        working-directory: ./workers/tiltify-cache
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Publish KV to Production
+        run: |
+          npm run kv-causes:production
+          npm run kv-conversion-rate:production
+          npm run kv-summary:production
+          npm run kv-trends-previous:production
         working-directory: ./workers/tiltify-cache
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
