@@ -34,10 +34,10 @@ async function getSummaryData(env) {
         INITIAL KV LOOKUPS
     */
     let causes = JSON.parse(await env.JINGLE_JAM_DATA.get('causes'));
-    let defaultConversionRate = parseFloat(await env.JINGLE_JAM_DATA.get('conversion-rate'));
+    let defaultConversionRate = env.CONVERSION_RATE;
     let summary = JSON.parse(await env.JINGLE_JAM_DATA.get('summary'));
 
-    apiResponse = getDefaultResponse(env, causes, summary, defaultConversionRate);
+    apiResponse = getDefaultResponse(env, causes, summary, env.CONVERSION_RATE);
 
     /*
         INITIAL TILTIFY LOOKUPS
@@ -66,7 +66,7 @@ async function getSummaryData(env) {
     apiResponse.raised.fundraisers = fundraiserPounds;
 
     //Gets average conversion rate
-    apiResponse.avgConversionRate = defaultConversionRate;
+    apiResponse.avgConversionRate = env.CONVERSION_RATE;
     let division = yogscastDollars / yogscastPounds;
     if (!isNaN(division) && isFinite(division))
       apiResponse.avgConversionRate = roundAmount(division, 10);
@@ -261,7 +261,7 @@ const debugEndDate = new Date(2023, 10, 13, 22, 10, 0)
 //Generate mock data for testing if debug mode is enabled
 async function getDebugData(env) {
   let causes = JSON.parse(await env.JINGLE_JAM_DATA.get('causes'));
-  let defaultConversionRate = parseFloat(await env.JINGLE_JAM_DATA.get('conversion-rate'));
+  let defaultConversionRate = env.CONVERSION_RATE;
   let summary = JSON.parse(await env.JINGLE_JAM_DATA.get('summary'));
 
   let defaultResponse = getDefaultResponse(env, causes, summary, defaultConversionRate);
@@ -291,6 +291,7 @@ export async function getLatestData(env) {
   env.DOLLAR_OFFSET = parseFloat(env.DOLLAR_OFFSET);
   env.COLLECTIONS_AVAILABLE = parseInt(env.COLLECTIONS_AVAILABLE);
   env.YEAR = parseInt(env.YEAR);
+  env.CONVERSION_RATE = parseFloat(env.CONVERSION_RATE);
 
   if (env.ENABLE_DEBUG)
     return await getDebugData(env);
