@@ -44,6 +44,6 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: JingleJamTracker
+          projectName: jingle-jam-tracker
           directory: /website
           wranglerVersion: '3'
