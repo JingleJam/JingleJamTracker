@@ -46,5 +46,5 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           projectName: jingle-jam-tracker
           directory: website
-          branch: master
+          branch: main
           wranglerVersion: '3'
