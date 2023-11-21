@@ -1,35 +1,16 @@
-const CACHE_NAME = 'tiltify-cache-2023';
+import { handleAPIRequest } from "./handler";
 
-const HEADERS = {
-  "content-type": "application/json;charset=UTF-8",
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
-  'Access-Control-Max-Age': '86400',
-  'Allow': 'GET, HEAD, OPTIONS'
-};
+export async function onRequest(context) {
+  return await handleAPIRequest(context, handleRequest);
+}
 
-
-async function handleRequest(request, env) {
+async function handleRequest(request, env, cacheName) {
   let response = '';
 
-  let id = env.TILTIFY_CACHE.idFromName(CACHE_NAME);
+  let id = env.TILTIFY_CACHE.idFromName(cacheName);
   let obj = env.TILTIFY_CACHE.get(id);
   let resp = await obj.fetch(request.url);
   response = await resp.text();
 
-  return new Response(response, {
-    headers: HEADERS
-  });
+  return response
 }
-
-export async function onRequest(context) {
-  if (context.request.method !== "GET" && context.request.method !== "HEAD") {
-    return new Response(null, {
-      status: 204,
-      headers: HEADERS
-    });
-  }
-
-  return await handleRequest(context.request, context.env);
-}
-
