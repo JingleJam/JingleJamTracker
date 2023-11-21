@@ -1,4 +1,4 @@
-name: Deploy to DEV
+name: Deploy to Development
 
 on:
   push:
@@ -23,6 +23,15 @@ jobs:
         working-directory: ./workers/tiltify-cache
         run: npm install
 
+      - name: Publish Pages to Development
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: jingle-jam-tracker
+          directory: website
+          wranglerVersion: '3'
+
       - name: Publish Worker to Development
         run: npm run deploy:development
         working-directory: ./workers/tiltify-cache
@@ -38,13 +47,3 @@ jobs:
         working-directory: ./workers/tiltify-cache
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
-      - name: Publish Pages to Development
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: jingle-jam-tracker
-          directory: website
-          branch: master
-          wranglerVersion: '3'
