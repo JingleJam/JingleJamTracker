@@ -38,3 +38,12 @@ jobs:
         working-directory: ./workers/tiltify-cache
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+
+      - name: Publish Pages to Productions
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: jingle-jam-tracker
+          directory: website
+          wranglerVersion: '3'
