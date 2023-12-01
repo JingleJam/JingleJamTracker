@@ -134,10 +134,10 @@ async function getSummaryData(env) {
         for (let campaign of campaigns) {
           //Get needed data from the lookup
           let campaignRegionId = campaign.node.region?.id ?? 0;
-          let isYogscastCampaign = campaign.node.user.slug === env.YOGSCAST_USERNAME_SLUG;
+          let isYogscastCampaign = campaign.node.user?.slug === env.YOGSCAST_USERNAME_SLUG;
           let isAllCharitiesCampaign = !campaignRegionId || campaignRegionId === allCharitiesRegionId;
 
-          let amount = parseFloat(campaign.node.totalAmountRaised.value);
+          let amount = parseFloat(campaign.node.totalAmountRaised?.value);
           campaignAmountPounds += amount;
 
           //If the charity is for all charities, divide it by the number of charities
@@ -158,6 +158,8 @@ async function getSummaryData(env) {
             }
           }
         }
+
+        console.log(apiResponse.causes.length)
 
         // Fix difference between amounts
         let amountDifference = totalPounds - campaignAmountPounds;
@@ -187,26 +189,26 @@ async function getSummaryData(env) {
 
     //Create the campaign objects for the API response
     for (let campaign of campaigns) {
-      let description = campaign.node.description.length > maxDescriptionLength ? campaign.node.description.slice(0, maxDescriptionLength) + "..." : campaign.node.description;
+      let description = campaign.node.description?.length > maxDescriptionLength ? campaign.node?.description.slice(0, maxDescriptionLength) + "..." : campaign.node?.description;
       campaignsComputed.push({
         causeId: campaign.node.region?.id || null,
         name: campaign.node.name,
         description: description,
-        slug: campaign.node.slug,
-        url: `https://tiltify.com/@${campaign.node.user.slug}/${campaign.node.slug}`,
+        slug: campaign.node?.slug,
+        url: `https://tiltify.com/@${campaign.node.user?.slug}/${campaign.node?.slug}`,
         startTime: campaign.node.publishedAt,
-        raised: roundAmount(parseFloat(campaign.node.totalAmountRaised.value)),
-        goal: roundAmount(parseFloat(campaign.node.goal.value)),
+        raised: roundAmount(parseFloat(campaign.node.totalAmountRaised?.value)),
+        goal: roundAmount(parseFloat(campaign.node.goal?.value)),
         livestream: {
-          channel: campaign.node.livestream?.channel || campaign.node.user.social.twitch,
+          channel: campaign.node.livestream?.channel || campaign.node.user?.social.twitch,
           type: campaign.node.livestream?.type || 'twitch'
         },
         user: {
-          id: campaign.node.user.id,
-          name: campaign.node.user.username,
-          slug: campaign.node.user.slug,
-          avatar: campaign.node.user.avatar.src,
-          url: `https://tiltify.com/@${campaign.node.user.slug}`,
+          id: campaign.node.user?.id,
+          name: campaign.node.user?.username,
+          slug: campaign.node.user?.slug,
+          avatar: campaign.node.user?.avatar.src,
+          url: `https://tiltify.com/@${campaign.node.user?.slug}`,
         }
       });
     }
@@ -217,6 +219,8 @@ async function getSummaryData(env) {
   } catch (e) {
     console.log(e);
   }
+  
+  console.log(JSON.stringify(apiResponse))
 
   return apiResponse;
 }
