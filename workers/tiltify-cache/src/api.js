@@ -159,16 +159,14 @@ async function getSummaryData(env) {
           }
         }
 
-        console.log(apiResponse.causes.length)
-
         // Fix difference between amounts
         let amountDifference = totalPounds - campaignAmountPounds;
         if (amountDifference > 0) {
           apiResponse.raised.yogscast += amountDifference;
           apiResponse.raised.fundraisers -= amountDifference;
           
-          roundAmount(apiResponse.raised.yogscast);
-          roundAmount(apiResponse.raised.fundraisers);
+          apiResponse.raised.yogscast = roundAmount(apiResponse.raised.yogscast);
+          apiResponse.raised.fundraisers = roundAmount(apiResponse.raised.fundraisers);
 
           let causeAmount = amountDifference / apiResponse.causes.length;
           for (let cause of apiResponse.causes) {
@@ -219,8 +217,6 @@ async function getSummaryData(env) {
   } catch (e) {
     console.log(e);
   }
-  
-  console.log(JSON.stringify(apiResponse))
 
   return apiResponse;
 }
