@@ -168,7 +168,7 @@ async function getSummaryData(env) {
           roundAmount(apiResponse.raised.yogscast);
           roundAmount(apiResponse.raised.fundraisers);
 
-          let causeAmount = apiResponse.causes.length;
+          let causeAmount = amountDifference / apiResponse.causes.length;
           for (let cause of apiResponse.causes) {
             cause.raised.yogscast += causeAmount;
           }
