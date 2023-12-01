@@ -5,7 +5,7 @@
       "name": "Autistica",
       "description": "Creating a Mental Health and Wellbeing Tips Hub for young autistic people.",
       "url": "https://www.autistica.org.uk/",
-      "donateUrl": "https://jinglejam.tiltify.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=582",
       "overrideDollars": 0
     },
     {
@@ -14,7 +14,7 @@
       "name": "Campaign Against Living Miserably (CALM)",
       "description": "Providing urgent mental health services for young people at risk of suicide.",
       "url": "https://www.thecalmzone.net/",
-      "donateUrl": "https://jinglejam.tiltify.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=575",
       "overrideDollars": 0
     },
     {
@@ -23,7 +23,7 @@
       "name": "Comic Relief",
       "description": "Tackling food insecurity by providing 920,000 meals across the UK in winter 2023/24.",
       "url": "https://www.comicrelief.com/",
-      "donateUrl": "https://jinglejam.tiltify.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=583",
       "overrideDollars": 0
     },
     {
@@ -32,7 +32,7 @@
       "name": "CoppaFeel!",
       "description": "Raising awareness of the signs and symptoms of breast cancer amongst young people, and driving relevancy amongst under represented groups that it can affect ANY body, regardless of age, gender or race.",
       "url": "https://coppafeel.org/",
-      "donateUrl": "https://jinglejam.tiltify.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=589",
       "overrideDollars": 0
     },
     {
@@ -41,7 +41,7 @@
       "name": "Galop",
       "description": "Unlocking a better future for LGBT+ youth with a national abuse and violence service.",
       "url": "https://galop.org.uk/",
-      "donateUrl": "https://jinglejam.tiltify.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=585",
       "overrideDollars": 0
     },
     {
@@ -50,7 +50,7 @@
       "name": "Movember",
       "description": "Working towards a future where men and their communities live happier and longer lives, by solving some of the most complex issues facing men today such as prostate and testicular cancer.",
       "url": "https://uk.movember.com/",
-      "donateUrl": "https://jinglejam.tiltify.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=570",
       "overrideDollars": 0
     },
     {
@@ -59,7 +59,7 @@
       "name": "Hello World",
       "description": "Closing the digital divide for marginalised children and young people globally.",
       "url": "https://www.projecthelloworld.org/",
-      "donateUrl": "https://jinglejam.tiltify.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=586",
       "overrideDollars": 0
     },
     {
@@ -68,7 +68,7 @@
       "name": "Justdiggit",
       "description": "Regreening African landscapes by using indigenous techniques, (mobile) technology and communication to inspire farmers to restore their land.",
       "url": "https://justdiggit.org/",
-      "donateUrl": "https://jinglejam.tiltify.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=587",
       "overrideDollars": 0
     },
     {
@@ -77,7 +77,7 @@
       "name": "RNIB, Royal National Institute of Blind People",
       "description": "Transforming the lives of children and young people with vision impairment through education, social support, and the joy of accessible video-gaming.",
       "url": "https://www.rnib.org.uk/",
-      "donateUrl": "https://jinglejam.tiltify.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=590",
       "overrideDollars": 0
     },
     {
@@ -86,7 +86,7 @@
       "name": "War Child",
       "description": "To protect, educate, and advocate for the rights of children impacted by the ongoing conflict in Ukraine.",
       "url": "https://www.warchild.org.uk/",
-      "donateUrl": "https://jinglejam.tiltify.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=588",
       "overrideDollars": 0
     },
     {
@@ -95,16 +95,16 @@
       "name": "Wallace & Gromit's Grand Appeal",
       "description": "The creation of a unique facility for Bristol Children’s Hospital which will be named the Jingle Jam Building.",
       "url": "https://www.grandappeal.org.uk/",
-      "donateUrl": "https://jinglejam.tiltify.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=565",
       "overrideDollars": 0
     },
     {
-      "id": 588,
+      "id": 574,
       "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2023/causes/whale.png",
       "name": "Whale and Dolphin Conservation",
       "description": "Helping to end whaling and hunting for good so that whales and dolphins can keep performing their vital role in the ocean to help us fight climate and biodiversity breakdown.",
       "url": "https://uk.whales.org/",
-      "donateUrl": "https://jinglejam.tiltify.com/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=588",
       "overrideDollars": 0
     }
   ]

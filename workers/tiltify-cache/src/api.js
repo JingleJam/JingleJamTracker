@@ -34,7 +34,6 @@ async function getSummaryData(env) {
         INITIAL KV LOOKUPS
     */
     let causes = JSON.parse(await env.JINGLE_JAM_DATA.get('causes'));
-    let defaultConversionRate = env.CONVERSION_RATE;
     let summary = JSON.parse(await env.JINGLE_JAM_DATA.get('summary'));
 
     apiResponse = getDefaultResponse(env, causes, summary, env.CONVERSION_RATE);
@@ -131,6 +130,7 @@ async function getSummaryData(env) {
         }
 
         // Go through each campaign from the lookup and combine with the cause object
+        let campaignAmountPounds = 0;
         for (let campaign of campaigns) {
           //Get needed data from the lookup
           let campaignRegionId = campaign.node.region?.id ?? 0;
@@ -138,6 +138,7 @@ async function getSummaryData(env) {
           let isAllCharitiesCampaign = !campaignRegionId || campaignRegionId === allCharitiesRegionId;
 
           let amount = parseFloat(campaign.node.totalAmountRaised.value);
+          campaignAmountPounds += amount;
 
           //If the charity is for all charities, divide it by the number of charities
           if (isAllCharitiesCampaign) {
@@ -155,6 +156,21 @@ async function getSummaryData(env) {
               else
                 cause.raised.fundraisers += amount;
             }
+          }
+        }
+
+        // Fix difference between amounts
+        let amountDifference = totalPounds - campaignAmountPounds;
+        if (amountDifference > 0) {
+          apiResponse.raised.yogscast += amountDifference;
+          apiResponse.raised.fundraisers -= amountDifference;
+          
+          roundAmount(apiResponse.raised.yogscast);
+          roundAmount(apiResponse.raised.fundraisers);
+
+          let causeAmount = apiResponse.causes.length;
+          for (let cause of apiResponse.causes) {
+            cause.raised.yogscast += causeAmount;
           }
         }
 
