@@ -168,7 +168,7 @@ async function getSummaryData(env) {
           roundAmount(apiResponse.raised.yogscast);
           roundAmount(apiResponse.raised.fundraisers);
 
-          let causeAmount = apiResponse.causes.length;
+          let causeAmount = amountDifference / apiResponse.causes.length;
           for (let cause of apiResponse.causes) {
             cause.raised.yogscast += causeAmount;
           }
@@ -247,7 +247,7 @@ function getDefaultResponse(env, causes = [], summary = [], defaultConversionRat
     date: date,
     event: {
       year: env.YEAR,
-      start: new Date(Date.UTC(env.YEAR, 11, 1, 17, 0, 0)),
+      start: new Date(Date.UTC(env.YEAR, 11, 0, 17, 0, 0)),
       end: new Date(Date.UTC(env.YEAR, 11, 15, 0, 0, 0))
     },
     avgConversionRate: defaultConversionRate,
