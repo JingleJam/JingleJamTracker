@@ -134,10 +134,10 @@ async function getSummaryData(env) {
         for (let campaign of campaigns) {
           //Get needed data from the lookup
           let campaignRegionId = campaign.node.region?.id ?? 0;
-          let isYogscastCampaign = campaign.node.user.slug === env.YOGSCAST_USERNAME_SLUG;
+          let isYogscastCampaign = campaign.node.user?.slug === env.YOGSCAST_USERNAME_SLUG;
           let isAllCharitiesCampaign = !campaignRegionId || campaignRegionId === allCharitiesRegionId;
 
-          let amount = parseFloat(campaign.node.totalAmountRaised.value);
+          let amount = parseFloat(campaign.node.totalAmountRaised?.value || 0);
           campaignAmountPounds += amount;
 
           //If the charity is for all charities, divide it by the number of charities
@@ -165,8 +165,8 @@ async function getSummaryData(env) {
           apiResponse.raised.yogscast += amountDifference;
           apiResponse.raised.fundraisers -= amountDifference;
           
-          roundAmount(apiResponse.raised.yogscast);
-          roundAmount(apiResponse.raised.fundraisers);
+          apiResponse.raised.yogscast = roundAmount(apiResponse.raised.yogscast);
+          apiResponse.raised.fundraisers = roundAmount(apiResponse.raised.fundraisers);
 
           let causeAmount = amountDifference / apiResponse.causes.length;
           for (let cause of apiResponse.causes) {
@@ -187,26 +187,26 @@ async function getSummaryData(env) {
 
     //Create the campaign objects for the API response
     for (let campaign of campaigns) {
-      let description = campaign.node.description.length > maxDescriptionLength ? campaign.node.description.slice(0, maxDescriptionLength) + "..." : campaign.node.description;
+      let description = campaign.node.description?.length > maxDescriptionLength ? campaign.node?.description.slice(0, maxDescriptionLength) + "..." : campaign.node?.description;
       campaignsComputed.push({
         causeId: campaign.node.region?.id || null,
         name: campaign.node.name,
         description: description,
-        slug: campaign.node.slug,
-        url: `https://tiltify.com/@${campaign.node.user.slug}/${campaign.node.slug}`,
+        slug: campaign.node?.slug,
+        url: `https://tiltify.com/@${campaign.node.user?.slug}/${campaign.node?.slug}`,
         startTime: campaign.node.publishedAt,
-        raised: roundAmount(parseFloat(campaign.node.totalAmountRaised.value)),
-        goal: roundAmount(parseFloat(campaign.node.goal.value)),
+        raised: roundAmount(parseFloat(campaign.node.totalAmountRaised?.value) || 0),
+        goal: roundAmount(parseFloat(campaign.node.goal?.value) || 0),
         livestream: {
-          channel: campaign.node.livestream?.channel || campaign.node.user.social.twitch,
+          channel: campaign.node.livestream?.channel || campaign.node.user?.social.twitch,
           type: campaign.node.livestream?.type || 'twitch'
         },
         user: {
-          id: campaign.node.user.id,
-          name: campaign.node.user.username,
-          slug: campaign.node.user.slug,
-          avatar: campaign.node.user.avatar.src,
-          url: `https://tiltify.com/@${campaign.node.user.slug}`,
+          id: campaign.node.user?.id,
+          name: campaign.node.user?.username,
+          slug: campaign.node.user?.slug,
+          avatar: campaign.node.user?.avatar.src,
+          url: `https://tiltify.com/@${campaign.node.user?.slug}`,
         }
       });
     }

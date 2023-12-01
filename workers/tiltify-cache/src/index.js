@@ -71,12 +71,6 @@ export class TiltifyData {
 
 		let isLive = newData.event.start <= Date.now() && newData.event.end >= Date.now();
 
-		//If previous cached data exists, check if the new data has a higher values. If not, keep the old data and update the date
-		if (data && isLive && (data.raised.yogscast > newData.raised.yogscast || data.raised.fundraisers > newData.raised.fundraisers)) {
-			data.date = newData.date;
-			dataToStore = data;
-		}
-
 		console.log(`Finished Fetching, caching result Tiltify data... (${endTime - startTime}ms)`);
 
 		await this.state.storage.put(DO_CACHE_KEY, dataToStore);
