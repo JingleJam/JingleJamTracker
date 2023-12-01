@@ -466,8 +466,8 @@
         let totalPounds = JingleJam.model.history.reduce((sum, a) => sum + a.total.pounds, 0) + JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers;
         let totalDollars = JingleJam.model.history.reduce((sum, a) => sum + a.total.dollars, 0) + yogsDollars + fundDollars;
 
-        let avgDollars = (yogsDollars + fundDollars) / JingleJam.model.donations.count;
-        let avgPounds = (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) / JingleJam.model.donations.count;
+        let avgDollars = !JingleJam.model.donations.count ? 0 : (yogsDollars + fundDollars) / JingleJam.model.donations.count;
+        let avgPounds = !JingleJam.model.donations.count ? 0 : (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) / JingleJam.model.donations.count;
 
         //Update the components instantly
         if (instant) {
