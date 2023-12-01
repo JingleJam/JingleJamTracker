@@ -137,7 +137,7 @@ async function getSummaryData(env) {
           let isYogscastCampaign = campaign.node.user?.slug === env.YOGSCAST_USERNAME_SLUG;
           let isAllCharitiesCampaign = !campaignRegionId || campaignRegionId === allCharitiesRegionId;
 
-          let amount = parseFloat(campaign.node.totalAmountRaised?.value);
+          let amount = parseFloat(campaign.node.totalAmountRaised?.value || 0);
           campaignAmountPounds += amount;
 
           //If the charity is for all charities, divide it by the number of charities
@@ -197,8 +197,8 @@ async function getSummaryData(env) {
         slug: campaign.node?.slug,
         url: `https://tiltify.com/@${campaign.node.user?.slug}/${campaign.node?.slug}`,
         startTime: campaign.node.publishedAt,
-        raised: roundAmount(parseFloat(campaign.node.totalAmountRaised?.value)),
-        goal: roundAmount(parseFloat(campaign.node.goal?.value)),
+        raised: roundAmount(parseFloat(campaign.node.totalAmountRaised?.value) || 0),
+        goal: roundAmount(parseFloat(campaign.node.goal?.value) || 0),
         livestream: {
           channel: campaign.node.livestream?.channel || campaign.node.user?.social.twitch,
           type: campaign.node.livestream?.type || 'twitch'
