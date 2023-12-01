@@ -371,16 +371,16 @@
 
 #embedContainer .subtext-label {
     position: absolute;
-    bottom: 6;
+    bottom: 6px;
     font-size: .87em;
 }
 
 #embedContainer .subtext-label.left {
-    left: -8;
+    left: -8px;
 }
 
 #embedContainer .subtext-label.right {
-    right: -8;
+    right: -8px;
 }
 
 #embedContainer .comma-value {
