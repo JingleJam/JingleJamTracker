@@ -474,12 +474,12 @@
             if (!JingleJam.isWaiting()) {
                 setCount('#mainCounter', (JingleJam.settings.isPounds ? (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) : (yogsDollars + fundDollars)), formatCurrency);
                 setCount('#bundlesSold', JingleJam.model.collections.redeemed, formatInt);
-                setCount('#donationCount', JingleJam.model.donations.count, (x) => formatInt(x) + (JingleJam.isLive() ? "+" : ""));
+                setCount('#donationCount', JingleJam.model.donations.count, (x) => formatInt(x));
                 setCount('#averageDonation', (JingleJam.settings.isPounds ? avgPounds : avgDollars), (x) => formatCurrency(x, 2));
             }
             else {
                 setCount('#bundlesSold', 0, formatInt);
-                setCount('#donationCount', 0, (x) => formatInt(x) + (JingleJam.isLive() ? "+" : ""));
+                setCount('#donationCount', 0, (x) => formatInt(x));
                 setCount('#averageDonation', 0, (x) => formatCurrency(x, 2));
             }
 
@@ -490,7 +490,7 @@
             if (!JingleJam.isWaiting()) {
                 animateCount('#mainCounter', formatCurrency, JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers, yogsDollars + fundDollars);
                 animateCount('#bundlesSold', formatInt, JingleJam.model.collections.redeemed);
-                animateCount('#donationCount', (x) => formatInt(x) + (JingleJam.isLive() ? "+" : ""), JingleJam.model.donations.count);
+                animateCount('#donationCount', (x) => formatInt(x), JingleJam.model.donations.count);
                 animateCount('#averageDonation', (x) => formatCurrency(x, 2), avgPounds, avgDollars);
 
                 if(JingleJam.oldModel){
@@ -509,7 +509,7 @@
             }
             else {
                 animateCount('#bundlesSold', formatInt, 0);
-                animateCount('#donationCount', (x) => formatInt(x) + (JingleJam.isLive() ? "+" : ""), 0);
+                animateCount('#donationCount', (x) => formatInt(x), 0);
                 animateCount('#averageDonation', (x) => formatCurrency(x, 2), 0, 0);
             }
 

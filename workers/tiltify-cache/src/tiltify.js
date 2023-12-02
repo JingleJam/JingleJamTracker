@@ -85,3 +85,15 @@ export async function getCampaigns(fundraiserPublicId, offset) {
 
     return await response.json();
 }
+
+/*
+    Gets the data from the Yogscast API endpoint
+
+    Used for:
+        - Getting the donation count
+*/
+export async function getYogscastAPI() {
+    let response = await fetch('https://jinglejam.yogscast.com/api/total')
+
+    return await response.json();
+}
