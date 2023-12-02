@@ -6,7 +6,8 @@ import {
 import {
   getCampaign,
   getEvent,
-  getCampaigns
+  getCampaigns,
+  getYogscastAPI
 } from "./tiltify";
 
 const maxSim = 6; //Maximum number of simultaneous fetches
@@ -43,7 +44,8 @@ async function getSummaryData(env) {
     */
     let requests = [
       getCampaign(env.YOGSCAST_USERNAME_SLUG, env.YOGSCAST_CAMPAIGN_SLUG), //Gets Yogscast Campaign Data
-      getEvent(env.CAUSE_SLUG, env.FUNDRAISER_SLUG) //Gets Yearly Event Level Data
+      getEvent(env.CAUSE_SLUG, env.FUNDRAISER_SLUG), //Gets Yearly Event Level Data
+      getYogscastAPI()
     ];
 
     //Get All Responses
@@ -51,6 +53,7 @@ async function getSummaryData(env) {
 
     let yogscastCampaign = results[0].data.campaign; //Yogscast Campaign Data
     let eventData = results[1].data; //Yearly Event Data
+    let yogscastAPI = results[2];
 
     /*
         SUMMARY DATA
@@ -82,7 +85,12 @@ async function getSummaryData(env) {
       apiResponse.collections.redeemed = 0;
     }
 
-    apiResponse.donations.count = apiResponse.collections.redeemed + env.DONATION_DIFFERENCE;
+    try{
+      apiResponse.donations.count = yogscastAPI.donations;
+    }
+    catch (e){
+      apiResponse.donations.count = apiResponse.collections.redeemed;
+    }
 
     //Create the causes objects
     for (let charity of apiResponse.causes) {
