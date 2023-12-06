@@ -92,16 +92,6 @@ async function getSummaryData(env) {
       apiResponse.donations.count = apiResponse.collections.redeemed;
     }
 
-    //Create the causes objects
-    for (let charity of apiResponse.causes) {
-      for (let defaultCauses of causes) {
-        if (charity.id === defaultCauses.id) {
-          charity.raised.yogscast = defaultCauses.overrideDollars / apiResponse.avgConversionRate;
-          break;
-        }
-      }
-    }
-
     /*
         CAMPAIGN DATA
     */
@@ -167,7 +157,7 @@ async function getSummaryData(env) {
           }
         }
 
-        // Fix difference between amounts
+        // Account for donations not associated with a campaign
         let amountDifference = totalPounds - campaignAmountPounds;
         if (amountDifference > 0) {
           apiResponse.raised.yogscast += amountDifference;
@@ -191,6 +181,19 @@ async function getSummaryData(env) {
 
     } catch (e) {
       console.log(e);
+    }
+
+    // Manually update manual donations raised for specific causes (like the Displate donation), but have been added as all causes
+    let totalOverride = causes.reduce((n, cause) => n + (cause.override || 0), 0);
+    let charityOverride = roundAmount(totalOverride/causes.length);
+    for (let charity of apiResponse.causes) {
+      for (let defaultCause of causes) {
+        if (charity.id === defaultCause.id) {
+          charity.raised.yogscast -= charityOverride;
+          charity.raised.yogscast += (defaultCause.override || 0);
+          break;
+        }
+      }
     }
 
     //Create the campaign objects for the API response
