@@ -37,7 +37,7 @@ Cloudflare Pages Functions handles the API endpoints above by fetching data eith
 
 
 ## Development
-The whole system is runs using 2 services, a Caching Service (using Cloudflare Workers) and the Web & API service (using Cloudflare Pages).
+The whole system runs using 2 services, a Caching Service (using Cloudflare Workers) and the Web & API service (using Cloudflare Pages).
 
 1. Install and Configure [Wrangler](https://developers.cloudflare.com/workers/wrangler/)
     - If you're using Visual Studio Code, also install the extension [F5 Anything](https://marketplace.visualstudio.com/items?itemName=discretegames.f5anything) to help run launch configurations
