@@ -24,7 +24,7 @@
       "description": "Tackling food insecurity by providing 920,000 meals across the UK in winter 2023/24.",
       "url": "https://www.comicrelief.com/",
       "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=583",
-      "override": 1000
+      "override": 3500
     },
     {
       "id": 589,
@@ -42,7 +42,7 @@
       "description": "Unlocking a better future for LGBT+ youth with a national abuse and violence service.",
       "url": "https://galop.org.uk/",
       "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=585",
-      "override": 0
+      "override": 2500
     },
     {
       "id": 570,
@@ -51,7 +51,7 @@
       "description": "Working towards a future where men and their communities live happier and longer lives, by solving some of the most complex issues facing men today such as prostate and testicular cancer.",
       "url": "https://uk.movember.com/",
       "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=570",
-      "override": 0
+      "override": 5000
     },
     {
       "id": 586,
@@ -60,7 +60,7 @@
       "description": "Closing the digital divide for marginalised children and young people globally.",
       "url": "https://www.projecthelloworld.org/",
       "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=586",
-      "override": 0
+      "override": 10000
     },
     {
       "id": 587,
@@ -69,7 +69,7 @@
       "description": "Regreening African landscapes by using indigenous techniques, (mobile) technology and communication to inspire farmers to restore their land.",
       "url": "https://justdiggit.org/",
       "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=587",
-      "override": 0
+      "override": 7500
     },
     {
       "id": 590,
@@ -105,6 +105,6 @@
       "description": "Helping to end whaling and hunting for good so that whales and dolphins can keep performing their vital role in the ocean to help us fight climate and biodiversity breakdown.",
       "url": "https://uk.whales.org/",
       "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=574",
-      "override": 0
+      "override": 2500
     }
   ]

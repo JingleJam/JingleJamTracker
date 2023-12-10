@@ -191,6 +191,9 @@ async function getSummaryData(env) {
         if (charity.id === defaultCause.id) {
           charity.raised.yogscast -= charityOverride;
           charity.raised.yogscast += (defaultCause.override || 0);
+
+          charity.raised.yogscast = roundAmount(charity.raised.yogscast);
+          
           break;
         }
       }
