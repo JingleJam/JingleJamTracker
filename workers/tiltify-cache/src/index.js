@@ -59,21 +59,14 @@ export class TiltifyData {
 
 		console.log('Alarm Called, fetching latest Tiltify data...');
 
-		//Get the current stored data
-		let data = await this.state.storage.get(DO_CACHE_KEY);
-
 		//Fetch the latest Tiltify data and cache it
 		let startTime = new Date();
 		let newData = await getLatestData(this.env);
 		let endTime = new Date();
 
-		let dataToStore = newData;
-
-		let isLive = newData.event.start <= Date.now() && newData.event.end >= Date.now();
-
 		console.log(`Finished Fetching, caching result Tiltify data... (${endTime - startTime}ms)`);
 
-		await this.state.storage.put(DO_CACHE_KEY, dataToStore);
+		await this.state.storage.put(DO_CACHE_KEY, newData);
 	}
 }
 
