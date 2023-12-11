@@ -67,6 +67,8 @@ export class TiltifyData {
 		console.log(`Finished Fetching, caching result Tiltify data... (${endTime - startTime}ms)`);
 
 		await this.state.storage.put(DO_CACHE_KEY, newData);
+
+		console.log(`Finished Caching data... (${new Date() - endTime}ms)`);
 	}
 }
 
