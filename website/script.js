@@ -696,7 +696,7 @@
         for (let year of JingleJam.current) {
             year[1].forEach(x => data.labels.add(x.x));
 
-            if(JingleJam.model.isLive()){
+            if(JingleJam.isLive()){
                 let currentData =  year[1].map(function (m) { return { x: m.x, y: m[JingleJam.settings.isPounds ? 'p' : 'd'] }; });
                 currentData.push({
                     x: JingleJam.model.date.getTime(),
