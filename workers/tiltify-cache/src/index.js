@@ -59,21 +59,16 @@ export class TiltifyData {
 
 		console.log('Alarm Called, fetching latest Tiltify data...');
 
-		//Get the current stored data
-		let data = await this.state.storage.get(DO_CACHE_KEY);
-
 		//Fetch the latest Tiltify data and cache it
 		let startTime = new Date();
 		let newData = await getLatestData(this.env);
 		let endTime = new Date();
 
-		let dataToStore = newData;
-
-		let isLive = newData.event.start <= Date.now() && newData.event.end >= Date.now();
-
 		console.log(`Finished Fetching, caching result Tiltify data... (${endTime - startTime}ms)`);
 
-		await this.state.storage.put(DO_CACHE_KEY, dataToStore);
+		await this.state.storage.put(DO_CACHE_KEY, newData);
+
+		console.log(`Finished Caching data... (${new Date() - endTime}ms)`);
 	}
 }
 
@@ -108,7 +103,7 @@ export class GraphData {
 
 			//Start the alarm if it is currently not started
 			let currentAlarm = await this.storage.getAlarm();
-			if (currentAlarm == null && this.env.ENABLE_REFRESH) {
+			if (currentAlarm == null && this.env.ENABLE_GRAPH_REFRESH) {
 				this.storage.setAlarm(Date.now() + UPDATE_TIME_GRAPH);
 			}
 
@@ -130,7 +125,7 @@ export class GraphData {
 
 	async alarm() {
 		//Enable the alarm again
-		if (this.env.ENABLE_REFRESH)
+		if (this.env.ENABLE_GRAPH_REFRESH)
 			this.storage.setAlarm(Date.now() + UPDATE_TIME_GRAPH);
 
 		console.log('Alarm Called, fetching latest graph data...');
