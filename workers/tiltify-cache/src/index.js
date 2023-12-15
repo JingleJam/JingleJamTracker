@@ -47,6 +47,16 @@ export class TiltifyData {
 
 			return new Response(JSON.stringify(data));
 		}
+		//Manually update the current graph data
+		else if (request.method === 'POST' && url.pathname === TILTIFY_API_PATH) {
+			//Get the default object
+			let data = await request.json();
+
+			await this.state.storage.put(DO_CACHE_KEY, data);
+
+			return new Response("Manual Update Success", { status: 200 });
+		}
+
 
 		//Invalid API Endpoint
 		return new Response("Not found", { status: 404 });
