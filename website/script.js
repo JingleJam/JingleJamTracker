@@ -696,11 +696,13 @@
         for (let year of JingleJam.current) {
             year[1].forEach(x => data.labels.add(x.x));
 
-            let currentData =  year[1].map(function (m) { return { x: m.x, y: m[JingleJam.settings.isPounds ? 'p' : 'd'] }; });
-            currentData.push({
-                x: JingleJam.model.date.getTime(),
-                y: JingleJam.settings.isPounds ? JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers : (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) * JingleJam.model.avgConversionRate
-            })
+            if(JingleJam.model.isLive()){
+                let currentData =  year[1].map(function (m) { return { x: m.x, y: m[JingleJam.settings.isPounds ? 'p' : 'd'] }; });
+                currentData.push({
+                    x: JingleJam.model.date.getTime(),
+                    y: JingleJam.settings.isPounds ? JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers : (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) * JingleJam.model.avgConversionRate
+                });
+            }
 
             data.datasets.push({
                 label: year[0],
