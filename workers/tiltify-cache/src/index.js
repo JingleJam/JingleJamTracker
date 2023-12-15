@@ -103,7 +103,7 @@ export class GraphData {
 
 			//Start the alarm if it is currently not started
 			let currentAlarm = await this.storage.getAlarm();
-			if (currentAlarm == null && this.env.ENABLE_REFRESH) {
+			if (currentAlarm == null && this.env.ENABLE_GRAPH_REFRESH) {
 				this.storage.setAlarm(Date.now() + UPDATE_TIME_GRAPH);
 			}
 
@@ -125,7 +125,7 @@ export class GraphData {
 
 	async alarm() {
 		//Enable the alarm again
-		if (this.env.ENABLE_REFRESH)
+		if (this.env.ENABLE_GRAPH_REFRESH)
 			this.storage.setAlarm(Date.now() + UPDATE_TIME_GRAPH);
 
 		console.log('Alarm Called, fetching latest graph data...');
