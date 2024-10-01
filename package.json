@@ -5,11 +5,11 @@
     "main": "src/index.js",
     "private": true,
     "scripts": {
-      "dev": "wrangler pages dev ./website --kv=JINGLE_JAM_DATA=6a08d74af525475baefa19a93f0ba136 --do TILTIFY_CACHE=TiltifyData@tiltify-cache --do GRAPH_DATA=GraphData@tiltify-cache"
-    },
-    "dependencies": {
+        "dev": "wrangler pages dev"
     },
     "devDependencies": {
-      "wrangler": "^3.15.0"
+        "@cloudflare/workers-types": "^4.20240925.0",
+        "typescript": "^5.6.2",
+        "wrangler": "^3.15.0"
     }
-  }
+}

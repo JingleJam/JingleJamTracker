@@ -1,0 +1,12 @@
+name = "jingle-jame-website"
+compatibility_date = "2024-09-02"
+pages_build_output_dir = "./website"
+kv_namespaces = [
+        { binding = "JINGLE_JAM_DATA", id = "6a08d74af525475baefa19a93f0ba136", preview_id = "6a08d74af525475baefa19a93f0ba136" }
+    ]
+
+[durable_objects]
+    bindings = [
+        { name = "TILTIFY_DATA", class_name = "TiltifyData", script_name = "tiltify-cache" }, 
+        { name = "GRAPH_DATA", class_name = "GraphData", script_name = "tiltify-cache" }
+    ]

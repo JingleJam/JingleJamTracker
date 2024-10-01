@@ -9,6 +9,6 @@
     "lib": ["es2021"],
     "types": ["@cloudflare/workers-types"]
   },
-  "include": ["src/**/*.ts"],
+  "include": ["functions/**/*.ts"],
   "exclude": ["node_modules"]
 }

@@ -11,17 +11,11 @@ const CACHE_NAME = 'tiltify-cache-2023'; // Cache Object Name
 const TILTIFY_API_PATH = '/api/tiltify'; // API Path for the Tiltify Cache
 const GRAPH_API_PATH = '/api/graph/current'; // API Path for the Graph Data
 
-interface State {
-  storage: DurableObjectStorage;
-}
-
 export class TiltifyData {
-  state: State;
   storage: DurableObjectStorage;
   env: Env;
 
-  constructor(state: State, env: Env) {
-    this.state = state;
+  constructor(state: DurableObjectState, env: Env) {
     this.storage = state.storage;
     this.env = env;
   }
@@ -33,7 +27,7 @@ export class TiltifyData {
 
     if (request.method === 'GET' && url.pathname === TILTIFY_API_PATH) {
       // Get the current cached value
-      let data = await this.state.storage.get(DO_CACHE_KEY);
+      let data = await this.storage.get(DO_CACHE_KEY);
 
       // Start the alarm if it is currently not started
       let currentAlarm = await this.storage.getAlarm();
@@ -46,14 +40,14 @@ export class TiltifyData {
         data = await getLatestData(this.env);
 
         if (this.env.ENABLE_REFRESH) {
-          await this.state.storage.put(DO_CACHE_KEY, data);
+          await this.storage.put(DO_CACHE_KEY, data);
         }
       }
 
       return new Response(JSON.stringify(data));
     } else if (request.method === 'POST' && url.pathname === TILTIFY_API_PATH) {
       const data = await request.json();
-      await this.state.storage.put(DO_CACHE_KEY, data);
+      await this.storage.put(DO_CACHE_KEY, data);
       return new Response("Manual Update Success", { status: 200 });
     }
 
@@ -74,19 +68,17 @@ export class TiltifyData {
 
     console.log(`Finished Fetching, caching result Tiltify data... (${endTime.getTime() - startTime.getTime()}ms)`);
 
-    await this.state.storage.put(DO_CACHE_KEY, newData);
+    await this.storage.put(DO_CACHE_KEY, newData);
 
     console.log(`Finished Caching data... (${new Date().getTime() - endTime.getTime()}ms)`);
   }
 }
 
 export class GraphData {
-  state: State;
   storage: DurableObjectStorage;
   env: Env;
 
-  constructor(state: State, env: Env) {
-    this.state = state;
+  constructor(state: DurableObjectState, env: Env) {
     this.storage = state.storage;
     this.env = env;
   }
@@ -97,11 +89,11 @@ export class GraphData {
     console.log('Called ' + url.pathname);
 
     if (request.method === 'GET' && url.pathname === GRAPH_API_PATH) {
-      let data = await this.state.storage.get(DO_CACHE_KEY) || null;
+      let data = await this.storage.get(DO_CACHE_KEY) || null;
 
       if (!data) {
         data = await this.defaultObject();
-        await this.state.storage.put(DO_CACHE_KEY, data);
+        await this.storage.put(DO_CACHE_KEY, data);
       }
 
       let currentAlarm = await this.storage.getAlarm();
@@ -112,7 +104,7 @@ export class GraphData {
       return new Response(JSON.stringify(data));
     } else if (request.method === 'POST' && url.pathname === GRAPH_API_PATH) {
       const data = await request.json();
-      await this.state.storage.put(DO_CACHE_KEY, data);
+      await this.storage.put(DO_CACHE_KEY, data);
       return new Response("Manual Update Success", { status: 200 });
     }
 
@@ -133,7 +125,7 @@ export class GraphData {
     console.log(`Finished Fetching, caching result graph data... (${endTime.getTime() - startTime.getTime()}ms)`);
 
     if (graphData !== null) {
-      await this.state.storage.put(DO_CACHE_KEY, graphData);
+      await this.storage.put(DO_CACHE_KEY, graphData);
     }
   }
 
@@ -154,7 +146,7 @@ export class GraphData {
 
     let graphData: any[] = [];
     try {
-      graphData = (await this.state.storage.get(DO_CACHE_KEY)) || [];
+      graphData = (await this.storage.get(DO_CACHE_KEY)) || [];
     } catch (e) { }
 
     if (graphData.length === 0) {
@@ -199,4 +191,8 @@ export class GraphData {
   }
 }
 
-export default {};
+export default {
+  fetch: async (request: Request, env: Env) => {
+    return new Response("Not found", { status: 404 });
+  }
+};

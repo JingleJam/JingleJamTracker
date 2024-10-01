@@ -5,7 +5,6 @@
     "main": "dist/index.js",
     "private": true,
     "scripts": {
-        "build": "esbuild src/index.ts --bundle --outdir=dist --minify --sourcemap",
         "dev": "wrangler dev --name tiltify-cache",
         "deploy:production": "wrangler deploy",
         "deploy:development": "wrangler deploy -e development",

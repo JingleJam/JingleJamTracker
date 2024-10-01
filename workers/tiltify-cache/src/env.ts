@@ -16,7 +16,3 @@ export interface Env {
     JINGLE_JAM_DATA: KVNamespace;
     TILTIFY_DATA: DurableObjectNamespace;
 }
-
-export interface CtxWithEnv extends ExecutionContext {
-    env: Env;
-}
