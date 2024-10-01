@@ -1,6 +1,8 @@
 import { getLatestData } from "./api";
 import { Env } from "./env";
 import { roundAmount } from "./utils";
+import { CurrentGraphPoint } from "./types/CurrentGraphPoint";
+import { ApiResponse } from "./types/ApiResponse";
 
 const UPDATE_TIME_GRAPH = 60 * 1000; // Refresh cache every 60 seconds
 const UPDATE_TIME_FREQ = 10; // Refresh graph every 10 minutes
@@ -88,6 +90,7 @@ export class GraphData {
     const url = new URL(request.url);
     console.log('Called ' + url.pathname);
 
+    // Get the current cached graph list
     if (request.method === 'GET' && url.pathname === GRAPH_API_PATH) {
       let data = await this.storage.get(DO_CACHE_KEY) || null;
 
@@ -102,7 +105,9 @@ export class GraphData {
       }
 
       return new Response(JSON.stringify(data));
-    } else if (request.method === 'POST' && url.pathname === GRAPH_API_PATH) {
+    } 
+    // Update the current cached graph list
+    else if (request.method === 'POST' && url.pathname === GRAPH_API_PATH) {
       const data = await request.json();
       await this.storage.put(DO_CACHE_KEY, data);
       return new Response("Manual Update Success", { status: 200 });
@@ -129,7 +134,7 @@ export class GraphData {
     }
   }
 
-  async getLatestGraphData(): Promise<any[] | null> {
+  async getLatestGraphData(): Promise<CurrentGraphPoint[] | null> {
     const tiltifyData = await this.getLatestData();
 
     if (!tiltifyData || new Date(tiltifyData.date).getMinutes() % UPDATE_TIME_FREQ !== 0) {
@@ -144,7 +149,7 @@ export class GraphData {
       return null;
     }
 
-    let graphData: any[] = [];
+    let graphData: CurrentGraphPoint[] = [];
     try {
       graphData = (await this.storage.get(DO_CACHE_KEY)) || [];
     } catch (e) { }
@@ -163,17 +168,13 @@ export class GraphData {
     return graphData;
   }
 
-  async defaultObject(data?: any): Promise<any[]> {
+  async defaultObject(data?: ApiResponse): Promise<CurrentGraphPoint[]> {
     if (!data) {
       data = await this.getLatestData();
     }
 
     if (!data) {
-      return [{
-        "date": Date.now(),
-        "p": 0,
-        "d": 0
-      }];
+      return [];
     }
 
     return [{
@@ -183,7 +184,7 @@ export class GraphData {
     }];
   }
 
-  async getLatestData(): Promise<any> {
+  async getLatestData(): Promise<ApiResponse> {
     const id = this.env.TILTIFY_DATA.idFromName(CACHE_NAME);
     const obj = this.env.TILTIFY_DATA.get(id);
     const resp = await obj.fetch("http://127.0.0.1" + TILTIFY_API_PATH);
@@ -191,8 +192,4 @@ export class GraphData {
   }
 }
 
-export default {
-  fetch: async (request: Request, env: Env) => {
-    return new Response("Not found", { status: 404 });
-  }
-};
+export default {};
