@@ -122,7 +122,7 @@
         else {
             $('[data-status]').attr('data-status', 'countdown')
             $('#mainCounter').html(JingleJam.timeLeft.days + "d " + JingleJam.timeLeft.hours + "h " + JingleJam.timeLeft.minutes + "m " + JingleJam.timeLeft.seconds + "s ");
-            $('#mainCounterHeader').text('Countdown to 2023')
+            $('#mainCounterHeader').text('Countdown to ' + JingleJam.model.event.year);
         }
     }
 
