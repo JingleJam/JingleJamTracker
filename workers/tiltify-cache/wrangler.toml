@@ -1,15 +1,19 @@
 name = "tiltify-cache"
-main = "src/index.js"
+main = "dist/index.js"
 account_id = "b5ef135c0a2feed17e7ba1c44698c5f4"
-compatibility_date = "2023-08-14"
+compatibility_date = "2024-09-02"
 workers_dev = true
 kv_namespaces = [
   { binding = "JINGLE_JAM_DATA", id = "9d285e05684c4887acb7731de7a41a4e", preview_id = "6a08d74af525475baefa19a93f0ba136" }
 ]
 
+[build]
+  command = "npm run build"
+  cwd = "."
+  watch_dir = "src"
+
 [durable_objects]
 bindings = [{name = "TILTIFY_DATA", class_name = "TiltifyData"}, {name = "GRAPH_DATA", class_name = "GraphData"}]
-compatibility_flags = ["durable_object_alarms"]
 
 [[migrations]]
 tag = "v1"
@@ -20,15 +24,15 @@ tag = "v2"
 new_classes = ["GraphData"]
 
 [vars]
-YEAR=2023
+YEAR=2024
 COLLECTIONS_AVAILABLE=100000
-DOLLAR_OFFSET=3371741.16
-DONATION_DIFFERENCE=329
-CONVERSION_RATE=1.263
+DOLLAR_OFFSET=5747814.82
+DONATION_DIFFERENCE=0
+CONVERSION_RATE=1.33
 CAUSE_SLUG="jingle-jam"
-FUNDRAISER_SLUG="jingle-jam-2023"
-FUNDRAISER_PUBLIC_ID="8601c634-c8a4-4a90-ac64-da037c683b46"
-YOGSCAST_CAMPAIGN_SLUG="jingle-jam-2023"
+FUNDRAISER_SLUG="jingle-jam-2024"
+FUNDRAISER_PUBLIC_ID="1c690c40-a2f6-48b3-9a88-5a8cb69d4734"
+YOGSCAST_CAMPAIGN_SLUG="jingle-jam-2024"
 YOGSCAST_USERNAME_SLUG="yogscast"
 REFRESH_TIME=10
 ENABLE_REFRESH=false
@@ -46,18 +50,17 @@ kv_namespaces = [
 
 [env.development.durable_objects]
 bindings = [{name = "TILTIFY_DATA", class_name = "TiltifyData"}, {name = "GRAPH_DATA", class_name = "GraphData"}]
-compatibility_flags = ["durable_object_alarms"]
 
 [env.development.vars]
-YEAR=2023
+YEAR=2024
 COLLECTIONS_AVAILABLE=100000
-DOLLAR_OFFSET=3371741.16
-DONATION_DIFFERENCE=329
-CONVERSION_RATE=1.263
+DOLLAR_OFFSET=5747814.82
+DONATION_DIFFERENCE=0
+CONVERSION_RATE=1.33
 CAUSE_SLUG="jingle-jam"
-FUNDRAISER_SLUG="jingle-jam-2023"
-FUNDRAISER_PUBLIC_ID="8601c634-c8a4-4a90-ac64-da037c683b46"
-YOGSCAST_CAMPAIGN_SLUG="jingle-jam-2023"
+FUNDRAISER_SLUG="jingle-jam-2024"
+FUNDRAISER_PUBLIC_ID="1c690c40-a2f6-48b3-9a88-5a8cb69d4734"
+YOGSCAST_CAMPAIGN_SLUG="jingle-jam-2024"
 YOGSCAST_USERNAME_SLUG="yogscast"
 REFRESH_TIME=60
 ENABLE_REFRESH=false
