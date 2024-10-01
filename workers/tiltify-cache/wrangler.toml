@@ -7,6 +7,9 @@ kv_namespaces = [
   { binding = "JINGLE_JAM_DATA", id = "9d285e05684c4887acb7731de7a41a4e", preview_id = "6a08d74af525475baefa19a93f0ba136" }
 ]
 
+[observability]
+    enabled = true
+
 [durable_objects]
 bindings = [{name = "TILTIFY_DATA", class_name = "TiltifyData"}, {name = "GRAPH_DATA", class_name = "GraphData"}]
 
