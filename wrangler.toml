@@ -1,0 +1,29 @@
+name = "jingle-jam-tracker"
+compatibility_date = "2024-09-02"
+pages_build_output_dir = "./website"
+
+kv_namespaces = [
+        { binding = "JINGLE_JAM_DATA", id = "9d285e05684c4887acb7731de7a41a4e", preview_id = "6a08d74af525475baefa19a93f0ba136" }
+    ]
+
+[observability]
+    enabled = true
+
+[durable_objects]
+    bindings = [
+        { name = "TILTIFY_DATA", class_name = "TiltifyData", script_name = "tiltify-cache" }, 
+        { name = "GRAPH_DATA", class_name = "GraphData", script_name = "tiltify-cache" }
+    ]
+
+
+    
+[env.preview]
+    kv_namespaces = [
+        { binding = "JINGLE_JAM_DATA", id = "c9634f49deeb4618b3c3f1980f777f7a", preview_id = "6a08d74af525475baefa19a93f0ba136" }
+    ]
+
+[env.preview.durable_objects]
+    bindings = [
+        { name = "TILTIFY_DATA", class_name = "TiltifyData", script_name = "tiltify-cache-development" }, 
+        { name = "GRAPH_DATA", class_name = "GraphData", script_name = "tiltify-cache-development" }
+    ]

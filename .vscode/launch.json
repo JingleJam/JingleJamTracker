@@ -14,7 +14,7 @@
             "name": "Run Website & API",
             "type": "f5anything",
             "request": "launch",
-            "command": "npm run dev",
+            "command": "cd ${workspaceFolder} ; npm run dev",
             "terminalName": "Website",
             "terminalIndex": 1,
             "showTerminal": true

@@ -94,5 +94,13 @@
             "pounds": 3448752.40
         },
         "donations": 86589
+    },
+    {
+        "year": 2023,
+        "total": {
+            "dollars": 3422130.97,
+            "pounds": 2702088.00
+        },
+        "donations": 64374
     }
 ]
