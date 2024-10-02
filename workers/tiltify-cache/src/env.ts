@@ -13,6 +13,7 @@ export interface Env {
     ENABLE_REFRESH: boolean;
     ENABLE_GRAPH_REFRESH: boolean;
     ENABLE_DEBUG: boolean;
+    ADMIN_TOKEN: string | undefined;
     JINGLE_JAM_DATA: KVNamespace;
     TILTIFY_DATA: DurableObjectNamespace;
 }

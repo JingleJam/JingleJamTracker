@@ -47,7 +47,14 @@ export class TiltifyData {
       }
 
       return new Response(JSON.stringify(data));
-    } else if (request.method === 'POST' && url.pathname === TILTIFY_API_PATH) {
+    }
+    // Manually update the current cached tiltify data 
+    else if (request.method === 'POST' && url.pathname === TILTIFY_API_PATH) {
+      // Check if the request is authorized
+      if(!this.env.ADMIN_TOKEN || request.headers.get('Authorization') !== this.env.ADMIN_TOKEN) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+      
       const data = await request.json();
       await this.storage.put(DO_CACHE_KEY, data);
       return new Response("Manual Update Success", { status: 200 });
@@ -106,8 +113,13 @@ export class GraphData {
 
       return new Response(JSON.stringify(data));
     } 
-    // Update the current cached graph list
+    // Manually update the current cached graph list
     else if (request.method === 'POST' && url.pathname === GRAPH_API_PATH) {
+      // Check if the request is authorized
+      if(!this.env.ADMIN_TOKEN || request.headers.get('Authorization') !== this.env.ADMIN_TOKEN) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+
       const data = await request.json();
       await this.storage.put(DO_CACHE_KEY, data);
       return new Response("Manual Update Success", { status: 200 });
