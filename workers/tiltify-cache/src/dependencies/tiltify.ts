@@ -1,8 +1,7 @@
-import { BaseTiltifyResponse } from "./types/tiltify/BaseResponse";
-import { TiltifyUserCampaign } from "./types/tiltify/TiltifyUserCampaign";
-import { TiltifyFundraisingEvent } from "./types/tiltify/TiltifyFundraisingEvent";
-import { FundraisingEventCampaignsData } from "./types/tiltify/TiltifyFundraisingEventCampaign";
-import { YogscastDonationData } from "./types/yogscast/YogscastDonationData";
+import { BaseTiltifyResponse } from "tiltify-cache/types/tiltify/BaseResponse";
+import { TiltifyUserCampaign } from "tiltify-cache/types/tiltify/TiltifyUserCampaign";
+import { TiltifyFundraisingEvent } from "tiltify-cache/types/tiltify/TiltifyFundraisingEvent";
+import { FundraisingEventCampaignsData } from "tiltify-cache/types/tiltify/TiltifyFundraisingEventCampaign";
 
 const TILTIFY_API_ENDPOINT = "https://api.tiltify.com/";
 const TILTIFY_API_OPTIONS: RequestInit = {
@@ -87,15 +86,4 @@ export async function getCampaigns(fundraiserPublicId: string, offset: number): 
 
     const response = await fetch(TILTIFY_API_ENDPOINT, request);
     return ((await response.json()) as BaseTiltifyResponse<{ fundraisingEvent: FundraisingEventCampaignsData}>)?.data?.fundraisingEvent || null;
-}
-
-/*
-    Gets the data from the Yogscast API endpoint
-
-    Used for:
-        - Getting the donation count
-*/
-export async function getYogscastAPI(): Promise<YogscastDonationData> {
-    const response = await fetch('https://jinglejam.yogscast.com/api/total');
-    return await response.json();
 }
