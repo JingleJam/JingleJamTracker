@@ -5,6 +5,12 @@
     </div>
     <p></p>
   </div>
+  <div class="ui segment" id="error" style="display: none;">
+    <div class="ui active inverted dimmer" style="background-color: #1b1c1d00">
+      <div><i class="times icon huge"></i></div>
+      <span class="ui big text">Error Loading Tracker</span>
+    </div>
+  </div>
   <div id="content" style="display: none;">
     <div class="ui compact huge segment" id="currencySelectorObj" style="right: 20px;">
       <label style="margin-right: 11px;">$</label>
@@ -76,10 +82,12 @@
                 <h3>Previous Years</h3>
               </div>
               <div class="body">
-                <table class="ui large celled striped table unstackable" style="min-width: 250px !important;" id="yearsTable">
+                <table class="ui large celled striped table unstackable" style="min-width: 250px !important;"
+                  id="yearsTable">
                   <thead>
                     <tr>
-                      <th class="center aligned six wide" style="min-width: 60px; border-left: 1px solid rgba(34,36,38,.1);">Year
+                      <th class="center aligned six wide"
+                        style="min-width: 60px; border-left: 1px solid rgba(34,36,38,.1);">Year
                       </th>
                       <th class="center aligned ten wide" style="min-width: 60px;">Raised</th>
                     </tr>
@@ -89,14 +97,16 @@
             </div>
           </div>
           <div class="flexable" style="flex: 50%; align-self: start;" id="rightGrid">
-            <div class="ui segment jj-pink-border-top fit-content centered full-width" style="min-height: 1305px;">
+            <div class="ui segment jj-pink-border-top fit-content centered full-width">
               <div class="header">
                 <h2>Charities</h2>
               </div>
               <div class="body">
                 <p style="text-align: center; margin-top: 5px; margin-bottom: 25px;">
-                  The <span class="jj-year"></span> Jingle Jam is raising money to support <span class="jj-cause-count"></span> important causes,
-                  ranging from physical and mental health, diversity and inclusion, global crisis relief, and safeguarding the 
+                  The <span class="jj-year"></span> Jingle Jam is raising money to support <span
+                    class="jj-cause-count"></span> important causes,
+                  ranging from physical and mental health, diversity and inclusion, global crisis relief, and
+                  safeguarding the
                   planet. Here's how your donations will make a difference.
                 </p>
                 <div class="ui horizontal raised doubling cards" id="charityCards">

@@ -5,14 +5,17 @@ compatibility_date = "2024-09-02"
 workers_dev = true
 logpush = true
 kv_namespaces = [
-  { binding = "JINGLE_JAM_DATA", id = "9d285e05684c4887acb7731de7a41a4e", preview_id = "6a08d74af525475baefa19a93f0ba136" }
+  { binding = "JINGLE_JAM_DATA", id = "9d285e05684c4887acb7731de7a41a4e", preview_id = "6a08d74af525475baefa19a93f0ba136" },
 ]
 
 [observability]
-    enabled = true
+enabled = true
 
 [durable_objects]
-bindings = [{name = "TILTIFY_DATA", class_name = "TiltifyData"}, {name = "GRAPH_DATA", class_name = "GraphData"}]
+bindings = [
+  { name = "TILTIFY_DATA", class_name = "TiltifyData"},
+  { name = "GRAPH_DATA", class_name = "GraphData" },
+]
 
 [[migrations]]
 tag = "v1"
@@ -23,45 +26,47 @@ tag = "v2"
 new_classes = ["GraphData"]
 
 [vars]
-YEAR=2024
-COLLECTIONS_AVAILABLE=100000
-DOLLAR_OFFSET=5747814.82
-DONATION_DIFFERENCE=0
-CONVERSION_RATE=1.33
-CAUSE_SLUG="jingle-jam"
-FUNDRAISER_SLUG="jingle-jam-2024"
-FUNDRAISER_PUBLIC_ID="1c690c40-a2f6-48b3-9a88-5a8cb69d4734"
-YOGSCAST_CAMPAIGN_SLUG="jingle-jam-2024"
-YOGSCAST_USERNAME_SLUG="yogscast"
-REFRESH_TIME=10
-ENABLE_REFRESH=false
-ENABLE_GRAPH_REFRESH=false
-ENABLE_DEBUG=false
-
-
-
+YEAR = 2024
+COLLECTIONS_AVAILABLE = 100000
+DOLLAR_OFFSET = 5747814.82
+DONATION_DIFFERENCE = 0
+CONVERSION_RATE = 1.33
+CAUSE_SLUG = "jingle-jam"
+FUNDRAISER_SLUG = "jingle-jam-2024"
+FUNDRAISER_PUBLIC_ID = "1c690c40-a2f6-48b3-9a88-5a8cb69d4734"
+YOGSCAST_CAMPAIGN_SLUG = "jingle-jam-2024"
+YOGSCAST_USERNAME_SLUG = "yogscast"
+DURABLE_OBJECT_CACHE_KEY = "tiltify-data-2024"
+REFRESH_TIME = 10
+ENABLE_REFRESH = false
+ENABLE_GRAPH_REFRESH = false
+ENABLE_DEBUG = false
 
 
 [env.development]
 kv_namespaces = [
-  { binding = "JINGLE_JAM_DATA", id = "c9634f49deeb4618b3c3f1980f777f7a", preview_id = "6a08d74af525475baefa19a93f0ba136" }
+  { binding = "JINGLE_JAM_DATA", id = "c9634f49deeb4618b3c3f1980f777f7a", preview_id = "6a08d74af525475baefa19a93f0ba136" },
 ]
 
 [env.development.durable_objects]
-bindings = [{name = "TILTIFY_DATA", class_name = "TiltifyData"}, {name = "GRAPH_DATA", class_name = "GraphData"}]
+bindings = [
+  { name = "TILTIFY_DATA", class_name = "TiltifyData" },
+  { name = "GRAPH_DATA", class_name = "GraphData" },
+]
 
 [env.development.vars]
-YEAR=2023
-COLLECTIONS_AVAILABLE=100000
-DOLLAR_OFFSET=3371741.16
-DONATION_DIFFERENCE=329
-CONVERSION_RATE=1.263
-CAUSE_SLUG="jingle-jam"
-FUNDRAISER_SLUG="jingle-jam-2023"
-FUNDRAISER_PUBLIC_ID="8601c634-c8a4-4a90-ac64-da037c683b46"
-YOGSCAST_CAMPAIGN_SLUG="jingle-jam-2023"
-YOGSCAST_USERNAME_SLUG="yogscast"
-REFRESH_TIME=600
-ENABLE_REFRESH=true
-ENABLE_GRAPH_REFRESH=false
-ENABLE_DEBUG=false
+YEAR = 2023
+COLLECTIONS_AVAILABLE = 100000
+DOLLAR_OFFSET = 3371741.16
+DONATION_DIFFERENCE = 329
+CONVERSION_RATE = 1.263
+CAUSE_SLUG = "jingle-jam"
+FUNDRAISER_SLUG = "jingle-jam-2023"
+FUNDRAISER_PUBLIC_ID = "8601c634-c8a4-4a90-ac64-da037c683b46"
+YOGSCAST_CAMPAIGN_SLUG = "jingle-jam-2023"
+YOGSCAST_USERNAME_SLUG = "yogscast"
+DURABLE_OBJECT_CACHE_KEY = "tiltify-data-2023"
+REFRESH_TIME = 600
+ENABLE_REFRESH = true
+ENABLE_GRAPH_REFRESH = false
+ENABLE_DEBUG = false

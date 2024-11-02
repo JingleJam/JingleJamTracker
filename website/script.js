@@ -37,14 +37,19 @@
         //Start loops
         await tiltifyLoop();
 
-        afterLoadSetup();
-
-        await getPrevious();
-        await graphLoop(true);
-        hideLoader();
-
-        //Start the timed loop
-        timedLoop();
+        if(JingleJam.model){
+            afterLoadSetup();
+    
+            await getPrevious();
+            await graphLoop(true);
+            hideLoader();
+    
+            //Start the timed loop
+            timedLoop();
+        }
+        else {
+            $('#loader').hide();
+        }
     };
 
     //Runs before the initial data is loaded
@@ -527,13 +532,21 @@
         //Also check if the next update time is less than 0 because of the browser tab check
         if (!JingleJam.model || (JingleJam.pageIsVisible && JingleJam.isLive() && getNextUpdateTime() <= 0)) {
             JingleJam.oldModel = JingleJam.model;
-            JingleJam.model = await getTiltify();
+            try {
+                JingleJam.model = await getTiltify();
 
-            JingleJam.model.history.reverse();
+                $('#embedContainer #error').hide();
+            } catch {
+                $('#embedContainer #error').show();
+            }
 
-            if (JingleJam.isLive()){
-                await updateCounts();
-                await createGraph();
+            if(JingleJam.model){
+                JingleJam.model.history.reverse();
+
+                if (JingleJam.isLive()){
+                    await updateCounts();
+                    await createGraph();
+                }   
             }
         }
     }
@@ -548,6 +561,10 @@
 
     //Gets the next update time based on the model update date
     function getNextUpdateTime() {
+        if(!JingleJam.model){
+            return 0;
+        }
+        
         let now = new Date();
         let modelUpdateTime = JingleJam.model.date ? new Date(JingleJam.model.date) : new Date();
 

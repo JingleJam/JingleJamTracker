@@ -7,7 +7,12 @@
     "noEmit": true,
     "strictNullChecks": true,
     "lib": ["es2021"],
-    "types": ["@cloudflare/workers-types"]
+    "types": ["@cloudflare/workers-types"],
+    "rootDir": "src",
+    "baseUrl": ".",
+    "paths": {
+      "tiltify-cache/*": ["src/*"]
+    }
   },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules"]

@@ -2,24 +2,6 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run Cache Service",
-            "type": "f5anything",
-            "request": "launch",
-            "command": "cd ${workspaceFolder}/workers/tiltify-cache/ ; npm run dev",
-            "terminalName": "cache",
-            "terminalIndex": 2,
-            "showTerminal": true
-        },
-        {
-            "name": "Run Website & API",
-            "type": "f5anything",
-            "request": "launch",
-            "command": "cd ${workspaceFolder} ; npm run dev",
-            "terminalName": "Website",
-            "terminalIndex": 1,
-            "showTerminal": true
-        },
-        {
             "name": "Add Local KV's",
             "type": "f5anything",
             "request": "launch",
@@ -27,6 +9,52 @@
             "terminalName": "Other",
             "terminalIndex": 0,
             "showTerminal": true
+        },
+        {
+            "name": "Run Website & API",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "dev"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "outputCapture": "std"
+        },
+        {
+            "name": "Run Cache Service",
+            "type": "node",
+            "request": "launch",
+            "runtimeExecutable": "npm",
+            "runtimeArgs": [
+                "run",
+                "dev"
+            ],
+            "cwd": "${workspaceFolder}/workers/tiltify-cache",
+            "console": "integratedTerminal",
+            "outputCapture": "std"
+        },
+        {
+            "name": "Attach Debugger to Cache Service",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "cwd": "${workspaceFolder}/workers/tiltify-cache",
+            "resolveSourceMapLocations": null,
+            "attachExistingChildren": false,
+            "autoAttachChildProcesses": false,
+
+        }
+    ],
+    "compounds": [
+        {
+            "name": "Debug Cache Service",
+            "configurations": [
+                "Run Cache Service",
+                "Attach Debugger to Cache Service"
+            ]
         }
     ]
 }

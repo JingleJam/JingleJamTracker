@@ -29,6 +29,13 @@
     background-color: #fafafa;
 }
 
+#embedContainer #error {
+    height: calc(100vh - 145px);
+    box-shadow: none;
+    border: 0;
+    background-color: #fafafa;
+}
+
 #embedContainer .ui.slider .inner .track-fill {
     background-color: #e21251 !important;
 }
