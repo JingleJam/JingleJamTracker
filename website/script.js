@@ -49,6 +49,7 @@
         }
         else {
             $('#loader').hide();
+            $('#embedContainer #error').show();
         }
     };
 
@@ -534,11 +535,7 @@
             JingleJam.oldModel = JingleJam.model;
             try {
                 JingleJam.model = await getTiltify();
-
-                $('#embedContainer #error').hide();
-            } catch {
-                $('#embedContainer #error').show();
-            }
+            } catch {}
 
             if(JingleJam.model){
                 JingleJam.model.history.reverse();
@@ -564,7 +561,7 @@
         if(!JingleJam.model){
             return 0;
         }
-        
+
         let now = new Date();
         let modelUpdateTime = JingleJam.model.date ? new Date(JingleJam.model.date) : new Date();
 

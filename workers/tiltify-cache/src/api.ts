@@ -99,7 +99,8 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
     if (env.FUNDRAISER_PUBLIC_ID) {
       // Fetch all campaigns in parallel (chunks of 6 requests with 20 campaigns each)
       while (offset <= maxCampaigns && !end) {
-        const regionResponses = await Promise.all(Array.from({ length: maxSim }, () => getCampaigns(env.FUNDRAISER_PUBLIC_ID, offset)));
+        const requests = Array.from({ length: maxSim }, (_, i) => getCampaigns(env.FUNDRAISER_PUBLIC_ID, offset + (i * 20)));
+        const regionResponses = await Promise.all(requests);
         offset += 20 * maxSim;
 
         for (const response of regionResponses) {
