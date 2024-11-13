@@ -24,7 +24,7 @@ export class TiltifyData {
             // Start the alarm if it is currently not started
             let currentAlarm = await this.storage.getAlarm();
             if (currentAlarm == null && this.env.ENABLE_REFRESH) {
-                this.storage.setAlarm(Date.now() + (this.env.REFRESH_TIME * 1000));
+                this.storage.setAlarm(Date.now() + (this.env.LIVE_REFRESH_TIME * 1000));
             }
 
             // If the cached value is null, fetch the latest data and save it to the cache
@@ -56,7 +56,7 @@ export class TiltifyData {
 
     async alarm(): Promise<void> {
         if (this.env.ENABLE_REFRESH) {
-            this.storage.setAlarm(Date.now() + (this.env.REFRESH_TIME * 1000));
+            this.storage.setAlarm(Date.now() + (this.env.LIVE_REFRESH_TIME * 1000));
         }
 
         console.log('Alarm Called, fetching latest Tiltify data...');

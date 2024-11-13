@@ -50,10 +50,11 @@
     ],
     "compounds": [
         {
-            "name": "Debug Cache Service",
+            "name": "Debug System",
             "configurations": [
                 "Run Cache Service",
-                "Attach Debugger to Cache Service"
+                "Attach Debugger to Cache Service",
+                "Run Website & API"
             ]
         }
     ]

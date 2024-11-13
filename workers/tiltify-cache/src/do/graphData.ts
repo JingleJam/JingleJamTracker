@@ -2,7 +2,7 @@ import { Env } from "tiltify-cache/types/env";
 import { roundAmount } from "tiltify-cache/utils";
 import { CurrentGraphPoint } from "tiltify-cache/types/CurrentGraphPoint";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
-import { GRAPH_API_PATH, TILTIFY_API_PATH, UPDATE_TIME_FREQ, UPDATE_TIME_GRAPH } from "tiltify-cache/constants";
+import { GRAPH_API_PATH, TILTIFY_API_PATH } from "tiltify-cache/constants";
 
 /*
   Graph Data Durable Object
@@ -25,10 +25,10 @@ export class GraphData {
 
         // Get the current cached graph list
         if (request.method === 'GET' && url.pathname === GRAPH_API_PATH) {
-            let data = await this.storage.get(this.env.DURABLE_OBJECT_CACHE_KEY) || null;
+            let data: any[] | null = await this.storage.get(this.env.DURABLE_OBJECT_CACHE_KEY) || [];
 
             // If the cached value is not found first time load), create a default object and save it to the cache
-            if (!data) {
+            if (!data || data.length === 0) {
                 data = await this.defaultObject();
                 await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, data);
             }
@@ -36,7 +36,7 @@ export class GraphData {
             // Start the alarm if it is currently not started and it should be
             let currentAlarm = await this.storage.getAlarm();
             if (currentAlarm == null && this.env.ENABLE_GRAPH_REFRESH) {
-                this.storage.setAlarm(Date.now() + UPDATE_TIME_GRAPH);
+                this.storage.setAlarm(Date.now());
             }
 
             return new Response(JSON.stringify(data));
@@ -60,7 +60,7 @@ export class GraphData {
     async alarm(): Promise<void> {
         // Check if the graph refresh is enabled and set the alarm if it is
         if (this.env.ENABLE_GRAPH_REFRESH) {
-            this.storage.setAlarm(Date.now() + UPDATE_TIME_GRAPH);
+            this.storage.setAlarm(Date.now() + 60 * 1000);
         }
 
         console.log('Alarm Called, fetching latest graph data...');
@@ -84,7 +84,8 @@ export class GraphData {
         const tiltifyData = await this.getLatestData();
 
         // Check if the tiltify data is null or the date is not divisible by the update time frequency
-        if (!tiltifyData || new Date(tiltifyData.date).getMinutes() % UPDATE_TIME_FREQ !== 0) {
+        if (!tiltifyData || new Date(tiltifyData.date).getMinutes() % (this.env.GRAPH_REFRESH_TIME/60) !== 0) {
+            console.log('Skipped alarm...');
             return null;
         }
 
