@@ -45,9 +45,9 @@ jobs:
 
       - name: Publish KV's to Development
         run: |
-          npm run kv-trends-previous:development
+          npm run kv-trends-previous:production
           cd ./workers/tiltify-cache
-          npm run kv-causes:development
-          npm run kv-summary:development
+          npm run kv-causes:production
+          npm run kv-summary:production
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
