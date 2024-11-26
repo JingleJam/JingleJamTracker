@@ -19,8 +19,12 @@ jobs:
         with:
             node-version: '20'
 
-      - name: Install dependencies
+      - name: Install Cache dependencies
         working-directory: ./workers/tiltify-cache
+        run: npm install
+
+      - name: Install Web UI & API dependencies
+        working-directory: ./
         run: npm install
 
       - name: Publish Pages to Production
@@ -39,11 +43,11 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      - name: Publish KV to Production
+      - name: Publish KV's to Development
         run: |
-          npm run kv-causes:production
-          npm run kv-summary:production
-          npm run kv-trends-previous:production
-        working-directory: ./workers/tiltify-cache
+          npm run kv-trends-previous:development
+          cd ./workers/tiltify-cache
+          npm run kv-causes:development
+          npm run kv-summary:development
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

@@ -5,7 +5,7 @@
         current: [],
         previous: [],
         refreshTime: 10000,         //How often to wait for an API refresh
-        waitTime: 4000,             //How long to wait for the data on the backend to be updated
+        waitTime: 3000,             //How long to wait for the data on the backend to be updated
         minRefreshTime: 5000,       //Minimum refresh time for the API
         graphTime: 1000 * 60 * 10,  //Graph should update every 10 minutes
         pageIsVisible: true,
@@ -255,12 +255,12 @@
 
                 if (date.getHours() === 0) {
                     if (window.innerWidth < 675) {
-                        if (date.getDate() % 2 === 0) {
-                            return date.getDate();
+                        if (date.getUTCDate() % 2 === 0) {
+                            return date.getUTCDate();
                         }
                     }
                     else
-                        return date.getDate();
+                        return date.getUTCDate();
                 }
                 return "";
             },
@@ -275,14 +275,14 @@
     //Add hours to a date
     function addHours(date, hours) {
         const dateCopy = new Date(date);
-        dateCopy.setHours(dateCopy.getHours() + hours);
+        dateCopy.setHours(dateCopy.getUTCHours() + hours);
         return dateCopy;
     }
 
     //Add seconds to a date
     function addSeconds(date, seconds) {
         const dateCopy = new Date(date);
-        dateCopy.setSeconds(dateCopy.getHours() + seconds);
+        dateCopy.setSeconds(dateCopy.getUTCSeconds() + seconds);
         return dateCopy;
     }
 
@@ -651,7 +651,7 @@
         let points = await (await fetchWithTimeout(JingleJam.domain + '/api/graph/previous')).json();
 
         for (let point of points) {
-            point.time = new Date(point.timestamp + " GMT");
+            point.time = new Date(point.timestamp);
 
             if (point.time.getMonth() < 10)
                 point.x = point.time.setFullYear(JingleJam.model.event.year + 1);
@@ -662,10 +662,14 @@
         JingleJam.previous = groupBy(points, x => x.year);
     }
 
-    function getClientTimezone() {
-        return new Intl.DateTimeFormat('en', {
-            timeZoneName: 'short',
-        }).formatToParts(new Date()).find(part => part.type === 'timeZoneName').value;
+    function getDateTimeInGMT(date) {
+        return `${date.getUTCFullYear()}-${(date.getUTCMonth() + 1)
+          .toString()
+          .padStart(2, '0')}-${date.getUTCDate().toString().padStart(2, '0')}T${date.getUTCHours()
+          .toString()
+          .padStart(2, '0')}:${date.getUTCMinutes()
+          .toString()
+          .padStart(2, '0')}:${date.getUTCSeconds().toString().padStart(2, '0')}.000`;
     }
 
     const colors = {
@@ -676,7 +680,8 @@
         '2020': '#ff0081',
         '2021': '#6967ff',
         '2022': '#6ba950',
-        '2023': '#d64538'
+        '2023': '#d64538',
+        '2024': '#6e4ee0'
     }
     let myChart;
 
@@ -773,10 +778,10 @@
                         },
                         title: {
                             display: true,
-                            text: `Day (${getClientTimezone()})`
+                            text: `Day (GMT)`
                         },
-                        min: JingleJam.graphDates.minDate,
-                        max: JingleJam.graphDates.maxDate,
+                        min: getDateTimeInGMT(new Date(JingleJam.graphDates.minDate)),
+                        max: getDateTimeInGMT(new Date(JingleJam.graphDates.maxDate)),
                         grid: {
                             color: '#d4d4d4'
                         }

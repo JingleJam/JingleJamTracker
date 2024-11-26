@@ -1,6 +1,6 @@
 export interface Context {
     request: Request;
-    env: Env;  // You can replace 'any' with a more specific type if your env variables have defined structures.
+    env: Env;
 }
 
 export interface Env {

@@ -82,7 +82,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
     }
 
     // Get donation counts from Yogscast API
-    apiResponse.donations.count = yogscastAPI?.donations || apiResponse.collections.redeemed || 0;
+    apiResponse.donations.count = apiResponse.collections.redeemed || yogscastAPI?.donations || 0;
 
     /*
       Campaigns:
@@ -261,8 +261,8 @@ async function getDefaultResponse(env: Env, date = new Date()): Promise<ApiRespo
 }
 
 
-const debugStartDate = new Date(2023, 9, 17, 20, 20, 10);
-const debugEndDate = new Date(2023, 10, 13, 22, 10, 0);
+const debugStartDate = new Date(2024, 10, 13, 0, 5, 0);
+const debugEndDate = new Date(2024, 10, 23, 22, 10, 0);
 
 // Create fake data for debugging purposes
 async function getDebugData(env: Env): Promise<ApiResponse> {
