@@ -19,8 +19,12 @@ jobs:
         with:
             node-version: '20'
 
-      - name: Install dependencies
+      - name: Install Cache dependencies
         working-directory: ./workers/tiltify-cache
+        run: npm install
+
+      - name: Install Web UI & API dependencies
+        working-directory: ./
         run: npm install
 
       - name: Publish Pages to Development
