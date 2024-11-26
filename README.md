@@ -1,5 +1,5 @@
 # Jingle Jam Tracker # 
-The API and Web UI powering the official [Jingle Jam Tracker](https://www.jinglejam.co.uk/tracker). The API endpoints are accessable at `https://dashboard.jinglejam.co.uk/`.
+The API and Web UI powering the official [Jingle Jam Tracker](https://www.jinglejam.co.uk/tracker). The API endpoints are accessible at `https://dashboard.jinglejam.co.uk/`
 
 ## API Endpoints
 
@@ -48,7 +48,7 @@ The Jingle Jam Tracker is dependent on 2 services, the Caching service and the W
 
 1. Install and Configure [Wrangler](https://developers.cloudflare.com/workers/wrangler/)
     - If you're using Visual Studio Code, also install the extension [F5 Anything](https://marketplace.visualstudio.com/items?itemName=discretegames.f5anything) to help run the launch configurations to populate the KV's
-    
+
 2. Run the `Add Local KV's` configuration to setup the static Cloudflare KV values (causes, historic data, etc.)
     - If you're not using Visual Studio Code, run the commands in the `launch.json` manually to setup the KV bindings
 
