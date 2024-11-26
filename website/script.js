@@ -651,7 +651,7 @@
         let points = await (await fetchWithTimeout(JingleJam.domain + '/api/graph/previous')).json();
 
         for (let point of points) {
-            point.time = new Date(point.timestamp + " GMT");
+            point.time = new Date(point.timestamp);
 
             if (point.time.getMonth() < 10)
                 point.x = point.time.setFullYear(JingleJam.model.event.year + 1);
@@ -676,7 +676,8 @@
         '2020': '#ff0081',
         '2021': '#6967ff',
         '2022': '#6ba950',
-        '2023': '#d64538'
+        '2023': '#d64538',
+        '2024': '#6e4ee0'
     }
     let myChart;
 

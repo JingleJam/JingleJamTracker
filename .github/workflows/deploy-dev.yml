@@ -38,11 +38,12 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      - name: Publish KV to Development
+      - name: Publish KV's to Development
         run: |
+          cd ./workers/tiltify-cache
           npm run kv-causes:development
           npm run kv-summary:development
+          cd -
           npm run kv-trends-previous:development
-        working-directory: ./workers/tiltify-cache
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
