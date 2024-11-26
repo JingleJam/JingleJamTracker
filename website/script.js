@@ -255,12 +255,12 @@
 
                 if (date.getHours() === 0) {
                     if (window.innerWidth < 675) {
-                        if (date.getDate() % 2 === 0) {
-                            return date.getDate();
+                        if (date.getUTCDate() % 2 === 0) {
+                            return date.getUTCDate();
                         }
                     }
                     else
-                        return date.getDate();
+                        return date.getUTCDate();
                 }
                 return "";
             },
@@ -275,14 +275,14 @@
     //Add hours to a date
     function addHours(date, hours) {
         const dateCopy = new Date(date);
-        dateCopy.setHours(dateCopy.getHours() + hours);
+        dateCopy.setHours(dateCopy.getUTCHours() + hours);
         return dateCopy;
     }
 
     //Add seconds to a date
     function addSeconds(date, seconds) {
         const dateCopy = new Date(date);
-        dateCopy.setSeconds(dateCopy.getHours() + seconds);
+        dateCopy.setSeconds(dateCopy.getUTCSeconds() + seconds);
         return dateCopy;
     }
 
@@ -662,10 +662,14 @@
         JingleJam.previous = groupBy(points, x => x.year);
     }
 
-    function getClientTimezone() {
-        return new Intl.DateTimeFormat('en', {
-            timeZoneName: 'short',
-        }).formatToParts(new Date()).find(part => part.type === 'timeZoneName').value;
+    function getDateTimeInGMT(date) {
+        return `${date.getUTCFullYear()}-${(date.getUTCMonth() + 1)
+          .toString()
+          .padStart(2, '0')}-${date.getUTCDate().toString().padStart(2, '0')}T${date.getUTCHours()
+          .toString()
+          .padStart(2, '0')}:${date.getUTCMinutes()
+          .toString()
+          .padStart(2, '0')}:${date.getUTCSeconds().toString().padStart(2, '0')}.000`;
     }
 
     const colors = {
@@ -774,10 +778,10 @@
                         },
                         title: {
                             display: true,
-                            text: `Day (${getClientTimezone()})`
+                            text: `Day (GMT)`
                         },
-                        min: JingleJam.graphDates.minDate,
-                        max: JingleJam.graphDates.maxDate,
+                        min: getDateTimeInGMT(new Date(JingleJam.graphDates.minDate)),
+                        max: getDateTimeInGMT(new Date(JingleJam.graphDates.maxDate)),
                         grid: {
                             color: '#d4d4d4'
                         }
