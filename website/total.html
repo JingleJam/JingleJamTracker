@@ -1,0 +1,62 @@
+<html>
+    <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+        
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+
+        <title>Jingle Jam Tracker</title>
+    </head>
+    <body>
+        <div id='myContainer'></div>
+
+        <script>
+            (function(){
+                const domain = './';
+
+                let element = document.querySelector('#myContainer');
+
+                async function loadTracker(){
+                    let html = await fetch(domain + "indexTotal")
+                    element.innerHTML = await html.text();
+                }
+                
+                function createScript(url){
+                    let scr = document.createElement('script');
+                    scr.src = url;
+                    scr.type = 'text/javascript';
+                    scr.async = false;
+                    element.appendChild(scr);
+                }
+                
+                function createStyle(url){
+                    let scr = document.createElement('div');
+                    scr.innerHTML = `<link rel="stylesheet" type="text/css" href="${url}"/>`;
+                    document.getElementsByTagName("head")[0].appendChild(scr);
+                }
+
+                async function create(){
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js');
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.js');
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js');
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js');
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-moment/1.0.1/chartjs-adapter-moment.min.js');
+                    
+                    createStyle('https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.css');
+                    createStyle(domain + 'style.css');
+
+                    await loadTracker();
+
+                    createScript(domain + 'scriptTotal.js');
+                }
+
+                create();
+            })();
+        </script>
+
+    </body>
+</html>
