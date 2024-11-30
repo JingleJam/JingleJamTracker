@@ -202,7 +202,6 @@
                 updateCounts(true);
                 updateCards(true);
                 setTables();
-                createGraph();
             }
         });
 
