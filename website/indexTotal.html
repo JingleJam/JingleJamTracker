@@ -1,0 +1,44 @@
+<div id="embedContainer" data-status="live">
+  <div class="ui segment" id="loader">
+    <div class="ui active inverted dimmer" style="background-color: #1b1c1d00">
+      <div class="ui massive text loader">Loading</div>
+    </div>
+    <p></p>
+  </div>
+  <div class="ui segment" id="error" style="display: none;">
+    <div class="ui active inverted dimmer" style="background-color: #1b1c1d00">
+      <div><i class="times icon huge"></i></div>
+      <span class="ui big text">Error Loading Tracker</span>
+    </div>
+  </div>
+  <div id="content" style="display: none;">
+    <div class="guttered">
+      <div class="guttered-section">
+        <div class="flexable">
+          <div class="ui segment jj-pink-border-top large centered stat full-width" style="height: 180px;">
+            <div class="header">
+              <h2 id="mainCounterHeader"></h2>
+            </div>
+            <div class="body" style="margin-top: 0px;">
+              <div class="change-counter-div">
+                <div class="change-counter hide">
+                  <div class="change-counter-text" id="mainCounterChange"></div>
+                </div>
+              </div>
+              <div class="value jj-pink" id="mainCounter"> </div>
+            </div>
+            <div id="liveUpdatingRow" class="hide-live-update">
+              <label class="subtext-label left" id="updatingRealTime">
+                <div class="ui active slow loader mini"></div>
+                <div class="loading-circle">
+                  <i class="live-icon icon circle"></i>
+                </div> Updating Live
+              </label>
+              <label class="subtext-label right" id="labelDate" style="float: right;"> Last Updated: N/A </label>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
