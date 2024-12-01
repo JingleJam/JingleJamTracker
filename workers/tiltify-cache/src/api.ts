@@ -261,8 +261,8 @@ async function getDefaultResponse(env: Env, date = new Date()): Promise<ApiRespo
 }
 
 
-const debugStartDate = new Date(2024, 10, 13, 0, 5, 0);
-const debugEndDate = new Date(2024, 10, 23, 22, 10, 0);
+const debugStartDate = new Date(2024, 10, 29, 7, 27, 0);
+const debugEndDate = new Date(2024, 10, 30, 22, 10, 0);
 
 // Create fake data for debugging purposes
 async function getDebugData(env: Env): Promise<ApiResponse> {
