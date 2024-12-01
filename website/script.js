@@ -404,7 +404,7 @@
             let fundDollars = cause.raised.fundraisers * conversion;
 
             causesCards += `
-            <a class="card" style="max-width: 1100px; width: 100%; padding: 10px;" href="${(JingleJam.isLive() ? cause.donateUrl : cause.url)}" target="_blank" id="card${cause.id}">
+            <a class="card" style="max-width: 1300px; width: 100%; padding: 10px;" href="${(JingleJam.isLive() ? cause.donateUrl : cause.url)}" target="_blank" id="card${cause.id}">
               <div class="image">
                 <img src="${cause.logo}">
               </div>
@@ -456,8 +456,8 @@
         let table = ''
         for (let year of JingleJam.model.history) {
             table += `<tr>`
-            table += `<th label="Year" class="center aligned">${year.year}</th>`
-            table += `<th label="Raised" class="right aligned jj-thin year-raised">${JingleJam.settings.isPounds ? formatCurrency(year.total.pounds) : formatCurrency(year.total.dollars)}</th>`
+            table += `<td label="Year" class="center aligned bold">${year.year}</td>`
+            table += `<td label="Raised" class="right aligned jj-thin year-raised">${JingleJam.settings.isPounds ? formatCurrency(year.total.pounds) : formatCurrency(year.total.dollars)}</td>`
             table += '</tr>'
         }
         $('#yearsTable tbody').html(table);
