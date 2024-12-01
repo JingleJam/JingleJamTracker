@@ -158,7 +158,7 @@
     //Hide the main page loader
     function hideLoader() {
         $('#loader').hide();
-        $('#content').show();
+        $('#trackerContent').show();
     }
 
     //Toggle the Live Row
