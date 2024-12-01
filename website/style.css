@@ -173,7 +173,7 @@
     border-top: 2px solid #e21251
 }
 
-#embedContainer .ui.cards .card .header {
+#embedContainer .ui.cards .card .header-text {
     word-break: break-word;
 }
 
@@ -197,10 +197,6 @@
     display: flex;
     justify-content: center;
     align-items: center;
-}
-
-#embedContainer .ui.cards .card .total .content {
-    margin-top: 6px;
 }
 
 #embedContainer .raised-total {
@@ -277,13 +273,17 @@
     max-width: 300px;
 }
 
-#embedContainer .ui.segment>.header {
+#embedContainer .ui.segment>.header-text {
     color: #6a6a6a;
     word-break: break-word;
 }
 
-#embedContainer .ui.segment.centered>.header {
+#embedContainer .ui.segment.centered>.header-text {
     position: absolute;
+}
+
+#embedContainer {
+    line-height: 20px !important;
 }
 
 #embedContainer .ui.segment.centered>.body {
@@ -358,10 +358,6 @@
 
     #embedContainer .ui.segment.stat.full-width .body {
         margin-top: 8px !important;
-    }
-
-    #embedContainer .ui.cards .card .total .content {
-        margin-top: 0px;
     }
 
     #embedContainer .change-counter-div .change-counter {

@@ -11,8 +11,8 @@
       <span class="ui big text">Error Loading Tracker</span>
     </div>
   </div>
-  <div id="content" style="display: none;">
-    <div class="ui compact huge segment" id="currencySelectorObj" style="right: 20px;">
+  <div id="trackerContent" style="display: none;">
+    <div class="ui compact huge segment" id="currencySelectorObj" style="right: 20px; background-color: white;">
       <label style="margin-right: 11px;">$</label>
       <div class="ui slider checkbox">
         <input type="checkbox" id="currencyCheckbox">
@@ -23,7 +23,7 @@
       <div class="guttered-section" style="margin-top: 43px;">
         <div class="flexable">
           <div class="ui segment jj-pink-border-top large centered stat full-width" style="height: 180px;">
-            <div class="header">
+            <div class="header-text">
               <h2 id="mainCounterHeader"></h2>
             </div>
             <div class="body" style="margin-top: 0px;">
@@ -46,7 +46,7 @@
           </div>
           <div class="flexable" style="flex: 0%; align-self: start;" id="leftGrid">
             <div class="ui segment jj-pink-border-top large centered stat">
-              <div class="header">
+              <div class="header-text">
                 <h3>Collections Distributed</h3>
               </div>
               <div class="body">
@@ -54,7 +54,7 @@
               </div>
             </div>
             <div class="ui segment jj-pink-border-top large centered stat">
-              <div class="header">
+              <div class="header-text">
                 <h3>Donations</h3>
               </div>
               <div class="body">
@@ -62,7 +62,7 @@
               </div>
             </div>
             <div class="ui segment jj-pink-border-top large centered stat">
-              <div class="header">
+              <div class="header-text">
                 <h3>Average Donation</h3>
               </div>
               <div class="body">
@@ -70,7 +70,7 @@
               </div>
             </div>
             <div class="ui segment jj-pink-border-top large centered stat">
-              <div class="header">
+              <div class="header-text">
                 <h3>Raised Since <span class="jj-start-year"></span></h3>
               </div>
               <div class="body">
@@ -78,7 +78,7 @@
               </div>
             </div>
             <div class="ui segment jj-pink-border-top fit-content large centered">
-              <div class="header">
+              <div class="header-text">
                 <h3>Previous Years</h3>
               </div>
               <div class="body">
@@ -98,7 +98,7 @@
           </div>
           <div class="flexable" style="flex: 50%; align-self: start;" id="rightGrid">
             <div class="ui segment jj-pink-border-top fit-content centered full-width">
-              <div class="header">
+              <div class="header-text">
                 <h2>Charities</h2>
               </div>
               <div class="body">
@@ -117,7 +117,7 @@
         </div>
         <div class="ui segment jj-pink-border-top fit-content large centered"
           style="margin-top: 35px !important; margin-bottom: 20px !important;">
-          <div class="header">
+          <div class="header-text">
             <h3>Amount Raised Over Time</h3>
           </div>
           <div class="body" style="height: auto;">
