@@ -634,7 +634,7 @@
             let points = await response.json();
 
             for (let point of points) {
-                point.time = new Date(point.date);
+                point.time = new Date(getDateTimeInGMT(point.date));
                 point.x = point.time.getTime();
                 point.year = point.time.getFullYear();
             }
@@ -780,8 +780,8 @@
                             display: true,
                             text: `Day (GMT)`
                         },
-                        min: getDateTimeInGMT(new Date(JingleJam.graphDates.minDate)),
-                        max: getDateTimeInGMT(new Date(JingleJam.graphDates.maxDate)),
+                        min: getDateTimeInGMT(new Date('12/01/2024 17:00 GMT')),
+                        max: getDateTimeInGMT(new Date('01/01/2025 00:00 GMT')),
                         grid: {
                             color: '#d4d4d4'
                         }
