@@ -634,7 +634,7 @@
             let points = await response.json();
 
             for (let point of points) {
-                point.time = getDateTimeInGMT(point.date);
+                point.time = new Date(getDateTimeInGMT(point.date));
                 point.x = point.time.getTime();
                 point.year = point.time.getFullYear();
             }

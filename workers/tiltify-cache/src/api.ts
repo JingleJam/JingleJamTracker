@@ -175,6 +175,11 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
         ? `${campaign.node.description.slice(0, maxDescriptionLength)}...`
         : campaign.node.description;
 
+        // Skip campaigns without a user
+        if(!campaign.node.user?.id){
+          continue;
+        }
+
       campaignsComputed.push({
         causeId: campaign.node.region?.id || null,
         name: campaign.node.name,
