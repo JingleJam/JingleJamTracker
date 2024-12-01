@@ -61,10 +61,6 @@
             $('#currencyCheckbox').attr('checked', 'checked')
         }
 
-        //Set Chart Defaults
-        Chart.defaults.font.family = 'Montserrat';
-        Chart.defaults.font.size = 14;
-
         //Domain lookup
         if (window.location.hostname.includes('jinglejam.co.uk') ||
             window.location.hostname.includes('squarespace.com') ||
@@ -90,12 +86,6 @@
         $('.jj-start-year').text(JingleJam.startYear);
         $('.jj-year').text(JingleJam.model.event.year);
         $('.jj-cause-count').text(JingleJam.model.causes.length);
-
-        //Replace HTML tables with model data
-        setTables();
-
-        //Create the charity cards
-        createCards();
 
         //Set the data on load
         updateCounts();
@@ -193,18 +183,6 @@
 
     //Setup components on the page
     function setupComponents() {
-        //Event when the currency checkbox is toggled
-        $('#currencyCheckbox').checkbox({
-            onChange: function () {
-                JingleJam.settings.isPounds = $('#currencyCheckbox').is(':checked');
-                localStorage.setItem('currency', JingleJam.settings.isPounds);
-
-                updateCounts(true);
-                updateCards(true);
-                setTables();
-            }
-        });
-
         //Handle when tabbed out of the page
         let hidden;
         let visibilityChange;
@@ -236,43 +214,6 @@
                 }, 1000);
             }, false);
         }
-
-        //Date Range Slider
-        $('#dateRange').slider({
-            min: 0,
-            max: Math.abs(JingleJam.graphDates.maxDate - JingleJam.graphDates.minDate) / 36e5,
-            start: 0,
-            end: Math.abs(JingleJam.graphDates.maxDate - JingleJam.graphDates.minDate) / 36e5,
-            step: 1,
-            smooth: true,
-            labelDistance: 24,
-            interpretLabel: function (value) {
-                let date = addHours(JingleJam.model.event.start, value);
-
-                if (date.getHours() === 0) {
-                    if (window.innerWidth < 675) {
-                        if (date.getUTCDate() % 2 === 0) {
-                            return date.getUTCDate();
-                        }
-                    }
-                    else
-                        return date.getUTCDate();
-                }
-                return "";
-            },
-            onChange: function (e, min, max) {
-                let minDate = addHours(JingleJam.model.event.start, min);
-                let maxDate = addHours(JingleJam.model.event.start, max);
-                updateStep(minDate.getTime(), maxDate.getTime());
-            }
-        });
-    }
-
-    //Add hours to a date
-    function addHours(date, hours) {
-        const dateCopy = new Date(date);
-        dateCopy.setHours(dateCopy.getUTCHours() + hours);
-        return dateCopy;
     }
 
     //Formats a currency value
@@ -382,43 +323,6 @@
         formatNumberText(elem, format(target))
     }
 
-    //Creates the card components
-    function createCards() {
-        let conversion = JingleJam.model.avgConversionRate;
-
-        let sortedCauses = JingleJam.model.causes.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
-        let causesCards = '';
-        for (let cause of sortedCauses) {
-            let yogDollars = cause.raised.yogscast * conversion;
-            let fundDollars = cause.raised.fundraisers * conversion;
-
-            causesCards += `
-            <a class="card" style="max-width: 1100px; width: 100%; padding: 10px;" href="${(JingleJam.isLive() ? cause.donateUrl : cause.url)}" target="_blank" id="card${cause.id}">
-              <div class="image">
-                <img src="${cause.logo}">
-              </div>
-              <div class="content">
-                <div class="header">${cause.name}</div>
-                <hr size="1" class="divider" style="margin: 3px 0px 8px 0px; width: calc(100% - 10px); opacity: .5; display: none;">
-                <div class="description">
-                    ${cause.description}
-                </div>
-              </div>
-              <div class="total">
-                <div class="extra content total-bold jj-pink">
-                    <span class="raised-total">
-                        ${JingleJam.settings.isPounds ? formatCurrency(cause.raised.fundraisers + cause.raised.yogscast) : formatCurrency(yogDollars + fundDollars)}
-                    </span>
-                    <div class="raised-label">
-                        raised
-                    </div>
-                </div>
-              </div>
-            </a>`;
-        }
-        $('#charityCards').html(causesCards);
-    }
-
     //Update the totals on the charities cards
     function updateCards(instant = false) {
         let conversion = JingleJam.model.avgConversionRate;
@@ -438,18 +342,6 @@
             else
                 animateCount(`#charityCards #card${cause.id} .raised-total`, formatCurrency, totalFund, totalFundDollar);
         }
-    }
-
-    //Set the previous years table with the previous year data
-    function setTables() {
-        let table = ''
-        for (let year of JingleJam.model.history) {
-            table += `<tr>`
-            table += `<th label="Year" class="center aligned">${year.year}</th>`
-            table += `<th label="Raised" class="right aligned jj-thin year-raised">${JingleJam.settings.isPounds ? formatCurrency(year.total.pounds) : formatCurrency(year.total.dollars)}</th>`
-            table += '</tr>'
-        }
-        $('#yearsTable tbody').html(table);
     }
 
     function updateCounts(instant = false) {
