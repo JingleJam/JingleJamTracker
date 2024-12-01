@@ -127,7 +127,7 @@
         }
         else {
             $('[data-status]').attr('data-status', 'countdown')
-            $('#mainCounter').html(JingleJam.timeLeft.days + "d " + JingleJam.timeLeft.hours + "h " + JingleJam.timeLeft.minutes + "m " + JingleJam.timeLeft.seconds + "s ");
+            $('#embedContainer #mainCounter').html(JingleJam.timeLeft.days + "d " + JingleJam.timeLeft.hours + "h " + JingleJam.timeLeft.minutes + "m " + JingleJam.timeLeft.seconds + "s ");
             $('#mainCounterHeader').text('Countdown to ' + JingleJam.model.event.year);
         }
     }
@@ -478,26 +478,26 @@
         //Update the components instantly
         if (instant) {
             if (!JingleJam.isWaiting()) {
-                setCount('#mainCounter', (JingleJam.settings.isPounds ? (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) : (yogsDollars + fundDollars)), formatCurrency);
-                setCount('#bundlesSold', JingleJam.model.collections.redeemed, formatInt);
-                setCount('#donationCount', JingleJam.model.donations.count, (x) => formatInt(x));
-                setCount('#averageDonation', (JingleJam.settings.isPounds ? avgPounds : avgDollars), (x) => formatCurrency(x, 2));
+                setCount('#embedContainer #mainCounter', (JingleJam.settings.isPounds ? (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) : (yogsDollars + fundDollars)), formatCurrency);
+                setCount('#embedContainer #bundlesSold', JingleJam.model.collections.redeemed, formatInt);
+                setCount('#embedContainer #donationCount', JingleJam.model.donations.count, (x) => formatInt(x));
+                setCount('#embedContainer #averageDonation', (JingleJam.settings.isPounds ? avgPounds : avgDollars), (x) => formatCurrency(x, 2));
             }
             else {
-                setCount('#bundlesSold', 0, formatInt);
-                setCount('#donationCount', 0, (x) => formatInt(x));
-                setCount('#averageDonation', 0, (x) => formatCurrency(x, 2));
+                setCount('#embedContainer #bundlesSold', 0, formatInt);
+                setCount('#embedContainer #donationCount', 0, (x) => formatInt(x));
+                setCount('#embedContainer #averageDonation', 0, (x) => formatCurrency(x, 2));
             }
 
-            setCount('#raisedEntire', (JingleJam.settings.isPounds ? totalPounds : totalDollars), formatCurrency);
+            setCount('#embedContainer #raisedEntire', (JingleJam.settings.isPounds ? totalPounds : totalDollars), formatCurrency);
         }
         //Update the components by counting up
         else {
             if (!JingleJam.isWaiting()) {
-                animateCount('#mainCounter', formatCurrency, JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers, yogsDollars + fundDollars);
-                animateCount('#bundlesSold', formatInt, JingleJam.model.collections.redeemed);
-                animateCount('#donationCount', (x) => formatInt(x), JingleJam.model.donations.count);
-                animateCount('#averageDonation', (x) => formatCurrency(x, 2), avgPounds, avgDollars);
+                animateCount('#embedContainer #mainCounter', formatCurrency, JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers, yogsDollars + fundDollars);
+                animateCount('#embedContainer #bundlesSold', formatInt, JingleJam.model.collections.redeemed);
+                animateCount('#embedContainer #donationCount', (x) => formatInt(x), JingleJam.model.donations.count);
+                animateCount('#embedContainer #averageDonation', (x) => formatCurrency(x, 2), avgPounds, avgDollars);
 
                 if(JingleJam.oldModel){
                     let oldYogsDollars = JingleJam.oldModel.raised.yogscast * conversion;
@@ -507,19 +507,19 @@
                     let oldAmount = (JingleJam.settings.isPounds ? (JingleJam.oldModel.raised.yogscast + JingleJam.oldModel.raised.fundraisers) : (oldYogsDollars + oldFundDollars));
                     let difference = amount - oldAmount;
                     if(difference > 0){
-                        setCount(`#mainCounterChange`, amount - oldAmount, (x) => "+ " + formatCurrency(x));
+                        setCount(`#embedContainer #mainCounterChange`, amount - oldAmount, (x) => "+ " + formatCurrency(x));
                         
                         resetAnimation();
                     }
                 }
             }
             else {
-                animateCount('#bundlesSold', formatInt, 0);
-                animateCount('#donationCount', (x) => formatInt(x), 0);
-                animateCount('#averageDonation', (x) => formatCurrency(x, 2), 0, 0);
+                animateCount('#embedContainer #bundlesSold', formatInt, 0);
+                animateCount('#embedContainer #donationCount', (x) => formatInt(x), 0);
+                animateCount('#embedContainer #averageDonation', (x) => formatCurrency(x, 2), 0, 0);
             }
 
-            animateCount('#raisedEntire', formatCurrency, totalPounds, totalDollars);
+            animateCount('#embedContainer #raisedEntire', formatCurrency, totalPounds, totalDollars);
         }
 
         updateCards(instant);
