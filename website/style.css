@@ -90,7 +90,7 @@
 #embedContainer #dateRange {
     margin-top: 5px;
     width: 100% !important;
-    max-width: 1350px !important;
+    max-width: 1750px !important;
 }
 
 #embedContainer tbody th {
@@ -164,6 +164,7 @@
 
 #embedContainer .jj-thin {
     font-weight: 300;
+    font-size: 18px;
 }
 
 #embedContainer .jj-pink {
@@ -203,7 +204,7 @@
 #embedContainer .raised-total {
     font-weight: 900;
     text-transform: uppercase;
-    font-size: 1.9em;
+    font-size: 2.1em;
     font-feature-settings: "tnum";
     letter-spacing: -1.5px;
 }
@@ -222,7 +223,7 @@
     box-sizing: border-box;
     color: rgba(0, 0, 0, .85);
     cursor: pointer;
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 700;
     line-height: 23.1429px;
     margin-top: -3.856px;
@@ -231,8 +232,32 @@
     unicode-bidi: isolate;
 }
 
+#embedContainer .card .description {
+    font-size: 16px;
+}
+
 #embedContainer h1, #embedContainer h2, #embedContainer h3 {
     color: rgb(106, 106, 106) !important;
+}
+
+/*
+    FONT SIZES
+*/
+
+#embedContainer h1 {
+    font-size: 2.5em;
+}
+
+#embedContainer h2 {
+    font-size: 2.0em;
+}
+
+#embedContainer h3 {
+    font-size: 1.3em;
+}
+
+#embedContainer p {
+    font-size: 18px;
 }
 
 
@@ -250,7 +275,7 @@
 
 #embedContainer .guttered .guttered-section {
     width: 100%;
-    max-width: 1400px;
+    max-width: 1700px;
 }
 
 #embedContainer .flexable {
@@ -280,15 +305,23 @@
 }
 
 #embedContainer .ui.segment.stat {
-    min-width: 350px;
-    max-width: 330px;
-    height: 140px;
+    min-width: 450px;
+    max-width: 430px;
+    height: 160px;
     margin: 0px;
 }
 
 #embedContainer .ui.segment table {
-    min-width: 300px;
-    max-width: 300px;
+    min-width: 400px;
+    max-width: 400px;
+}
+
+#embedContainer .ui.segment table td {
+    padding: 10px !important;
+}
+
+#embedContainer .ui.segment table .bold {
+    font-weight: bold;
 }
 
 #embedContainer .ui.segment>.header-text {
@@ -330,18 +363,26 @@
     letter-spacing: -2.5px;
 }
 
+#embedContainer .ui.segment.stat.main {
+    height: 210px;
+}
+
+#embedContainer .ui.segment.stat .value.large {
+    font-size: 4.0em;
+}
+
 #embedContainer .ui.segment.stat .value.small {
-    font-size: 2.3em;
+    font-size: 2.7em;
 }
 
 #embedContainer .ui.segment.stat .value.tiny {
-    font-size: 1.8em;
+    font-size: 1.9em;
 }
 
 @media screen and (max-width: 1100px) {
     #embedContainer .ui.segment.stat {
         max-width: 100%;
-        height: 120px;
+        height: 125px;
         flex: 1;
     }
 
@@ -369,9 +410,13 @@
         min-width: 100%;
     }
 
-    #embedContainer .ui.segment.stat .value {
+    #embedContainer .ui.segment.stat .value.large {
         font-weight: bold;
-        font-size: 2.7em;
+        font-size: 2.4em !important;
+    }
+
+    #embedContainer .ui.segment.stat .value.small {
+        font-size: 2.1em;
     }
 
     #embedContainer .ui.segment.stat.full-width .body {
@@ -380,6 +425,26 @@
 
     #embedContainer .change-counter-div .change-counter {
         margin-left: 230px !important;
+    }
+    
+    /*
+        FONT SIZES
+    */
+
+    #embedContainer h1 {
+        font-size: 2.0em;
+    }
+
+    #embedContainer h2 {
+        font-size: 1.7em;
+    }
+
+    #embedContainer h3 {
+        font-size: 1.2em;
+    }
+
+    #embedContainer p {
+        font-size: 16px;
     }
 }
 
