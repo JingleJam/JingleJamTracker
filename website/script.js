@@ -634,14 +634,17 @@
             let points = await response.json();
 
             for (let point of points) {
-                point.time = new Date(getDateTimeInGMT(point.date));
-                point.x = point.time.getTime();
+                point.time = new Date(point.date);
+                point.x = new Date(getDateTimeInGMT(point.time)).getTime();
                 point.year = point.time.getFullYear();
             }
 
             JingleJam.current = groupBy(points, x => x.year);
+
+            console.log(points);
         }
         catch {
+            console.log('Error getting current data');
             JingleJam.current = [];
         }
     }
@@ -717,12 +720,14 @@
 
             let currentData =  year[1].map(function (m) { return { x: m.x, y: m[JingleJam.settings.isPounds ? 'p' : 'd'] }; });
             
+            /*
             if(JingleJam.isLive()){
                 currentData.push({
                     x: JingleJam.model.date.getTime(),
                     y: JingleJam.settings.isPounds ? JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers : (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) * JingleJam.model.avgConversionRate
                 });
             }
+                */
 
             data.datasets.push({
                 label: year[0],
