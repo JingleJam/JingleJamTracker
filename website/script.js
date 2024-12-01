@@ -409,14 +409,14 @@
                 <img src="${cause.logo}">
               </div>
               <div class="content">
-                <div class="header">${cause.name}</div>
+                <div class="header-text">${cause.name}</div>
                 <hr size="1" class="divider" style="margin: 3px 0px 8px 0px; width: calc(100% - 10px); opacity: .5; display: none;">
                 <div class="description">
                     ${cause.description}
                 </div>
               </div>
               <div class="total">
-                <div class="extra content total-bold jj-pink">
+                <div class="extra total-bold jj-pink">
                     <span class="raised-total">
                         ${JingleJam.settings.isPounds ? formatCurrency(cause.raised.fundraisers + cause.raised.yogscast) : formatCurrency(yogDollars + fundDollars)}
                     </span>
