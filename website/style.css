@@ -305,7 +305,7 @@
 }
 
 #embedContainer .ui.segment.stat {
-    min-width: 450px;
+    min-width: 430px;
     max-width: 430px;
     height: 160px;
     margin: 0px;
@@ -381,8 +381,9 @@
 
 @media screen and (max-width: 1100px) {
     #embedContainer .ui.segment.stat {
+        min-width: 390px;
         max-width: 100%;
-        height: 125px;
+        height: 135px;
         flex: 1;
     }
 
@@ -398,9 +399,38 @@
     #embedContainer #rightGrid {
         flex: 100% !important;
     }
+
+    #embedContainer .ui.segment.stat .value.large {
+        font-weight: bold;
+        font-size: 3.4em !important;
+    }
+    
+    /*
+        FONT SIZES
+    */
+
+    #embedContainer h1 {
+        font-size: 2.0em;
+    }
+
+    #embedContainer h2 {
+        font-size: 1.7em;
+    }
+
+    #embedContainer h3 {
+        font-size: 1.2em;
+    }
+
+    #embedContainer p {
+        font-size: 16px;
+    }
 }
 
 @media screen and (max-width: 650px) {
+    #embedContainer .ui.segment.stat {
+        height: 125px;
+    }
+
     #embedContainer .ui.cards .card .total {
         width: 100% !important;
         margin: 16px 10px 5px 10px !important;
@@ -425,26 +455,6 @@
 
     #embedContainer .change-counter-div .change-counter {
         margin-left: 230px !important;
-    }
-    
-    /*
-        FONT SIZES
-    */
-
-    #embedContainer h1 {
-        font-size: 2.0em;
-    }
-
-    #embedContainer h2 {
-        font-size: 1.7em;
-    }
-
-    #embedContainer h3 {
-        font-size: 1.2em;
-    }
-
-    #embedContainer p {
-        font-size: 16px;
     }
 }
 
