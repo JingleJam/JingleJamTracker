@@ -82,8 +82,8 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
     }
 
     // Get donation counts from Yogscast API
-    apiResponse.donations.count = apiResponse.collections.redeemed || yogscastAPI?.donations || 0;
-    apiResponse.donations.count += env.DONATION_DIFFERENCE;
+    apiResponse.donations.count = yogscastAPI?.donations || 0;
+    //apiResponse.donations.count += env.DONATION_DIFFERENCE;
 
     /*
       Campaigns:
