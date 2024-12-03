@@ -2,6 +2,7 @@
 import { Env } from "tiltify-cache/types/env";
 import { TILTIFY_API_PATH } from "tiltify-cache/constants";
 import { getLatestData } from "tiltify-cache/api";
+import { ApiResponse } from "tiltify-cache/types/ApiResponse";
 
 export class TiltifyData {
     storage: DurableObjectStorage;
@@ -19,7 +20,7 @@ export class TiltifyData {
 
         if (request.method === 'GET' && url.pathname === TILTIFY_API_PATH) {
             // Get the current cached value
-            let data = await this.storage.get(this.env.DURABLE_OBJECT_CACHE_KEY);
+            let data: ApiResponse | undefined = await this.storage.get(this.env.DURABLE_OBJECT_CACHE_KEY);
 
             // Start the alarm if it is currently not started
             let currentAlarm = await this.storage.getAlarm();
@@ -67,7 +68,15 @@ export class TiltifyData {
 
         console.log(`Finished Fetching, caching result Tiltify data... (${endTime.getTime() - startTime.getTime()}ms)`);
 
-        await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, newData);
+        // Get the current cached value
+        let data: ApiResponse | undefined = await this.storage.get(this.env.DURABLE_OBJECT_CACHE_KEY);
+
+        // Update the cached value if it's valid
+        if(!data ||                                                             // If the cached value is null
+            !(newData?.raised?.yogscast == 0 && data?.raised?.yogscast !== 0)   // If the raised amount it not valid
+        ) {
+            await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, newData);
+        }
 
         console.log(`Finished Caching data... (${new Date().getTime() - endTime.getTime()}ms)`);
     }
