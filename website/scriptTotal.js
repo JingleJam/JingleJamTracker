@@ -5,7 +5,7 @@
         current: [],
         previous: [],
         refreshTime: 10000,         //How often to wait for an API refresh
-        waitTime: 4000,             //How long to wait for the data on the backend to be updated
+        waitTime: 5000,             //How long to wait for the data on the backend to be updated
         minRefreshTime: 5000,       //Minimum refresh time for the API
         graphTime: 1000 * 60 * 10,  //Graph should update every 10 minutes
         pageIsVisible: true,

@@ -27,8 +27,11 @@ const allCharitiesRegionId = 566;
 // Pre-2023 Jingle Jam dollar amount = 3371741.16
 // End of 2023 yogscast dollar amount = 5747814.82
 async function getSummaryData(env: Env): Promise<ApiResponse> {
-  let apiResponse = await getDefaultResponse(env);
   let campaignsComputed: Campaign[] = [];
+  
+  let causes: Cause[] = JSON.parse(await env.JINGLE_JAM_DATA.get('causes') || "") || [];
+
+  let apiResponse = await getDefaultResponse(env, new Date(), causes);
 
   try {
     // Perform all Tiltify and Yogscast lookups in parallel
@@ -163,6 +166,19 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
         }
       }
 
+      // Any manual adjustments to causes? This is if manual donations are made to the entire fundraiser, but not to a specific cause
+      for(const cause of causes){
+        if(cause.override){
+          for(const apiCause of apiResponse.causes){
+            if(cause.id === apiCause.id){
+              apiCause.raised.yogscast += cause.override;
+            }
+
+            apiCause.raised.yogscast -= cause.override/causes.length;
+          }
+        }
+      }
+
       // Round the raised amounts for each cause
       for (const cause of apiResponse.causes) {
         cause.raised.fundraisers = roundAmount(cause.raised.fundraisers);
@@ -216,12 +232,13 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
 }
 
 // Get the default response data before any Tiltify or Yogscast API calls
-async function getDefaultResponse(env: Env, date = new Date()): Promise<ApiResponse> {
-  let causes: Cause[] = [];
+async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] | null = null): Promise<ApiResponse> {
   let donationHistory: DonationHistory[] = [];
 
   try {
-    causes = JSON.parse(await env.JINGLE_JAM_DATA.get('causes') || "") || [];
+    if(!causes){
+      causes = JSON.parse(await env.JINGLE_JAM_DATA.get('causes') || "") || [];
+    }
   } catch { }
 
   try {
@@ -236,7 +253,7 @@ async function getDefaultResponse(env: Env, date = new Date()): Promise<ApiRespo
     url: cause.url,
     donateUrl: cause.donateUrl,
     raised: { yogscast: 0, fundraisers: 0 },
-  }));
+  })) || [];
 
   return {
     date: date,
