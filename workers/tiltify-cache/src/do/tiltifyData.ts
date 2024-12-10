@@ -72,9 +72,18 @@ export class TiltifyData {
         let data: ApiResponse | undefined = await this.storage.get(this.env.DURABLE_OBJECT_CACHE_KEY);
 
         // Update the cached value if it's valid
-        if(!data ||                                                             // If the cached value is null
-            !(newData?.raised?.yogscast == 0 && data?.raised?.yogscast !== 0)   // If the raised amount it not valid
-        ) {
+        if(newData && (
+            !data ||                                                             // If the cached value is null
+            !(newData?.raised?.yogscast == 0 && data?.raised?.yogscast !== 0)    // If the raised amount it not valid
+        )) {
+            // Check if the campaigns failed to load, if so, keep the old data
+            if(data && (newData.campaigns.count === 0 && data.campaigns.count > 0)) {
+                console.log(`Campaigns failed to load... Keeping old data`);
+
+                newData.campaigns = data.campaigns;
+                newData.causes = data.causes;
+            }
+
             await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, newData);
         }
 
