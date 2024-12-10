@@ -150,19 +150,13 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
       }
 
       // Clean up the raised amounts if the total raised amount is different from the sum of all campaign amounts
+      // This is mainly team donations that are not assigned to a specific campaign
       const amountDifference = totalPounds - campaignAmountPounds;
       if (amountDifference > 0) {
-        // Fix the summary data
-        apiResponse.raised.yogscast += amountDifference;
-        apiResponse.raised.fundraisers -= amountDifference;
-
-        apiResponse.raised.yogscast = roundAmount(apiResponse.raised.yogscast);
-        apiResponse.raised.fundraisers = roundAmount(apiResponse.raised.fundraisers);
-
         // Fix the cause data
         const causeAmount = amountDifference / apiResponse.causes.length;
         for (const cause of apiResponse.causes) {
-          cause.raised.yogscast += causeAmount;
+          cause.raised.fundraisers += causeAmount;
         }
       }
 

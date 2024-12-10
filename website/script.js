@@ -640,11 +640,8 @@
             }
 
             JingleJam.current = groupBy(points, x => x.year);
-
-            console.log(points);
         }
         catch {
-            console.log('Error getting current data');
             JingleJam.current = [];
         }
     }
