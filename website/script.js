@@ -122,7 +122,7 @@
         JingleJam.timeLeft = getTimeLeft();
         if (!JingleJam.isWaiting() || JingleJam.timeLeft.totalTime < 0) {
             $('[data-status]').attr('data-status', 'live')
-            $('#mainCounterHeader').text('Raised This Year');
+            $('#mainCounterHeader').html('<i class="money icon"></i>Raised This Year');
             if ($('#mainCounter').text().includes('h')) {
                 updateGraph();
                 updateCounts(true);
@@ -131,7 +131,7 @@
         else {
             $('[data-status]').attr('data-status', 'countdown')
             $('#embedContainer #mainCounter').html(JingleJam.timeLeft.days + '<span class="countdown-label">d</span> ' + JingleJam.timeLeft.hours + '<span class="countdown-label">h</span> ' + JingleJam.timeLeft.minutes + '<span class="countdown-label">m</span> ' + JingleJam.timeLeft.seconds + '<span class="countdown-label">s</span> ');
-            $('#mainCounterHeader').text('Countdown to ' + JingleJam.model.event.year);
+            $('#mainCounterHeader').html('<i class="clock icon"></i>Countdown to ' + JingleJam.model.event.year);
         }
     }
 

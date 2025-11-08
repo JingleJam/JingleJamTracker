@@ -42,12 +42,12 @@
             </div>
           </div>
           <div class="top-stat-cards">
-            <div class="ui segment stat-card">
-              <div class="stat-header">Collections Distributed</div>
+            <div class="ui segment stat-card" style="min-width: 260px !important;">
+              <div class="stat-header"><i class="gift icon"></i>Collections Distributed</div>
               <div class="stat-value" id="bundlesSold"> 0 </div>
             </div>
-            <div class="ui segment stat-card">
-              <div class="stat-header">Donations</div>
+            <div class="ui segment stat-card" style="min-width: 240px !important;">
+              <div class="stat-header"><i class="heart icon"></i>Donations</div>
               <div class="stat-value" id="donationCount"> 0 </div>
             </div>
           </div>
@@ -58,7 +58,7 @@
         <div class="flexable">
           <div class="flexable" style="flex: 0%; align-self: start;" id="leftGrid">
             <div class="ui segment stat-card">
-              <div class="stat-header">Average Donation</div>
+              <div class="stat-header"><i class="calculator icon"></i>Average Donation</div>
               <div class="stat-value" id="averageDonation"> £ 0 </div>
             </div>
             <div class="ui segment jj-pink-border-top large centered stat" style="display: none !important;">
@@ -70,7 +70,7 @@
               </div>
             </div>
             <div class="ui segment previous-years-card">
-              <div class="card-header-text">Previous Years</div>
+              <div class="card-header-text"><i class="calendar icon"></i>Previous Years</div>
               <div class="previous-years-body">
                 <table id="yearsTable">
                   <tbody></tbody>
@@ -80,7 +80,7 @@
           </div>
           <div class="flexable" style="flex: 50%; align-self: start;" id="rightGrid">
             <div class="ui segment charities-card">
-              <div class="charities-header-text">Charities</div>
+              <div class="charities-header-text"><i class="users icon"></i>Charities</div>
               <div class="charities-description">
                 The <span class="jj-year"></span> Jingle Jam is raising money to support <span class="jj-cause-count"></span> important causes, ranging from physical and mental health, diversity and inclusion, global crisis relief, and safeguarding the planet. Here's how your donations will make a difference.
               </div>
@@ -93,7 +93,7 @@
         </div>
         <div class="ui segment chart-card"
           style="margin-top: 20px !important; margin-bottom: 20px !important;">
-          <div class="card-header-text">Amount Raised Over Time</div>
+          <div class="card-header-text"><i class="chart line icon"></i>Amount Raised Over Time</div>
           <div class="chart-body">
             <div class="stat-row">
               <canvas id="comparisonChart"></canvas>

@@ -15,7 +15,7 @@ const maxSim = 6; // Maximum number of simultaneous fetches
 const maxNumOfCampaigns = 100;
 const maxDescriptionLength = 1024;
 const maxCampaigns = (20 * 900) - 2; // Maximum number of campaigns that can be fetched
-const allCharitiesRegionId = 566;
+const allCharitiesRegionId = "0f5718f6-bf64-4001-b0ba-30195f81de02";
 
 // Old Team Data
 // End of 2020 yogscast dollar amount = 2827226.00

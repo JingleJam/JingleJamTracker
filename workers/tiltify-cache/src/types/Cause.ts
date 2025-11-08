@@ -1,5 +1,5 @@
 export interface Cause {
-    id: number;
+    id: string;
     name: string;
     logo: string;
     description: string;

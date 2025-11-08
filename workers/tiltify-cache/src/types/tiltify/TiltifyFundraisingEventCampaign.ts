@@ -10,7 +10,7 @@ export interface TiltifyFundraisingEventCampaign {
     name: string;
     publishedAt: string;
     region: {
-        id: number;
+        id: string;
     } | null;
     slug: string;
     supportedTeamEvent: {

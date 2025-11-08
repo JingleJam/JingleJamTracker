@@ -106,7 +106,7 @@ body {
     padding: 10px !important;
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 550px) {
     #embedContainer #updatingRealTime {
         display: none;
     }
@@ -308,7 +308,7 @@ body {
     display: flex;
     gap: 30px;
     width: 100%;
-    margin-bottom: 20px;
+    margin-bottom: 30px;
     flex-wrap: wrap;
     align-items: stretch;
 }
@@ -518,7 +518,7 @@ body {
     }
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 550px) {
     div[data-status="countdown"] #mainCounter {
         font-size: 2.1em !important;
     }
@@ -709,6 +709,15 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
     margin-bottom: 28px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#embedContainer .main-stat-header i.icon {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 1em;
 }
 
 #embedContainer .main-stat-body {
@@ -760,6 +769,15 @@ body {
     margin-bottom: 28px;
     text-transform: none;
     white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+#embedContainer .stat-header i.icon {
+    margin: 0;
+    opacity: 0.7;
+    font-size: 1em;
 }
 
 #embedContainer .stat-value {
@@ -791,6 +809,15 @@ body {
     margin-top: 0 !important;
     text-transform: none !important;
     white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+#embedContainer .ui.segment.previous-years-card .card-header-text i.icon {
+    margin: 0 !important;
+    opacity: 0.7 !important;
+    font-size: 1em !important;
 }
 
 #embedContainer .previous-years-body {
@@ -892,6 +919,15 @@ body {
     margin-top: 14px !important;
     text-transform: none !important;
     white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+}
+
+#embedContainer .charities-header-text i.icon {
+    margin: 0 !important;
+    opacity: 0.7 !important;
+    font-size: 0.9em !important;
 }
 
 #embedContainer .charities-description {
@@ -1003,10 +1039,11 @@ body {
 #embedContainer .charities-list .card .total {
     margin: 0 !important;
     margin-left: 16px !important;
+    margin-right: 16px !important;
     min-width: auto !important;
     display: flex;
     flex-direction: column;
-    align-items: flex-end;
+    align-items: center;
 }
 
 #embedContainer .charities-list .card .total .raised-total {
@@ -1038,6 +1075,25 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
     margin: 0 !important;
     width: 100%;
+}
+
+#embedContainer .chart-card .card-header-text {
+    color: #3f3f3f !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    margin-bottom: 20px !important;
+    margin-top: 0 !important;
+    text-transform: none !important;
+    white-space: nowrap !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+}
+
+#embedContainer .chart-card .card-header-text i.icon {
+    margin: 0 !important;
+    opacity: 0.7 !important;
+    font-size: 1em !important;
 }
 
 #embedContainer .chart-body {
@@ -1140,7 +1196,7 @@ body {
     }
 }
 
-@media screen and (max-width: 500px) {
+@media screen and (max-width: 550px) {
     #embedContainer .main-stat-value {
         font-size: 36px;
     }
@@ -1207,11 +1263,12 @@ body {
     #embedContainer .charities-list .card .total {
         width: 100%;
         align-items: center;
-        margin-top: 16px;
+        margin-top: 12px !important;
     }
 
     #embedContainer .charities-list .card .total .raised-total {
         text-align: center;
+        font-size: 26px;
     }
 
     #embedContainer .charities-list .card .total .raised-label {
