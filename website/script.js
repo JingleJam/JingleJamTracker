@@ -101,6 +101,9 @@
 
         //Set the data on load
         updateCounts();
+        
+        //Position the change counter after counts are updated
+        setTimeout(positionChangeCounter, 100);
     }
 
     //Loop to update data on the page as needed
@@ -119,7 +122,7 @@
         JingleJam.timeLeft = getTimeLeft();
         if (!JingleJam.isWaiting() || JingleJam.timeLeft.totalTime < 0) {
             $('[data-status]').attr('data-status', 'live')
-            $('#mainCounterHeader').text('Raised For ' + JingleJam.model.event.year);
+            $('#mainCounterHeader').text('Raised This Year');
             if ($('#mainCounter').text().includes('h')) {
                 updateGraph();
                 updateCounts(true);
@@ -127,7 +130,7 @@
         }
         else {
             $('[data-status]').attr('data-status', 'countdown')
-            $('#embedContainer #mainCounter').html(JingleJam.timeLeft.days + "d " + JingleJam.timeLeft.hours + "h " + JingleJam.timeLeft.minutes + "m " + JingleJam.timeLeft.seconds + "s ");
+            $('#embedContainer #mainCounter').html(JingleJam.timeLeft.days + '<span class="countdown-label">d</span> ' + JingleJam.timeLeft.hours + '<span class="countdown-label">h</span> ' + JingleJam.timeLeft.minutes + '<span class="countdown-label">m</span> ' + JingleJam.timeLeft.seconds + '<span class="countdown-label">s</span> ');
             $('#mainCounterHeader').text('Countdown to ' + JingleJam.model.event.year);
         }
     }
@@ -206,6 +209,7 @@
                 updateCards(true);
                 setTables();
                 createGraph();
+                setTimeout(positionChangeCounter, 100);
             }
         });
 
@@ -377,6 +381,24 @@
             el.offsetHeight; /* trigger reflow */
             el.style.animation = null;
         }
+        // Position the counter at the top-right of the value text
+        positionChangeCounter();
+    }
+
+    //Position the change counter at the top-right of the value text
+    function positionChangeCounter() {
+        const valueElement = document.getElementById('mainCounter');
+        const counterDiv = document.querySelector('.main-stat-card .change-counter-div');
+        if(valueElement && counterDiv) {
+            const valueRect = valueElement.getBoundingClientRect();
+            const cardRect = valueElement.closest('.main-stat-card').getBoundingClientRect();
+            const leftOffset = valueRect.left - cardRect.left + valueRect.width + 5;
+            const topOffset = valueRect.top - cardRect.top - 55;
+            counterDiv.style.left = leftOffset + 'px';
+            counterDiv.style.right = 'auto';
+            counterDiv.style.top = topOffset + 'px';
+            counterDiv.style.bottom = 'auto';
+        }
     }
 
     //Calculates a normal distribution value
@@ -393,6 +415,16 @@
         formatNumberText(elem, format(target))
     }
 
+    //Helper function to convert hex to RGB
+    function hexToRgb(hex) {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result ? {
+            r: parseInt(result[1], 16),
+            g: parseInt(result[2], 16),
+            b: parseInt(result[3], 16)
+        } : { r: 226, g: 18, b: 81 };
+    }
+
     //Creates the card components
     function createCards() {
         let conversion = JingleJam.model.avgConversionRate;
@@ -402,27 +434,26 @@
         for (let cause of sortedCauses) {
             let yogDollars = cause.raised.yogscast * conversion;
             let fundDollars = cause.raised.fundraisers * conversion;
+            let accentColor = cause.color || '#e21251';
+            let rgb = hexToRgb(accentColor);
 
             causesCards += `
-            <a class="card" style="max-width: 1300px; width: 100%; padding: 10px;" href="${(JingleJam.isLive() ? cause.donateUrl : cause.url)}" target="_blank" id="card${cause.id}">
+            <a class="card" href="${(JingleJam.isLive() ? cause.donateUrl : cause.url)}" target="_blank" id="card${cause.id}" style="border-left: 3px solid ${accentColor}; --accent-color-rgb: ${rgb.r}, ${rgb.g}, ${rgb.b};">
               <div class="image">
                 <img src="${cause.logo}">
               </div>
               <div class="content">
                 <div class="header-text">${cause.name}</div>
-                <hr size="1" class="divider" style="margin: 3px 0px 8px 0px; width: calc(100% - 10px); opacity: .5; display: none;">
                 <div class="description">
                     ${cause.description}
                 </div>
               </div>
               <div class="total">
-                <div class="extra total-bold jj-pink">
-                    <span class="raised-total">
-                        ${JingleJam.settings.isPounds ? formatCurrency(cause.raised.fundraisers + cause.raised.yogscast) : formatCurrency(yogDollars + fundDollars)}
-                    </span>
-                    <div class="raised-label">
-                        raised
-                    </div>
+                <span class="raised-total">
+                    ${JingleJam.settings.isPounds ? formatCurrency(cause.raised.fundraisers + cause.raised.yogscast) : formatCurrency(yogDollars + fundDollars)}
+                </span>
+                <div class="raised-label">
+                    RAISED
                 </div>
               </div>
             </a>`;
@@ -453,11 +484,23 @@
 
     //Set the previous years table with the previous year data
     function setTables() {
+        // Find the maximum value for progress bar scaling
+        let maxValue = 0;
+        for (let year of JingleJam.model.history) {
+            let value = JingleJam.settings.isPounds ? year.total.pounds : year.total.dollars;
+            if (value > maxValue) maxValue = value;
+        }
+        
         let table = ''
         for (let year of JingleJam.model.history) {
+            let value = JingleJam.settings.isPounds ? year.total.pounds : year.total.dollars;
+            let percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
             table += `<tr>`
-            table += `<td label="Year" class="center aligned bold">${year.year}</td>`
-            table += `<td label="Raised" class="right aligned jj-thin year-raised">${JingleJam.settings.isPounds ? formatCurrency(year.total.pounds) : formatCurrency(year.total.dollars)}</td>`
+            table += `<td label="Year" class="year-label">${year.year}</td>`
+            table += `<td label="Raised" class="year-value">${JingleJam.settings.isPounds ? formatCurrency(year.total.pounds) : formatCurrency(year.total.dollars)}</td>`
+            table += '</tr>'
+            table += `<tr class="progress-row">`
+            table += `<td colspan="2" class="progress-cell"><div class="progress-bar-track"><div class="progress-bar-fill" style="width: ${percentage}%"></div></div></td>`
             table += '</tr>'
         }
         $('#yearsTable tbody').html(table);
@@ -506,10 +549,26 @@
                     let amount = (JingleJam.settings.isPounds ? (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) : (yogsDollars + fundDollars));
                     let oldAmount = (JingleJam.settings.isPounds ? (JingleJam.oldModel.raised.yogscast + JingleJam.oldModel.raised.fundraisers) : (oldYogsDollars + oldFundDollars));
                     let difference = amount - oldAmount;
-                    if(difference > 0){
-                        setCount(`#embedContainer #mainCounterChange`, amount - oldAmount, (x) => "+ " + formatCurrency(x));
+                    if(difference !== 0){
+                        const changeElement = document.getElementById('mainCounterChange');
+                        const isPositive = difference > 0;
+                        const absDifference = Math.abs(difference);
+                        
+                        setCount(`#embedContainer #mainCounterChange`, absDifference, (x) => isPositive ? "+ " + formatCurrency(x) : "- " + formatCurrency(x));
+                        
+                        // Set background color based on positive or negative
+                        if(changeElement) {
+                            if(isPositive) {
+                                changeElement.style.background = 'rgba(46, 204, 113)';
+                                changeElement.style.color = '#ffffff';
+                            } else {
+                                changeElement.style.background = 'rgba(226, 18, 18, 0.9)';
+                                changeElement.style.color = '#ffffff';
+                            }
+                        }
                         
                         resetAnimation();
+                        setTimeout(positionChangeCounter, 50);
                     }
                 }
             }

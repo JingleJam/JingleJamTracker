@@ -3,6 +3,7 @@ export interface Cause {
     name: string;
     logo: string;
     description: string;
+    color: string;
     url: string;
     donateUrl: string;
     override?: number;

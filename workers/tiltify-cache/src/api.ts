@@ -244,6 +244,7 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
     name: cause.name,
     logo: cause.logo,
     description: cause.description,
+    color: cause.color,
     url: cause.url,
     donateUrl: cause.donateUrl,
     raised: { yogscast: 0, fundraisers: 0 },
@@ -278,8 +279,8 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
 }
 
 
-const debugStartDate = new Date(2024, 10, 29, 7, 27, 0);
-const debugEndDate = new Date(2024, 10, 30, 22, 10, 0);
+const debugStartDate = new Date(2025, 10, 6, 7, 27, 0);
+const debugEndDate = new Date(2025, 10, 10, 22, 10, 0);
 
 // Create fake data for debugging purposes
 async function getDebugData(env: Env): Promise<ApiResponse> {

@@ -9,6 +9,11 @@
     width: 100%;
     height: 100%;
     box-sizing: border-box;
+    background-color: #fafafa;
+}
+
+body {
+    background-color: #fafafa;
 }
 
 #embedContainer #currencySelectorObj {
@@ -64,16 +69,20 @@
 }
 
 #embedContainer #liveUpdatingRow {
-    margin-top: 20px;
-    height: 20px;
-    width: 100%;
-}
-
-#embedContainer .hide-live-update {
-    margin-top: 20px;
+    position: absolute;
+    top: 32px;
+    right: 32px;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    align-items: center;
 }
 
 #embedContainer .hide-live-update #liveUpdatingRow {
+    display: none;
+}
+
+#embedContainer #lastUpdatedRow {
     display: none;
 }
 
@@ -110,7 +119,7 @@
 
 #embedContainer .live-icon {
     font-size: 15px;
-    color: #e21251;
+    color: #fff;
     -webkit-animation-name: toggle;
     -webkit-animation-duration: 4s;
     -webkit-animation-timing-function: linear;
@@ -172,7 +181,15 @@
 }
 
 #embedContainer .jj-pink-border-top {
-    border-top: 2px solid #e21251
+    border-top: 2px solid #e21251;
+}
+
+/* Override for new design cards */
+#embedContainer .main-stat-card.jj-pink-border-top,
+#embedContainer .stat-card.jj-pink-border-top,
+#embedContainer .previous-years-card.jj-pink-border-top,
+#embedContainer .charities-card.jj-pink-border-top {
+    border-top: none !important;
 }
 
 #embedContainer .ui.cards .card .header-text {
@@ -283,7 +300,54 @@
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 18px;
+    gap: 30px;
+}
+
+/* Top stats container - main stat card with side cards */
+#embedContainer .top-stats-container {
+    display: flex;
+    gap: 30px;
+    width: 100%;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    align-items: stretch;
+}
+
+#embedContainer .top-stats-container .main-stat-card {
+    flex: 1;
+    min-width: 400px;
+}
+
+#embedContainer .top-stat-cards {
+    display: flex;
+    gap: 30px;
+    flex: 1;
+    min-width: 300px;
+    flex-wrap: wrap;
+}
+
+#embedContainer .top-stat-cards .stat-card {
+    flex: 1;
+    min-width: 200px;
+}
+
+#embedContainer .top-stat-cards .stat-card .stat-value {
+    font-size: 48px;
+    letter-spacing: -2px;
+}
+
+#embedContainer .flexable#leftGrid {
+    flex-wrap: wrap;
+    gap: 30px;
+}
+
+#embedContainer .flexable#leftGrid .stat-card {
+    flex: 1 1 calc(33.333% - 12px);
+    min-width: 180px;
+}
+
+#embedContainer .flexable#leftGrid .previous-years-card {
+    flex: 1 1 100%;
 }
 
 #embedContainer .ui.segment {
@@ -452,13 +516,9 @@
     #embedContainer .ui.segment.stat.full-width .body {
         margin-top: 8px !important;
     }
-
-    #embedContainer .change-counter-div .change-counter {
-        margin-left: 230px !important;
-    }
 }
 
-@media screen and (max-width: 450px) {
+@media screen and (max-width: 500px) {
     div[data-status="countdown"] #mainCounter {
         font-size: 2.1em !important;
     }
@@ -479,10 +539,35 @@
     right: -8px;
 }
 
+/* Subtext labels for updating row */
+#embedContainer #liveUpdatingRow .subtext-label {
+    position: static;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 13px;
+    margin: 0;
+}
+
+#embedContainer #liveUpdatingRow .subtext-label.right {
+    right: auto;
+    float: none;
+}
+
+#embedContainer #liveUpdatingRow .live-icon {
+    color: white;
+}
+
+#embedContainer #lastUpdatedRow .subtext-label {
+    position: static;
+    color: #3f3f3f;
+    font-size: 13px;
+    margin: 0;
+}
+
 #embedContainer .comma-value {
     margin: 0px 3px 0px 1px;
 }
 
+/* General card styles - overridden by charities-list specific styles */
 #embedContainer .card img {
     height: 100px;
     width: 100px;
@@ -500,13 +585,27 @@
     position: absolute;
     width: 100%;
     height: 100%;
-    text-align: center;
+    pointer-events: none;
+}
+
+#embedContainer .main-stat-card .change-counter-div {
+    display: inline-flex !important;
+    align-items: flex-start;
+    justify-content: flex-end;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: auto !important;
+    height: auto !important;
+    bottom: auto;
+    right: auto;
+    z-index: 10;
+    pointer-events: none;
 }
 
 #embedContainer .change-counter-div .change-counter {
     display: flex;
-    justify-content: center;
-    margin-left: 370px;
+    justify-content: flex-end;
     -webkit-animation-duration: 4s;
     animation-duration: 4s;
     -webkit-animation-fill-mode: both;
@@ -521,10 +620,17 @@
     border-radius: 20px;
     font-size: .9em;
     width: fit-content;
-    opacity: .8;
+    opacity: 1;
     font-weight: 900;
     color: #2b9652;
     transform: scale(.9);
+}
+
+/* Change counter in new main stat card */
+#embedContainer .main-stat-card .change-counter-div .change-counter .change-counter-text {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+    transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 @-webkit-keyframes fadeOutUp {
@@ -576,5 +682,539 @@
     100% {
         opacity: 0;
         transform: translateY(32px);
+    }
+}
+
+/* NEW DASHBOARD DESIGN STYLES */
+
+/* Main Stat Card - Pink Gradient */
+#embedContainer .main-stat-card {
+    background: linear-gradient(135deg, #e21251 0%, #c20d45 100%);
+    border: none !important;
+    border-radius: 20px;
+    padding: 32px 36px;
+    width: 100%;
+    box-shadow: 0 4px 20px rgba(226, 18, 81, 0.25), 0 0 30px rgba(226, 18, 81, 0.15), 0 2px 8px rgba(0, 0, 0, 0.12);
+    position: relative;
+    min-height: 140px;
+    margin: 0 !important;
+    display: flex;
+    flex-direction: column;
+}
+
+#embedContainer .main-stat-header {
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 28px;
+}
+
+#embedContainer .main-stat-body {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-between;
+    flex: 1;
+    min-height: 0;
+    position: relative;
+}
+
+#embedContainer .main-stat-value {
+    color: white;
+    font-size: 48px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -2px;
+    font-feature-settings: 'tnum';
+    margin-top: auto;
+}
+
+#embedContainer .main-stat-value .countdown-label {
+    font-size: 0.65em;
+    vertical-align: baseline;
+    margin-left: 0.15em;
+    margin-right: 0.15em;
+}
+
+/* Stat Cards - White */
+#embedContainer .stat-card {
+    background: white;
+    border: none !important;
+    border-radius: 12px;
+    padding: 32px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    min-width: 200px;
+    flex: 1;
+    margin: 0 !important;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+#embedContainer .stat-header {
+    color: #3f3f3f;
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 28px;
+    text-transform: none;
+    white-space: nowrap;
+}
+
+#embedContainer .stat-value {
+    color: #000;
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -1px;
+    font-feature-settings: 'tnum';
+    margin-top: auto;
+}
+
+/* Previous Years Card - Progress Bar Design */
+#embedContainer .ui.segment.previous-years-card {
+    background: white !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 32px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12) !important;
+    margin: 0 !important;
+    width: 100%;
+}
+
+#embedContainer .ui.segment.previous-years-card .card-header-text {
+    color: #3f3f3f !important;
+    font-size: 16px !important;
+    font-weight: 500 !important;
+    margin-bottom: 28px !important;
+    margin-top: 0 !important;
+    text-transform: none !important;
+    white-space: nowrap !important;
+}
+
+#embedContainer .previous-years-body {
+    padding-top: 0 !important;
+    width: 100%;
+}
+
+#embedContainer .previous-years-body table {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+}
+
+#embedContainer .previous-years-body table tbody {
+    display: table-row-group !important;
+}
+
+#embedContainer .previous-years-body table tbody tr {
+    display: table-row !important;
+    border: none !important;
+}
+
+#embedContainer .previous-years-body table tbody tr.progress-row {
+    padding-top: 2px !important;
+}
+
+#embedContainer .previous-years-body table tbody td {
+    padding: 0 !important;
+    font-size: 16px !important;
+    display: table-cell !important;
+    vertical-align: middle !important;
+}
+
+#embedContainer .previous-years-body table tbody td.year-label {
+    font-weight: 700 !important;
+    color: #1a1a1a !important;
+    font-size: 18px !important;
+    letter-spacing: -0.3px !important;
+    padding-right: 20px !important;
+    padding-bottom: 8px !important;
+    padding-left: 0px !important;
+    width: 70px !important;
+    white-space: nowrap !important;
+}
+
+#embedContainer .previous-years-body table tbody td.progress-cell {
+    padding: 0 !important;
+    padding-bottom: 12px !important;
+}
+
+#embedContainer .previous-years-body .progress-bar-track {
+    width: 100% !important;
+    height: 8px !important;
+    background-color: #f0f0f0 !important;
+    border-radius: 4px !important;
+    overflow: hidden !important;
+    position: relative !important;
+}
+
+#embedContainer .previous-years-body .progress-bar-fill {
+    height: 100% !important;
+    background: linear-gradient(90deg, #e21251 0%, #ff4d7a 100%) !important;
+    border-radius: 4px !important;
+    transition: width 0.3s ease !important;
+}
+
+#embedContainer .previous-years-body table tbody td.year-value {
+    text-align: right !important;
+    color: #666 !important;
+    font-weight: 500 !important;
+    font-size: 17px !important;
+    letter-spacing: -0.4px !important;
+    font-feature-settings: 'tnum' !important;
+    padding-left: 20px !important;
+    padding-bottom: 8px !important;
+    padding-right: 0px !important;
+    white-space: nowrap !important;
+    width: auto !important;
+}
+
+/* Charities Card */
+#embedContainer .charities-card {
+    background: transparent;
+    border: none !important;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
+    margin: 0 !important;
+    width: 100%;
+}
+
+#embedContainer .charities-header-text {
+    color: #3f3f3f !important;
+    font-size: 24px !important;
+    font-weight: 700 !important;
+    margin-bottom: 12px !important;
+    margin-top: 14px !important;
+    text-transform: none !important;
+    white-space: nowrap !important;
+}
+
+#embedContainer .charities-description {
+    color: #000;
+    font-size: 16px;
+    line-height: 1.5;
+    margin-top: 12px;
+    margin-bottom: 20px;
+}
+
+#embedContainer .charities-body {
+    width: 100%;
+    margin-top: 20px;
+}
+
+#embedContainer .charities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+/* Charity Item */
+#embedContainer .charities-list .card {
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    text-decoration: none;
+    transition: box-shadow 0.1s ease, border-left-width 0.1s ease;
+    margin: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    border: none;
+    border-left: 4px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+#embedContainer .charities-list .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(to right, rgba(var(--accent-color-rgb, 226, 18, 81), 0.16), transparent 16%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    z-index: 0;
+}
+
+#embedContainer .charities-list .card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.20);
+    border-left-width: 6px !important;
+}
+
+#embedContainer .charities-list .card:hover::before {
+    opacity: 1;
+}
+
+#embedContainer .charities-list .card > * {
+    position: relative;
+    z-index: 1;
+}
+
+#embedContainer .charities-list .card .image {
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 20px;
+    background: white !important;
+    overflow: hidden;
+}
+
+#embedContainer .charities-list .card .image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#embedContainer .charities-list .card .content {
+    flex: 1;
+    padding: 0;
+    border: none;
+}
+
+#embedContainer .charities-list .card .content .header-text {
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 6px;
+    line-height: 1.3;
+}
+
+#embedContainer .charities-list .card .content .description {
+    font-size: 14px;
+    color: #000;
+    line-height: 1.5;
+    margin-top: 0;
+}
+
+#embedContainer .charities-list .card .total {
+    margin: 0 !important;
+    margin-left: 16px !important;
+    min-width: auto !important;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+#embedContainer .charities-list .card .total .raised-total {
+    font-size: 24px;
+    font-weight: 700;
+    color: #e21251;
+    letter-spacing: -0.5px;
+    font-feature-settings: 'tnum';
+    margin-top: 8px;
+}
+
+#embedContainer .charities-list .card .total .raised-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #999;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+    text-align: center;
+    width: 100%;
+}
+
+/* Chart Card */
+#embedContainer .chart-card {
+    background: white;
+    border: none !important;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    margin: 0 !important;
+    width: 100%;
+}
+
+#embedContainer .chart-body {
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* Responsive Design for New Dashboard */
+@media screen and (max-width: 1200px) {
+
+    #embedContainer .stat-value {
+        font-size: 36px;
+    }
+
+    #embedContainer .stat-card {
+        min-width: 180px;
+    }
+
+    #embedContainer .top-stats-container {
+        flex-direction: column;
+    }
+
+    #embedContainer .top-stats-container .main-stat-card {
+        width: 100%;
+        min-width: 100%;
+    }
+
+    #embedContainer .top-stat-cards {
+        width: 100%;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    #embedContainer .main-stat-card {
+        min-height: 150px;
+    }
+
+    #embedContainer .main-stat-card .subtext-label.left {
+        left: 30px;
+    }
+
+    #embedContainer .main-stat-card .subtext-label.right {
+        right: 30px;
+    }
+
+    #embedContainer .stat-card {
+        padding: 26px;
+        min-width: 100%;
+    }
+
+    #embedContainer .stat-value {
+        font-size: 32px !important;
+    }
+
+    #embedContainer .charities-list .card {
+        padding: 18px;
+    }
+
+    #embedContainer .charities-list .card .image {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+        margin-right: 15px;
+    }
+
+    #embedContainer .charities-list .card .content .header-text {
+        font-size: 16px;
+    }
+
+    #embedContainer .charities-list .card .content .description {
+        font-size: 13px;
+    }
+
+    #embedContainer .charities-list .card .total .raised-total {
+        font-size: 20px;
+    }
+
+    #embedContainer .previous-years-card {
+        padding: 28px !important;
+    }
+
+    #embedContainer .previous-years-body table tbody td.year-label {
+        font-size: 17px !important;
+        padding-right: 16px !important;
+        width: 60px !important;
+    }
+
+    #embedContainer .previous-years-body table tbody td.progress-cell {
+        padding-top: 6px !important;
+        padding-bottom: 10px !important;
+    }
+
+    #embedContainer .previous-years-body .progress-bar-track {
+        height: 7px !important;
+    }
+
+    #embedContainer .previous-years-body table tbody td.year-value {
+        font-size: 16px !important;
+        padding-left: 16px !important;
+    }
+}
+
+@media screen and (max-width: 500px) {
+    #embedContainer .main-stat-value {
+        font-size: 36px;
+    }
+
+    #embedContainer .top-stat-cards .stat-card .stat-value {
+        font-size: 36px;
+    }
+
+    #embedContainer .previous-years-card {
+        padding: 24px !important;
+    }
+
+    #embedContainer .previous-years-card .card-header-text {
+        font-size: 12px !important;
+        margin-bottom: 18px !important;
+        letter-spacing: 1px !important;
+    }
+
+    #embedContainer .previous-years-body table tbody td.year-label {
+        font-size: 16px !important;
+        padding-right: 12px !important;
+        width: 55px !important;
+    }
+
+    #embedContainer .previous-years-body table tbody td.progress-cell {
+        padding-top: 6px !important;
+        padding-bottom: 8px !important;
+    }
+
+    #embedContainer .previous-years-body .progress-bar-track {
+        height: 6px !important;
+    }
+
+    #embedContainer .previous-years-body table tbody td.year-value {
+        font-size: 15px !important;
+        padding-left: 12px !important;
+    }
+
+    #embedContainer .charities-list .card {
+        flex-direction: column;
+        align-items: center;
+        padding: 16px;
+        text-align: center;
+    }
+
+    #embedContainer .charities-list .card .image {
+        margin-bottom: 12px;
+        margin-right: 0;
+    }
+
+    #embedContainer .charities-list .card .content {
+        text-align: center;
+        width: 100%;
+    }
+
+    #embedContainer .charities-list .card .content .header-text {
+        text-align: center;
+    }
+
+    #embedContainer .charities-list .card .content .description {
+        text-align: center;
+    }
+
+    #embedContainer .charities-list .card .total {
+        width: 100%;
+        align-items: center;
+        margin-top: 16px;
+    }
+
+    #embedContainer .charities-list .card .total .raised-total {
+        text-align: center;
+    }
+
+    #embedContainer .charities-list .card .total .raised-label {
+        text-align: center;
     }
 }

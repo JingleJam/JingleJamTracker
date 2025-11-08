@@ -4,6 +4,7 @@
     "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2024/causes/autistica.png",
     "name": "Autistica",
     "description": "Building evidence-based solutions for young autistic people to make society more inclusive by 2030.",
+    "color": "#00a691",
     "url": "https://www.autistica.org.uk/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=582",
     "override": 0
@@ -13,6 +14,7 @@
     "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2024/causes/calm.png",
     "name": "CALM",
     "description": "Running a life-saving suicide prevention helpline and providing mental health resources for all who need them.",
+    "color": "#cbf900",
     "url": "https://www.thecalmzone.net/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=575",
     "override": 0
@@ -22,6 +24,7 @@
     "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2024/causes/cool-earth.png",
     "name": "Cool Earth",
     "description": "A new approach to fighting climate change - back Indigenous peoples and protect the rainforest.",
+    "color": "#2b423a",
     "url": "https://www.coolearth.org/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=1227",
     "override": 0
@@ -31,6 +34,7 @@
     "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2024/causes/sarcoma-uk.png",
     "name": "Sarcoma UK",
     "description": "Funding research, supporting those affected by sarcoma cancer, and campaigning for better treatments.",
+    "color": "#0386a4",
     "url": "https://sarcoma.org.uk/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=1228",
     "override": 0
@@ -40,6 +44,7 @@
     "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2024/causes/the-trevor-project.png",
     "name": "The Trevor Project",
     "description": "Working to end suicide among LGBTQ+ young people through suicide prevention and crisis intervention.",
+    "color": "#ef5b41",
     "url": "https://www.thetrevorproject.org/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=1229",
     "override": 0
@@ -48,7 +53,8 @@
     "id": 565,
     "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2024/causes/the-grand-appeal.png",
     "name": "Wallace & Gromit's Grand Appeal",
-    "description": "Creating the 'Jingle Jam Building', a unique facility that will help sick children and their families at Bristol Children's Hospital.",
+    "description": "Creating the 'Jingle Jam Building', a unique facility that will help sick children and their families at Bristol Children's Hospital.", 
+    "color": "#3e9cd8",
     "url": "https://www.grandappeal.org.uk/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=565",
     "override": 0
@@ -58,6 +64,7 @@
     "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2024/causes/war-child.png",
     "name": "War Child",
     "description": "Protecting, educating, and advocating for the rights of children impacted by the ongoing conflicts in Gaza and worldwide.",
+    "color": "#cc232a",
     "url": "https://www.warchild.org.uk/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=588",
     "override": 0
@@ -67,6 +74,7 @@
     "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2024/causes/wdc.png",
     "name": "Whale and Dolphin Conservation",
     "description": "Helping to protect the endangered Amazon River dolphin, and launching a global education programme for schools.",
+    "color": "#25374b",
     "url": "https://uk.whales.org/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=574",
     "override": 0
