@@ -32,9 +32,7 @@ export class TiltifyData {
             if (!data) {
                 data = await getLatestData(this.env);
 
-                if (this.env.ENABLE_REFRESH) {
-                    await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, data);
-                }
+                await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, data);
             }
 
             return new Response(JSON.stringify(data));
