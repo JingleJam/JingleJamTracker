@@ -102,5 +102,13 @@
             "pounds": 2702088.00
         },
         "donations": 64374
+    },
+    {
+        "year": 2024,
+        "total": {
+            "dollars": 3398349.81,
+            "pounds": 2673906.16
+        },
+        "donations": 62609
     }
 ]

@@ -1,8 +1,9 @@
 export interface Cause {
-    id: number;
+    id: string;
     name: string;
     logo: string;
     description: string;
+    color: string;
     url: string;
     donateUrl: string;
     override?: number;

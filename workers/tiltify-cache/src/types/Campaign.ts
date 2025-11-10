@@ -1,5 +1,5 @@
 export interface Campaign {
-    causeId: number | null;
+    causeId: string | null;
     name: string;
     description: string;
     slug: string;

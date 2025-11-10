@@ -21,53 +21,45 @@
     </div>
     <div class="guttered">
       <div class="guttered-section" style="margin-top: 43px;">
-        <div class="flexable">
-          <div class="ui segment jj-pink-border-top large centered stat full-width main">
-            <div class="header-text">
-              <h2 id="mainCounterHeader"></h2>
-            </div>
-            <div class="body" style="margin-top: 0px;">
-              <div class="change-counter-div">
-                <div class="change-counter hide">
-                  <div class="change-counter-text" id="mainCounterChange"></div>
-                </div>
-              </div>
-              <div class="value jj-pink large" id="mainCounter"> </div>
-            </div>
+        <div class="top-stats-container">
+          <div class="ui segment main-stat-card">
+            <div class="main-stat-header" id="mainCounterHeader"></div>
             <div id="liveUpdatingRow" class="hide-live-update">
-              <label class="subtext-label left" id="updatingRealTime">
+              <label class="subtext-label right" id="updatingRealTime">
                 <div class="ui active slow loader mini"></div>
                 <div class="loading-circle">
                   <i class="live-icon icon circle"></i>
-                </div> Updating Live
+                </div> Live
               </label>
-              <label class="subtext-label right" id="labelDate" style="float: right;"> Last Updated: N/A </label>
+            </div>
+            <div class="main-stat-body">
+              <div class="main-stat-value" id="mainCounter"> </div>
+            </div>
+            <div class="change-counter-div">
+              <div class="change-counter hide">
+                <div class="change-counter-text" id="mainCounterChange"></div>
+              </div>
             </div>
           </div>
+          <div class="top-stat-cards">
+            <div class="ui segment stat-card" style="min-width: 260px !important;">
+              <div class="stat-header"><i class="gift icon"></i>Collections Distributed</div>
+              <div class="stat-value" id="bundlesSold"> 0 </div>
+            </div>
+            <div class="ui segment stat-card" style="min-width: 240px !important;">
+              <div class="stat-header"><i class="heart icon"></i>Donations</div>
+              <div class="stat-value" id="donationCount"> 0 </div>
+            </div>
+          </div>
+        </div>
+        <div id="lastUpdatedRow" class="hide-live-update">
+          <label class="subtext-label right" id="labelDate"> Last Updated: N/A </label>
+        </div>
+        <div class="flexable">
           <div class="flexable" style="flex: 0%; align-self: start;" id="leftGrid">
-            <div class="ui segment jj-pink-border-top large centered stat">
-              <div class="header-text">
-                <h3>Collections Distributed</h3>
-              </div>
-              <div class="body">
-                <div class="value small jj-pink" id="bundlesSold"> 0 </div>
-              </div>
-            </div>
-            <div class="ui segment jj-pink-border-top large centered stat">
-              <div class="header-text">
-                <h3>Donations</h3>
-              </div>
-              <div class="body">
-                <div class="value small jj-pink" id="donationCount"> 0 </div>
-              </div>
-            </div>
-            <div class="ui segment jj-pink-border-top large centered stat">
-              <div class="header-text">
-                <h3>Average Donation</h3>
-              </div>
-              <div class="body">
-                <div class="value small jj-pink" id="averageDonation"> £ 0 </div>
-              </div>
+            <div class="ui segment stat-card">
+              <div class="stat-header"><i class="calculator icon"></i>Average Donation</div>
+              <div class="stat-value" id="averageDonation"> £ 0 </div>
             </div>
             <div class="ui segment jj-pink-border-top large centered stat" style="display: none !important;">
               <div class="header-text">
@@ -77,50 +69,32 @@
                 <div class="value small jj-pink" id="raisedEntire"> £ 0 </div>
               </div>
             </div>
-            <div class="ui segment jj-pink-border-top fit-content large centered">
-              <div class="header-text">
-                <h3>Previous Years</h3>
-              </div>
-              <div class="body">
-                <table class="ui large celled striped table unstackable" style="min-width: 250px !important;"
-                  id="yearsTable">
-                  <thead>
-                    <tr>
-                      <th class="center aligned six wide"
-                        style="min-width: 60px; border-left: 1px solid rgba(34,36,38,.1);">Year
-                      </th>
-                      <th class="center aligned ten wide" style="min-width: 60px;">Raised</th>
-                    </tr>
+            <div class="ui segment previous-years-card">
+              <div class="card-header-text"><i class="calendar icon"></i>Previous Years</div>
+              <div class="previous-years-body">
+                <table id="yearsTable">
                   <tbody></tbody>
                 </table>
               </div>
             </div>
           </div>
           <div class="flexable" style="flex: 50%; align-self: start;" id="rightGrid">
-            <div class="ui segment jj-pink-border-top fit-content centered full-width">
-              <div class="header-text">
-                <h2>Charities</h2>
+            <div class="ui segment charities-card">
+              <div class="charities-header-text"><i class="users icon"></i>Charities</div>
+              <div class="charities-description">
+                The <span class="jj-year"></span> Jingle Jam is raising money to support <span class="jj-cause-count"></span> important causes, ranging from physical and mental health, diversity and inclusion, global crisis relief, and safeguarding the planet. Here's how your donations will make a difference.
               </div>
-              <div class="body">
-                <p style="text-align: center; margin-top: 14px; margin-bottom: 30px;">
-                  The <span class="jj-year"></span> Jingle Jam is raising money to support <span
-                    class="jj-cause-count"></span> important causes,
-                  ranging from physical and mental health, diversity and inclusion, global crisis relief, and
-                  safeguarding the
-                  planet. Here's how your donations will make a difference.
-                </p>
-                <div class="ui horizontal raised doubling cards" id="charityCards">
+              <div class="charities-body">
+                <div class="charities-list" id="charityCards">
                 </div>
               </div>
             </div>
           </div>
         </div>
-        <div class="ui segment jj-pink-border-top fit-content large centered"
-          style="margin-top: 35px !important; margin-bottom: 20px !important;">
-          <div class="header-text">
-            <h3>Amount Raised Over Time</h3>
-          </div>
-          <div class="body" style="height: auto;">
+        <div class="ui segment chart-card"
+          style="margin-top: 20px !important; margin-bottom: 20px !important;">
+          <div class="charities-header-text" style="margin-top: 5px !important;"><i class="area chart icon"></i>Raised By Year</div>
+          <div class="chart-body">
             <div class="stat-row">
               <canvas id="comparisonChart"></canvas>
             </div>
