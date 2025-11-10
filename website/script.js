@@ -740,7 +740,8 @@
         '2021': '#6967ff',
         '2022': '#6ba950',
         '2023': '#d64538',
-        '2024': '#6e4ee0'
+        '2024': '#6e4ee0',
+        '2025': '#de8b47'
     }
     let myChart;
 
@@ -841,8 +842,8 @@
                             display: true,
                             text: `Day (GMT)`
                         },
-                        min: getDateTimeInGMT(new Date('12/01/2024 17:00 GMT')),
-                        max: getDateTimeInGMT(new Date('01/01/2025 00:00 GMT')),
+                        min: getDateTimeInGMT(new Date('12/01/' + JingleJam.model.event.year + ' 17:00 GMT')),
+                        max: getDateTimeInGMT(new Date('01/01/' + (JingleJam.model.event.year + 1) + ' 00:00 GMT')),
                         grid: {
                             color: '#d4d4d4'
                         }

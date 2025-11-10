@@ -1,7 +1,7 @@
 import { CacheResponse } from "../types/CacheResponse";
 import { Context, Env } from "../types/env";
 
-const CACHE_NAME = 'tiltify-cache-2024';
+const CACHE_NAME = 'tiltify-cache-2025';
 
 const HEADERS: Record<string, string> = {
     "content-type": "application/json;charset=UTF-8",
