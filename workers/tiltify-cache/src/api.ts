@@ -15,7 +15,7 @@ const maxSim = 6; // Maximum number of simultaneous fetches
 const maxNumOfCampaigns = 100;
 const maxDescriptionLength = 1024;
 const maxCampaigns = (20 * 900) - 2; // Maximum number of campaigns that can be fetched
-const allCharitiesRegionId = 566;
+const allCharitiesRegionId = "0f5718f6-bf64-4001-b0ba-30195f81de02";
 
 // Old Team Data
 // End of 2020 yogscast dollar amount = 2827226.00
@@ -244,6 +244,7 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
     name: cause.name,
     logo: cause.logo,
     description: cause.description,
+    color: cause.color,
     url: cause.url,
     donateUrl: cause.donateUrl,
     raised: { yogscast: 0, fundraisers: 0 },
@@ -278,8 +279,8 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
 }
 
 
-const debugStartDate = new Date(2024, 10, 29, 7, 27, 0);
-const debugEndDate = new Date(2024, 10, 30, 22, 10, 0);
+const debugStartDate = new Date(2025, 10, 6, 7, 27, 0);
+const debugEndDate = new Date(2025, 10, 10, 22, 10, 0);
 
 // Create fake data for debugging purposes
 async function getDebugData(env: Env): Promise<ApiResponse> {

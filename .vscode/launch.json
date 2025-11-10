@@ -5,7 +5,7 @@
             "name": "Add Local KV's",
             "type": "f5anything",
             "request": "launch",
-            "command": "npm run kv-trends-previous:local ; cd ${workspaceFolder}/workers/tiltify-cache/ ; npm run kv-causes:local ; npm run kv-summary:local",
+            "command": "cd ${workspaceFolder} ; npm run kv-trends-previous:local ; cd ${workspaceFolder}/workers/tiltify-cache ; npm run kv-causes:local ; npm run kv-summary:local",
             "terminalName": "Other",
             "terminalIndex": 0,
             "showTerminal": true
