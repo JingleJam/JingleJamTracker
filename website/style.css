@@ -892,6 +892,12 @@
     width: auto !important;
 }
 
+#embedContainer .previous-years-body table tbody td small {
+    font-weight: 400 !important;
+    color: #888 !important;
+    font-size: 0.75em !important;
+}
+
 /* Charities Card */
 #embedContainer .charities-card {
     background: transparent;
