@@ -1,5 +1,6 @@
 export interface Cause {
     id: string;
+    legacyId?: string | undefined;
     name: string;
     logo: string;
     description: string;
@@ -7,8 +8,6 @@ export interface Cause {
     url: string;
     donateUrl: string;
     override?: number;
-    raised: {
-        yogscast: number;
-        fundraisers: number;
-    };
+    raised: number;
+    campaigns: number;
 }

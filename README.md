@@ -1,9 +1,17 @@
 # Jingle Jam Tracker
 
-The API and Web UI powering the official [Jingle Jam Tracker](https://www.jinglejam.co.uk/tracker). The API endpoints are accessible at `https://dashboard.jinglejam.co.uk/`
+The API and Web UI powering the official [Jingle Jam Tracker](https://www.jinglejam.co.uk/tracker). 
+
+**API Endpoints:**
+- **Production:** `https://dashboard.jinglejam.co.uk/`
+- **Development:** `https://develop.jingle-jam-tracker.pages.dev/`
+- **Local:** `http://127.0.0.1:8788/`
+
+> **Note:** The `Development` API includes previous years' data for testing purposes.
 
 ## Table of Contents
 
+- [API Documentation](#api-documentation)
 - [API Endpoints](#api-endpoints)
 - [Usage Guidelines](#usage-guidelines)
 - [Architecture](#architecture)
@@ -11,6 +19,10 @@ The API and Web UI powering the official [Jingle Jam Tracker](https://www.jingle
 - [Admin Management](#admin-management)
 - [Scripts](#scripts)
 - [Project Structure](#project-structure)
+
+## API Documentation
+
+📖 **[Complete API Documentation](./API.md)** - Detailed API specification with request/response formats, examples, and type definitions.
 
 ## API Endpoints
 
