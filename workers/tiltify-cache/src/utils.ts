@@ -16,8 +16,6 @@ function getRandomFloat(min: number, max: number): number {
 
 /**
  * Generates a URL-friendly slug from a string.
- * Converts strings like "sam_eklls & meg__h" to "sam-eklls-and-meg-h"
- * Converts "Charlie | CALM" to "charlie-or-calm"
  * 
  * @param input - The string to convert to a slug
  * @returns A URL-friendly slug string
