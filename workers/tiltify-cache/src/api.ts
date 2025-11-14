@@ -1,4 +1,4 @@
-import { roundAmount, sortByKey } from "tiltify-cache/utils";
+import { generateSlug, roundAmount, sortByKey } from "tiltify-cache/utils";
 import { getEvent, getCampaigns, getUserBySlug } from "tiltify-cache/dependencies/tiltify";
 import { get as getYogscastAPI } from "tiltify-cache/dependencies/yogscast";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
@@ -202,8 +202,8 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
       const slug = campaign.url?.split('/').pop() || campaign.clean_name?.toLowerCase().replace(/\s+/g, '-') || '';
 
       // Get the user slug by replaccing the username with lowercase and dashes
-      const userSlug = campaign.username.toLowerCase().replace(/\s+/g, '-') || '';
-      const teamSlug = campaign.team_name?.toLowerCase().replace(/\s+/g, '-') || '';
+      const userSlug = generateSlug(campaign.username) || '';
+      const teamSlug = generateSlug(campaign.team_name) || '';
 
       // Get the cause id from the legacy cause id
       const causeId = legacyCauseIdToCauseId[campaign.region_id?.toString()];
