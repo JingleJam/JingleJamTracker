@@ -1,21 +1,21 @@
 import { roundAmount, sortByKey } from "tiltify-cache/utils";
-import { getCampaign, getEvent, getCampaigns } from "tiltify-cache/dependencies/tiltify";
+import { getEvent, getCampaigns, getUserBySlug } from "tiltify-cache/dependencies/tiltify";
 import { get as getYogscastAPI } from "tiltify-cache/dependencies/yogscast";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
 import { Env } from "tiltify-cache/types/env";
 import { Cause } from "tiltify-cache/types/Cause";
 import { DonationHistory } from "tiltify-cache/types/DonationHistory";
-import { TiltifyUserCampaign } from "tiltify-cache/types/tiltify/TiltifyUserCampaign";
-import { TiltifyFundraisingEvent } from "tiltify-cache/types/tiltify/TiltifyFundraisingEvent";
 import { YogscastDonationData } from "tiltify-cache/types/yogscast/YogscastDonationData";
 import { Campaign } from "tiltify-cache/types/Campaign";
-import { TiltifyFundraisingEventCampaign } from "tiltify-cache/types/tiltify/TiltifyFundraisingEventCampaign";
+import { TiltifyMultiSearchCampaign, TiltifyMultiSearchResult } from "tiltify-cache/types/tiltify/TiltifyMultiSearchCampaign";
+import { TiltifyTemplateFact } from "./types/tiltify/TiltifyTemplateFact";
+import { TiltifyUser } from "./types/tiltify/TiltifyUser";
 
 const maxSim = 6; // Maximum number of simultaneous fetches
 const maxNumOfCampaigns = 100;
 const maxDescriptionLength = 1024;
 const maxCampaigns = (20 * 900) - 2; // Maximum number of campaigns that can be fetched
-const allCharitiesRegionId = "0f5718f6-bf64-4001-b0ba-30195f81de02";
+const allCharitiesRegionId = "566";
 
 // Old Team Data
 // End of 2020 yogscast dollar amount = 2827226.00
@@ -26,6 +26,7 @@ const allCharitiesRegionId = "0f5718f6-bf64-4001-b0ba-30195f81de02";
 // End of 2022 yogscast dollar amount = 3368996.43
 // Pre-2023 Jingle Jam dollar amount = 3371741.16
 // End of 2023 yogscast dollar amount = 5747814.82
+// Pre-2024 Jingle Jam dollar amount = 8215739.75
 async function getSummaryData(env: Env): Promise<ApiResponse> {
   let campaignsComputed: Campaign[] = [];
   
@@ -36,14 +37,14 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
   try {
     // Perform all Tiltify and Yogscast lookups in parallel
     const results = await Promise.all([
-      getCampaign(env.YOGSCAST_USERNAME_SLUG, env.YOGSCAST_CAMPAIGN_SLUG),  // Gets Yogscast Campaign Data
-      getEvent(env.CAUSE_SLUG, env.FUNDRAISER_SLUG),                        // Gets Yearly Event Level Data
-      getYogscastAPI()                                                      // Gets Yogscast API Data
+      getEvent(env.FUNDRAISER_PUBLIC_ID),       // Gets Yearly Event Level Data
+      getYogscastAPI(),                         // Gets Yogscast API Data
+      getUserBySlug(env.YOGSCAST_USERNAME)      // Gets Yogscast User Data
     ]);
 
-    const yogscastCampaign: TiltifyUserCampaign | null = results[0] as TiltifyUserCampaign | null;
-    const eventData: TiltifyFundraisingEvent | null = results[1] as TiltifyFundraisingEvent | null;
-    const yogscastAPI: YogscastDonationData | null = results[2] as YogscastDonationData | null;
+    const eventData: TiltifyTemplateFact | null = results[0] as TiltifyTemplateFact | null;
+    const yogscastAPI: YogscastDonationData | null = results[1] as YogscastDonationData | null;
+    const yogscastUser: TiltifyUser | null = results[2] as TiltifyUser | null;
 
     /*
       Summary Data:
@@ -56,25 +57,11 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
     */
 
     // Get the total amount raised from the whole event (Yogscast & Fundraisers)
-    const totalPounds = parseFloat(eventData?.totalAmountRaised.value || "0");
-
-    apiResponse.raised.yogscast = parseFloat(yogscastCampaign?.totalAmountRaised.value || "0"); // Get amount raised directly from the Yogscast Tiltify campaign
-    apiResponse.raised.fundraisers = roundAmount(totalPounds - apiResponse.raised.yogscast); // Subtract Yogscast amount from total amount raised from the whole event
-
-    // Calculate the average conversion rate over the period of the event
-    const yogscastDollars = roundAmount(parseFloat(yogscastCampaign?.user.totalAmountRaised.value || "0") - env.DOLLAR_OFFSET);
-    const division = yogscastDollars / apiResponse.raised.yogscast;
-
-    if (!isNaN(division) && isFinite(division)) {
-      apiResponse.avgConversionRate = roundAmount(division, 10);
-    }
-    else {
-      apiResponse.avgConversionRate = env.CONVERSION_RATE;
-    }
+    apiResponse.raised = parseFloat(eventData?.totalAmountRaised.value || "0");
 
     // Gets collections counts
     try {
-      const rewards = (eventData?.rewards?.length || 0) > 0 ? eventData?.rewards : yogscastCampaign?.rewards;
+      const rewards = (eventData?.rewards?.length || 0) > 0 ? eventData?.rewards : 0;
       if (rewards && rewards.length > 0) {
         apiResponse.collections.total = rewards[0].quantity;
         apiResponse.collections.redeemed = apiResponse.collections.total - rewards[0].remaining;
@@ -85,8 +72,17 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
     }
 
     // Get donation counts from Yogscast API
-    apiResponse.donations.count = yogscastAPI?.donations || 0;
-    //apiResponse.donations.count += env.DONATION_DIFFERENCE;
+
+    // If the average donation is less than 10, don't use the donations from the Yogscast API
+    try {
+      if(yogscastAPI?.donations && (apiResponse.raised/yogscastAPI?.donations) > 10) {
+        apiResponse.donations = yogscastAPI?.donations || 0;
+      } else {
+        apiResponse.donations = apiResponse.collections.redeemed;
+      }
+    } catch {
+      apiResponse.donations = apiResponse.collections.redeemed;
+    }
 
     /*
       Campaigns:
@@ -95,23 +91,23 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
     */
 
     // Get the list of campaigns
-    let campaigns: { node: TiltifyFundraisingEventCampaign }[] = [];
+    let campaigns: TiltifyMultiSearchCampaign[] = [];
     let offset = 0;
     let end = false;
 
     // Get all campaigns from the fundraiser
     if (env.FUNDRAISER_PUBLIC_ID) {
-      // Fetch all campaigns in parallel (chunks of 6 requests with 20 campaigns each)
+      // Fetch all campaigns in parallel (chunks of 6 requests with 100 campaigns each)
       while (offset <= maxCampaigns && !end) {
-        const requests = Array.from({ length: maxSim }, (_, i) => getCampaigns(env.FUNDRAISER_PUBLIC_ID, offset + (i * 20)));
-        const regionResponses = await Promise.all(requests);
-        offset += 20 * maxSim;
+        const requests = Array.from({ length: maxSim }, (_, i) => getCampaigns(env.FUNDRAISER_PUBLIC_ID, offset + i));
+        const regionResponses: TiltifyMultiSearchResult[] = await Promise.all(requests);
+        offset += maxSim;
 
         for (const response of regionResponses) {
-          const campaignsData = response.publishedCampaigns;
-          campaigns = campaigns.concat(campaignsData.edges);
+          campaigns = campaigns.concat(response.hits);
 
-          if (!campaignsData.pagination.hasNextPage) {
+          // Check if we've reached the last page
+          if (response.page >= response.totalPages) {
             end = true;
             break;
           }
@@ -121,11 +117,11 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
       // Cycle through all campaigns and calculate the amount raised for each cause
       let campaignAmountPounds = 0;
       for (const campaign of campaigns) {
-        const campaignRegionId = campaign.node.region?.id || 0;
+        const campaignRegionId = campaign.region_id?.toString() || null;
         const isAllCauseCampaign = !campaignRegionId || campaignRegionId === allCharitiesRegionId;
 
-        // Detemine the cause amount
-        let raisedAmount = parseFloat(campaign.node.totalAmountRaised?.value || '0');
+        // Determine the cause amount
+        let raisedAmount = campaign.total_amount_raised || 0;
         campaignAmountPounds += raisedAmount;
 
         // If the campaign donates to all charities, divide the amount by the number of causes
@@ -138,25 +134,20 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
         // Add the amount to the correct cause
         for (const cause of apiResponse.causes) {
           // If the campaign is for a specific cause or applies to all causes
-          if (cause.id === campaignRegionId || isAllCauseCampaign) {
-            // Add the amount to the correct cause (Yogscast or Fundraisers)
-            if (campaign.node.user?.slug === env.YOGSCAST_USERNAME_SLUG) {
-              cause.raised.yogscast += causeAmount;
-            } else {
-              cause.raised.fundraisers += causeAmount;
-            }
+          if (cause.legacyId === campaignRegionId || isAllCauseCampaign) {
+            cause.raised += causeAmount;
           }
         }
       }
 
       // Clean up the raised amounts if the total raised amount is different from the sum of all campaign amounts
       // This is mainly team donations that are not assigned to a specific campaign
-      const amountDifference = totalPounds - campaignAmountPounds;
+      const amountDifference = apiResponse.raised - campaignAmountPounds;
       if (amountDifference > 0) {
         // Fix the cause data
         const causeAmount = amountDifference / apiResponse.causes.length;
         for (const cause of apiResponse.causes) {
-          cause.raised.fundraisers += causeAmount;
+          cause.raised += causeAmount;
         }
       }
 
@@ -165,51 +156,90 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
         if(cause.override){
           for(const apiCause of apiResponse.causes){
             if(cause.id === apiCause.id){
-              apiCause.raised.yogscast += cause.override;
+              apiCause.raised += cause.override;
             }
 
-            apiCause.raised.yogscast -= cause.override/causes.length;
+            apiCause.raised -= cause.override/causes.length;
           }
         }
       }
 
       // Round the raised amounts for each cause
       for (const cause of apiResponse.causes) {
-        cause.raised.fundraisers = roundAmount(cause.raised.fundraisers);
-        cause.raised.yogscast = roundAmount(cause.raised.yogscast);
+        cause.raised = roundAmount(cause.raised);
       }
+    }
+
+    // Get the Yogscast total amount raised to calculate the average conversion rate
+    let yogscastRaisedDollars = Math.max(parseFloat(yogscastUser?.totalAmountRaised.value || "0") - env.DOLLAR_OFFSET, 0);
+    let yogscastRaisedPounds = campaigns.find(campaign => campaign.username === env.YOGSCAST_USERNAME)?.total_amount_raised || 0;
+
+    try {
+      apiResponse.dollarConversionRate = parseFloat((yogscastRaisedDollars/yogscastRaisedPounds).toFixed(8)) || env.CONVERSION_RATE;
+    } catch {
+      apiResponse.dollarConversionRate = env.CONVERSION_RATE;
+    }
+
+
+    // Generate legacy cause id to cause id mapping
+    const legacyCauseIdToCauseId: Record<string, string> = {};
+    for (const cause of apiResponse.causes) {
+      legacyCauseIdToCauseId[cause.legacyId!] = cause.id;
     }
 
     // Create and format the campaign list from the Tiltify API data
     for (const campaign of campaigns) {
-      const description = campaign.node.description?.length > maxDescriptionLength
-        ? `${campaign.node.description.slice(0, maxDescriptionLength)}...`
-        : campaign.node.description;
+      const description = campaign.description?.length > maxDescriptionLength
+        ? `${campaign.description.slice(0, maxDescriptionLength)}...`
+        : campaign.description;
 
-        // Skip campaigns without a user
-        if(!campaign.node.user?.id){
-          continue;
-        }
+      // Skip campaigns without a username or if not published
+      if (!campaign.username) {
+        continue;
+      }
+
+      // Extract slug from URL or use clean_name converted to slug format
+      const slug = campaign.url?.split('/').pop() || campaign.clean_name?.toLowerCase().replace(/\s+/g, '-') || '';
+
+      // Get the user slug by replaccing the username with lowercase and dashes
+      const userSlug = campaign.username.toLowerCase().replace(/\s+/g, '-') || '';
+      const teamSlug = campaign.team_name?.toLowerCase().replace(/\s+/g, '-') || '';
+
+      // Get the cause id from the legacy cause id
+      const causeId = legacyCauseIdToCauseId[campaign.region_id?.toString()];
+
+      // Increment the campaign count for the cause
+      if (causeId) {
+        for (const cause of apiResponse.causes) {
+          if (cause.id === causeId) {
+            cause.campaigns++;
+            break;
+          }
+        } 
+      }
 
       campaignsComputed.push({
-        causeId: campaign.node.region?.id || null,
-        name: campaign.node.name,
+        id: campaign.id,
+        slug: slug,
+        name: campaign.name,
         description: description,
-        slug: campaign.node.slug,
-        url: `https://tiltify.com/@${campaign.node.user?.slug}/${campaign.node.slug}`,
-        startTime: campaign.node.publishedAt,
-        raised: roundAmount(parseFloat(campaign.node.totalAmountRaised?.value) || 0),
-        goal: roundAmount(parseFloat(campaign.node.goal?.value) || 0),
-        livestream: {
-          channel: campaign.node.livestream?.channel || campaign.node.user?.social.twitch,
-          type: campaign.node.livestream?.type || 'twitch',
-        },
+        url: campaign.url || `https://tiltify.com/@${campaign.username}/${slug}`,
+        startTime: campaign.published_at_utc ? new Date(campaign.published_at_utc * 1000).toISOString(): null,
+        raised: roundAmount(campaign.total_amount_raised || 0),
+        goal: roundAmount(campaign.goal || 0),
+        causeId: causeId || null,
+        type: campaign.type,
+        team: campaign.team_public_id ? {
+          name: campaign.team_name || '',
+          slug: teamSlug,
+          avatar: campaign.team_avatar?.src || '',
+          url: `https://tiltify.com/+${teamSlug}`,
+        } : null,
         user: {
-          id: campaign.node.user?.id,
-          name: campaign.node.user?.username,
-          slug: campaign.node.user?.slug,
-          avatar: campaign.node.user?.avatar.src,
-          url: `https://tiltify.com/@${campaign.node.user?.slug}`,
+          name: campaign.username,
+          slug: userSlug,
+          avatar: campaign.user_avatar?.src || campaign.fact_avatar?.src || '',
+          url: `https://tiltify.com/@${userSlug}`,
         },
       });
     }
@@ -217,6 +247,11 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
     // Sort the campaigns by the amount raised and limit the number of campaigns
     apiResponse.campaigns.count = campaignsComputed.length;
     apiResponse.campaigns.list = sortByKey(campaignsComputed, 'raised').slice(0, maxNumOfCampaigns);
+
+    // Remove the legacyId from the causes
+    for(const cause of apiResponse.causes){
+      delete cause.legacyId;
+    }
 
   } catch (e) {
     console.error(e);
@@ -241,13 +276,15 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
 
   const causeObjects: Cause[] = causes?.map(cause => ({
     id: cause.id,
+    legacyId: cause.legacyId || '',
     name: cause.name,
     logo: cause.logo,
     description: cause.description,
     color: cause.color,
     url: cause.url,
     donateUrl: cause.donateUrl,
-    raised: { yogscast: 0, fundraisers: 0 },
+    raised: 0,
+    campaigns: 0,
   })) || [];
 
   return {
@@ -257,18 +294,13 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
       start: new Date(Date.UTC(env.YEAR, 11, 1, 17, 0, 0)),
       end: new Date(Date.UTC(env.YEAR, 11, 15, 0, 0, 0)),
     },
-    avgConversionRate: env.CONVERSION_RATE,
-    raised: {
-      yogscast: 0,
-      fundraisers: 0,
-    },
+    raised: 0,
+    dollarConversionRate: env.CONVERSION_RATE,
     collections: {
       redeemed: 0,
       total: env.COLLECTIONS_AVAILABLE,
     },
-    donations: {
-      count: 0,
-    },
+    donations: 0,
     history: donationHistory || [],
     causes: causeObjects,
     campaigns: {
@@ -291,15 +323,13 @@ async function getDebugData(env: Env): Promise<ApiResponse> {
 
   const amount = 1 * Math.max(((new Date().getTime() - debugStartDate.getTime()) / 3.5913 % 5000000), 0);
 
-  defaultResponse.raised.yogscast = amount * 0.8;
-  defaultResponse.raised.fundraisers = amount * 0.2;
+  defaultResponse.raised = amount;
 
   defaultResponse.collections.redeemed = parseInt((amount / 40.84).toFixed(0));
-  defaultResponse.donations.count = defaultResponse.collections.redeemed + 945;
+  defaultResponse.donations = defaultResponse.collections.redeemed + 945;
 
   for (const cause of defaultResponse.causes) {
-    cause.raised.yogscast = (amount / defaultResponse.causes.length) * 0.8;
-    cause.raised.fundraisers = (amount / defaultResponse.causes.length) * 0.2;
+    cause.raised = (amount / defaultResponse.causes.length);
   }
 
   return defaultResponse;

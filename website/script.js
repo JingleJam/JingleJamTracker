@@ -427,13 +427,11 @@
 
     //Creates the card components
     function createCards() {
-        let conversion = JingleJam.model.avgConversionRate;
+        let conversion = JingleJam.model.dollarConversionRate;
 
         let sortedCauses = JingleJam.model.causes.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
         let causesCards = '';
         for (let cause of sortedCauses) {
-            let yogDollars = cause.raised.yogscast * conversion;
-            let fundDollars = cause.raised.fundraisers * conversion;
             let accentColor = cause.color || '#e21251';
             let rgb = hexToRgb(accentColor);
 
@@ -450,7 +448,7 @@
               </div>
               <div class="total">
                 <span class="raised-total">
-                    ${JingleJam.settings.isPounds ? formatCurrency(cause.raised.fundraisers + cause.raised.yogscast) : formatCurrency(yogDollars + fundDollars)}
+                    ${JingleJam.settings.isPounds ? formatCurrency(cause.raised) : formatCurrency(cause.raised * conversion)}
                 </span>
                 <div class="raised-label">
                     RAISED
@@ -463,22 +461,16 @@
 
     //Update the totals on the charities cards
     function updateCards(instant = false) {
-        let conversion = JingleJam.model.avgConversionRate;
+        let conversion = JingleJam.model.dollarConversionRate;
 
         let sortedCauses = JingleJam.model.causes.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
         for (let cause of sortedCauses) {
-            let yogDollars = cause.raised.yogscast * conversion;
-            let fundDollars = cause.raised.fundraisers * conversion;
-
-            let totalFund = (cause.raised.fundraisers + cause.raised.yogscast);
-            let totalFundDollar = (yogDollars + fundDollars);
-
             if (JingleJam.isWaiting())
                 setCount(`#charityCards #card${cause.id} .raised-total`, 0, formatCurrency);
             else if (instant)
-                setCount(`#charityCards #card${cause.id} .raised-total`, (JingleJam.settings.isPounds ? totalFund : totalFundDollar), formatCurrency);
+                setCount(`#charityCards #card${cause.id} .raised-total`, (JingleJam.settings.isPounds ? cause.raised : cause.raised * conversion), formatCurrency);
             else
-                animateCount(`#charityCards #card${cause.id} .raised-total`, formatCurrency, totalFund, totalFundDollar);
+                animateCount(`#charityCards #card${cause.id} .raised-total`, formatCurrency, cause.raised, cause.raised * conversion);
         }
     }
 
@@ -508,22 +500,20 @@
 
     function updateCounts(instant = false) {
         //Get the current data
-        let conversion = JingleJam.model.avgConversionRate;
-        let yogsDollars = JingleJam.model.raised.yogscast * conversion;
-        let fundDollars = JingleJam.model.raised.fundraisers * conversion;
+        let conversion = JingleJam.model.dollarConversionRate;
 
-        let totalPounds = JingleJam.model.history.reduce((sum, a) => sum + a.total.pounds, 0) + JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers;
-        let totalDollars = JingleJam.model.history.reduce((sum, a) => sum + a.total.dollars, 0) + yogsDollars + fundDollars;
+        let totalPounds = JingleJam.model.history.reduce((sum, a) => sum + a.total.pounds, 0) + JingleJam.model.raised
+        let totalDollars = JingleJam.model.history.reduce((sum, a) => sum + a.total.dollars, 0) + JingleJam.model.raised * conversion;
 
-        let avgDollars = !JingleJam.model.donations.count ? 0 : (yogsDollars + fundDollars) / JingleJam.model.donations.count;
-        let avgPounds = !JingleJam.model.donations.count ? 0 : (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) / JingleJam.model.donations.count;
+        let avgDollars = !JingleJam.model.donations ? 0 : totalDollars / JingleJam.model.donations;
+        let avgPounds = !JingleJam.model.donations ? 0 : (JingleJam.model.raised) / JingleJam.model.donations;
 
         //Update the components instantly
         if (instant) {
             if (!JingleJam.isWaiting()) {
-                setCount('#embedContainer #mainCounter', (JingleJam.settings.isPounds ? (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) : (yogsDollars + fundDollars)), formatCurrency);
+                setCount('#embedContainer #mainCounter', (JingleJam.settings.isPounds ? JingleJam.model.raised : JingleJam.model.raised * conversion), formatCurrency);
                 setCount('#embedContainer #bundlesSold', JingleJam.model.collections.redeemed, formatInt);
-                setCount('#embedContainer #donationCount', JingleJam.model.donations.count, (x) => formatInt(x));
+                setCount('#embedContainer #donationCount', JingleJam.model.donations, (x) => formatInt(x));
                 setCount('#embedContainer #averageDonation', (JingleJam.settings.isPounds ? avgPounds : avgDollars), (x) => formatCurrency(x, 2));
             }
             else {
@@ -537,17 +527,14 @@
         //Update the components by counting up
         else {
             if (!JingleJam.isWaiting()) {
-                animateCount('#embedContainer #mainCounter', formatCurrency, JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers, yogsDollars + fundDollars);
+                animateCount('#embedContainer #mainCounter', formatCurrency, JingleJam.model.raised, JingleJam.model.raised * conversion);
                 animateCount('#embedContainer #bundlesSold', formatInt, JingleJam.model.collections.redeemed);
-                animateCount('#embedContainer #donationCount', (x) => formatInt(x), JingleJam.model.donations.count);
+                animateCount('#embedContainer #donationCount', (x) => formatInt(x), JingleJam.model.donations);
                 animateCount('#embedContainer #averageDonation', (x) => formatCurrency(x, 2), avgPounds, avgDollars);
 
                 if(JingleJam.oldModel){
-                    let oldYogsDollars = JingleJam.oldModel.raised.yogscast * conversion;
-                    let oldFundDollars = JingleJam.oldModel.raised.fundraisers * conversion;
-
-                    let amount = (JingleJam.settings.isPounds ? (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) : (yogsDollars + fundDollars));
-                    let oldAmount = (JingleJam.settings.isPounds ? (JingleJam.oldModel.raised.yogscast + JingleJam.oldModel.raised.fundraisers) : (oldYogsDollars + oldFundDollars));
+                    let amount = (JingleJam.settings.isPounds ? JingleJam.model.raised : JingleJam.model.raised * conversion);
+                    let oldAmount = (JingleJam.settings.isPounds ? JingleJam.oldModel.raised : JingleJam.oldModel.raised * conversion);
                     let difference = amount - oldAmount;
                     if(difference !== 0){
                         const changeElement = document.getElementById('mainCounterChange');
@@ -781,7 +768,7 @@
             if(JingleJam.isLive()){
                 currentData.push({
                     x: JingleJam.model.date.getTime(),
-                    y: JingleJam.settings.isPounds ? JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers : (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) * JingleJam.model.avgConversionRate
+                    y: JingleJam.settings.isPounds ? JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers : (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) * JingleJam.model.dollarConversionRate
                 });
             }
                 */

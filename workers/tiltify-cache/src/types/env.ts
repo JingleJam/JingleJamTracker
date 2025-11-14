@@ -5,10 +5,8 @@ export interface Env {
     DONATION_DIFFERENCE: number;
     CONVERSION_RATE: number;
     CAUSE_SLUG: string;
-    FUNDRAISER_SLUG: string;
     FUNDRAISER_PUBLIC_ID: string;
-    YOGSCAST_CAMPAIGN_SLUG: string;
-    YOGSCAST_USERNAME_SLUG: string;
+    YOGSCAST_USERNAME: string;
     DURABLE_OBJECT_CACHE_KEY: string;
     LIVE_REFRESH_TIME: number;
     ENABLE_REFRESH: boolean;
