@@ -110,7 +110,7 @@ export class GraphData {
         // Data exists in the graph list, add the new data point
         else {
             const pounds = roundAmount(tiltifyData.raised.yogscast + tiltifyData.raised.fundraisers);
-            graphData.push(this.formatGraphData(date, pounds, roundAmount(pounds * tiltifyData.avgConversionRate)));
+            graphData.push(this.formatGraphData(date, pounds, roundAmount(pounds * tiltifyData.dollarConversionRate)));
         }
 
         return graphData;

@@ -1,8 +1,8 @@
-import { BaseTiltifyResponse } from "tiltify-cache/types/tiltify/BaseResponse";
-import { TiltifyUserCampaign } from "tiltify-cache/types/tiltify/TiltifyUserCampaign";
-import { TiltifyFundraisingEvent } from "tiltify-cache/types/tiltify/TiltifyFundraisingEvent";
-import { FundraisingEventCampaignsData } from "tiltify-cache/types/tiltify/TiltifyFundraisingEventCampaign";
+import { TiltifyMultiSearchResponse, TiltifyMultiSearchResult } from "tiltify-cache/types/tiltify/TiltifyMultiSearchCampaign";
+import { TiltifyTemplateFact, TiltifyTemplateFactResponse } from "tiltify-cache/types/tiltify/TiltifyTemplateFact";
+import { TiltifyUser, TiltifyUserResponse } from "tiltify-cache/types/tiltify/TiltifyUser";
 
+const TILTIFY_MULTI_SEARCH_ENDPOINT = 'https://site-search.tiltify.com/multi-search';
 const TILTIFY_API_ENDPOINT = "https://api.tiltify.com/";
 const TILTIFY_API_OPTIONS: RequestInit = {
     method: "POST",
@@ -12,53 +12,29 @@ const TILTIFY_API_OPTIONS: RequestInit = {
 };
 
 /*
-    Gets campaign information for a specific user and campaign
-
-    Used for:
-        - Yogscast Campaign Pound Amount
-        - Yogscast Campaign Dollar Amount
-        - Average Conversion Rate
-        - Backup Collections Data
-*/
-export async function getCampaign(userSlug: string, campaignSlug: string): Promise<TiltifyUserCampaign | null> {
-    const request: RequestInit = {
-        body: JSON.stringify({
-            "operationName": "get_campaign_by_vanity_and_slug",
-            "variables": {
-                "vanity": "@" + userSlug,
-                "slug": campaignSlug
-            },
-            "query": "query get_campaign_by_vanity_and_slug($vanity: String!, $slug: String!) { campaign(vanity: $vanity, slug: $slug) { publicId legacyCampaignId name slug status originalGoal { value } region { name } totalAmountRaised { value } goal { value } user { id username slug totalAmountRaised { value } } cause { id name slug } fundraisingEvent { publicId legacyFundraisingEventId name slug } livestream { channel type } rewards { quantity remaining amount { value } quantity remaining } } }"
-        }),
-        ...TILTIFY_API_OPTIONS
-    };
-
-    const response = await fetch(TILTIFY_API_ENDPOINT, request);
-    return ((await response.json()) as BaseTiltifyResponse<{ campaign: TiltifyUserCampaign}>)?.data?.campaign || null;
-}
-
-/*
-    Gets all event data for a related cause and fundraiser
+    Gets default template fact data by ID
 
     Used for:
         - Jingle Jam Pound Amount
         - Collections Data
 */
-export async function getEvent(causeSlug: string, fundraiserSlug: string): Promise<TiltifyFundraisingEvent | null> {
+export async function getEvent(id: string): Promise<TiltifyTemplateFact | null> {
+    const query = `query get_default_template_fact($id: ID!) {\n  fact(id: $id) {\n    id\n    currentSlug\n    updatedAt\n    trackers\n    template {\n      id\n      theme\n      panels {\n        id\n        name\n        __typename\n      }\n      ...DefaultTemplateFactElements\n      __typename\n    }\n    supportedFacts {\n      id\n      name\n      link\n      usageType\n      currentSlug\n      __typename\n    }\n    ...DefaultTemplateFactAbout\n    ...DefaultTemplateFactAuctionHouses\n    ...DefaultTemplateFactBonfire\n    ...DefaultTemplateFactCurrentEvents\n    ...DefaultTemplateFactFAQ\n    ...DefaultTemplateFactFeaturedMedia\n    ...DefaultTemplateFactFitnessData\n    ...DefaultTemplateFactFundraiserRewards\n    ...DefaultTemplateFactFundraisers\n    ...DefaultTemplateFactHeader\n    ...DefaultTemplateFactImpactPoints\n    ...DefaultTemplateFactLeaderboards\n    ...DefaultTemplateFactLiveDonations\n    ...DefaultTemplateFactMilestones\n    ...DefaultTemplateFactPolls\n    ...DefaultTemplateFactRewards\n    ...DefaultTemplateFactSchedules\n    ...DefaultTemplateFactSponsors\n    ...DefaultTemplateFactTargets\n    ...DefaultTemplateFactTeamStats\n    ...DefaultTemplateFactToolkit\n    ...DefaultTemplateFactUpdates\n    __typename\n  }\n}\n\nfragment DefaultTemplateFactAbout on Fact {\n  id\n  name\n  description\n  contactEmail\n  avatar {\n    src\n    alt\n    height\n    width\n    __typename\n  }\n  video\n  image {\n    src\n    alt\n    height\n    width\n    __typename\n  }\n  usageType\n  supportedFacts {\n    id\n    name\n    description\n    link\n    avatar {\n      src\n      alt\n      height\n      width\n      __typename\n    }\n    usageType\n    __typename\n  }\n  template {\n    id\n    panels {\n      id\n      config {\n        findOutMore\n        findOutMoreLink\n        contact\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactAuctionHouses on Fact {\n  id\n  __typename\n}\n\nfragment DefaultTemplateFactBonfire on Fact {\n  id\n  bonfire {\n    id\n    description\n    featuredItemImage {\n      src\n      alt\n      width\n      height\n      __typename\n    }\n    featuredItemName\n    featuredItemPrice {\n      currency\n      value\n      __typename\n    }\n    itemsSold\n    products {\n      id\n      productType\n      sellingPrice {\n        currency\n        value\n        __typename\n      }\n      __typename\n    }\n    url\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactCurrentEvents on Fact {\n  id\n  currency\n  link\n  template {\n    id\n    primaryColor\n    panels {\n      id\n      config {\n        show\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactFAQ on Fact {\n  id\n  template {\n    id\n    primaryColor\n    panels {\n      id\n      config {\n        show\n        faqUrl\n        faqHeading\n        faqDescription\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactFeaturedMedia on Fact {\n  id\n  scheduleCount\n  useScheduledMedia\n  mediaTypes {\n    id\n    image {\n      src\n      alt\n      height\n      width\n      __typename\n    }\n    provider\n    value\n    default\n    position\n    __typename\n  }\n  template {\n    id\n    panels {\n      id\n      config {\n        fullWidth\n        chat\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  paginatedSchedules(first: 10, activeAndUpcoming: true) {\n    edges {\n      cursor\n      node {\n        id\n        description\n        endsAt\n        name\n        startsAt\n        scheduledFact {\n          id\n          name\n          avatar {\n            src\n            alt\n            height\n            width\n            __typename\n          }\n          link\n          mediaTypes {\n            id\n            image {\n              src\n              alt\n              height\n              width\n              __typename\n            }\n            provider\n            value\n            default\n            position\n            __typename\n          }\n          __typename\n        }\n        ...DefaultTemplateFactFeaturedMediaCurrentScheduleItem\n        ...DefaultTemplateFactFeaturedMediaFutureScheduleItem\n        __typename\n      }\n      __typename\n    }\n    pageInfo {\n      endCursor\n      startCursor\n      hasNextPage\n      hasPreviousPage\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactFeaturedMediaCurrentScheduleItem on NewSchedule {\n  id\n  description\n  endsAt\n  name\n  startsAt\n  scheduledFact {\n    id\n    name\n    avatar {\n      src\n      alt\n      height\n      width\n      __typename\n    }\n    link\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactFeaturedMediaFutureScheduleItem on NewSchedule {\n  id\n  description\n  name\n  startsAt\n  scheduledFact {\n    id\n    avatar {\n      src\n      alt\n      height\n      width\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactFitnessData on Fact {\n  id\n  template {\n    id\n    primaryColor\n    panels {\n      id\n      config {\n        show\n        stats\n        individualTime\n        individualDistance\n        teamDistance\n        teamTime\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  ...DefaultTemplateFactFitnessDataStats\n  ...DefaultTemplateFactFitnessDataRecentActivities\n  ...DefaultTemplateFactFitnessDataFitnessChart\n  __typename\n}\n\nfragment DefaultTemplateFactFitnessDataStats on Fact {\n  id\n  fitnessMeasurementUnit\n  fitnessTotals {\n    averagePaceMinutesKilometer\n    averagePaceMinutesMile\n    totalDistanceKilometers\n    totalDistanceMiles\n    totalDurationSeconds\n    totalSteps\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactFitnessDataRecentActivities on Fact {\n  id\n  fitnessActivities(first: 5) {\n    edges {\n      node {\n        id\n        ...DefaultTemplateFactFitnessDataRecentFitnessActivity\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  ...DefaultTemplateFactFitnessDataRecentActivity\n  __typename\n}\n\nfragment DefaultTemplateFactFitnessDataRecentActivity on Fact {\n  id\n  fitnessMeasurementUnit\n  showPolyline\n  __typename\n}\n\nfragment DefaultTemplateFactFitnessDataRecentFitnessActivity on NewFitnessActivity {\n  distanceMiles\n  id\n  distanceKilometers\n  durationSeconds\n  steps\n  elevationGainFeet\n  elevationGainMeters\n  paceMinutesMile\n  paceMinutesKilometer\n  startDate\n  obfuscatedPolyline\n  fitnessActivityType {\n    id\n    type\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactFitnessDataFitnessChart on Fact {\n  id\n  fitnessMeasurementUnit\n  fitnessDailyActivities {\n    date\n    totalDistanceKilometers\n    totalDistanceMiles\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactFundraiserRewards on Fact {\n  id\n  fundraiserRewards {\n    id\n    title\n    description\n    label\n    promoted\n    amount {\n      value\n      currency\n      __typename\n    }\n    fairMarketValue {\n      value\n      currency\n      __typename\n    }\n    image {\n      src\n      alt\n      height\n      width\n      __typename\n    }\n    __typename\n  }\n  template {\n    id\n    primaryColor\n    panels {\n      id\n      config {\n        show\n        fundraiserRewardsHeading\n        fundraiserRewardsDescription\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactFundraisers on Fact {\n  id\n  link\n  template {\n    id\n    primaryColor\n    panels {\n      id\n      config {\n        show\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactHeader on Fact {\n  id\n  name\n  fundraisingForName\n  status\n  usageType\n  restricted\n  avatar {\n    src\n    alt\n    height\n    width\n    __typename\n  }\n  region {\n    id\n    name\n    __typename\n  }\n  supportable\n  featureSettings {\n    monthlyGivingEnabled\n    __typename\n  }\n  totalAmountRaised {\n    value\n    currency\n    __typename\n  }\n  goal {\n    value\n    currency\n    __typename\n  }\n  originalGoal {\n    value\n    currency\n    __typename\n  }\n  donationMatches {\n    id\n    active\n    startedAtAmount {\n      value\n      currency\n      __typename\n    }\n    matchedAmountTotalAmountRaised {\n      value\n      currency\n      __typename\n    }\n    __typename\n  }\n  milestones {\n    id\n    name\n    amount {\n      value\n      currency\n      __typename\n    }\n    __typename\n  }\n  monthlyGivingStats {\n    donorCount\n    totalAmountRaised {\n      value\n      currency\n      __typename\n    }\n    __typename\n  }\n  ownership {\n    id\n    name\n    slug\n    __typename\n  }\n  shareLinks {\n    supportLink\n    __typename\n  }\n  social {\n    discord\n    facebook\n    instagram\n    snapchat\n    tiktok\n    twitch\n    twitter\n    website\n    youtube\n    linkedin\n    __typename\n  }\n  supportedFacts {\n    id\n    name\n    usageType\n    link\n    ownership {\n      id\n      name\n      __typename\n    }\n    __typename\n  }\n  template {\n    id\n    primaryColor\n    secondaryFont\n    panels {\n      id\n      config {\n        alignment\n        heading\n        subHeading\n        donateButton\n        donateMonthlyButton\n        startFundraisingButton\n        amountRaised\n        fundraisingGoal\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  ...DefaultTemplateFactHeaderDonationMatches\n  ...DefaultTemplateFactHeaderFitnessgoals\n  __typename\n}\n\nfragment DefaultTemplateFactHeaderDonationMatches on Fact {\n  id\n  donationMatches {\n    id\n    totalAmountRaised {\n      value\n      currency\n      __typename\n    }\n    pledgedAmount {\n      value\n      currency\n      __typename\n    }\n    endsAt\n    ...DefaultTemplateFactHeaderDonationMatchesDonationMatch\n    ...SharedComponentMatch\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactHeaderDonationMatchesDonationMatch on DonationMatch {\n  id\n  matchedBy\n  totalAmountRaised {\n    value\n    currency\n    __typename\n  }\n  pledgedAmount {\n    value\n    currency\n    __typename\n  }\n  startsAt\n  endsAt\n  __typename\n}\n\nfragment SharedComponentMatch on DonationMatch {\n  id\n  matchedBy\n  totalAmountRaised {\n    value\n    currency\n    __typename\n  }\n  pledgedAmount {\n    value\n    currency\n    __typename\n  }\n  startsAt\n  endsAt\n  active\n  __typename\n}\n\nfragment DefaultTemplateFactHeaderFitnessgoals on Fact {\n  id\n  fitnessMeasurementUnit\n  fitnessGoals {\n    id\n    currentValue {\n      unit\n      value\n      __typename\n    }\n    goal {\n      unit\n      value\n      __typename\n    }\n    type\n    __typename\n  }\n  template {\n    id\n    primaryColor\n    panels {\n      id\n      config {\n        distanceProgress\n        stepProgress\n        timeProgress\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactImpactPoints on Fact {\n  id\n  impactPoints {\n    id\n    name\n    amount {\n      value\n      currency\n      __typename\n    }\n    description\n    __typename\n  }\n  template {\n    id\n    primaryColor\n    panels {\n      id\n      config {\n        show\n        impactPointsHeader\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactLeaderboards on Fact {\n  id\n  currency\n  link\n  template {\n    id\n    primaryColor\n    panels {\n      id\n      config {\n        show\n        individual\n        team\n        donor\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactLiveDonations on Fact {\n  id\n  template {\n    id\n    secondaryFont\n    panels {\n      id\n      config {\n        show\n        backgroundColor\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactMilestones on Fact {\n  id\n  milestones {\n    id\n    name\n    amount {\n      value\n      currency\n      __typename\n    }\n    active\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactPolls on Fact {\n  id\n  polls {\n    id\n    active\n    updatedAt\n    ...DefaultTemplateFactPollsPoll\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactPollsPoll on Poll {\n  id\n  name\n  amountRaised(factId: $id) {\n    value\n    currency\n    __typename\n  }\n  totalAmountRaised {\n    value\n    currency\n    __typename\n  }\n  ownerUsageType\n  pollOptions {\n    id\n    name\n    amountRaised(factId: $id) {\n      value\n      currency\n      __typename\n    }\n    totalAmountRaised {\n      value\n      currency\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactRewards on Fact {\n  id\n  rewards {\n    id\n    updatedAt\n    active\n    promoted\n    amount {\n      value\n      currency\n      __typename\n    }\n    ...DefaultTemplateFactRewardsReward\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactRewardsReward on Reward {\n  id\n  name\n  description\n  image {\n    src\n    alt\n    height\n    width\n    __typename\n  }\n  amount {\n    value\n    currency\n    __typename\n  }\n  quantity\n  remaining\n  endsAt\n  startsAt\n  ownerUsageType\n  __typename\n}\n\nfragment DefaultTemplateFactSchedules on Fact {\n  id\n  scheduleCount\n  paginatedSchedules(first: 10, activeAndUpcoming: true) {\n    edges {\n      cursor\n      node {\n        id\n        ...DefaultTemplateFactSchedulesSchedule\n        __typename\n      }\n      __typename\n    }\n    pageInfo {\n      endCursor\n      startCursor\n      hasNextPage\n      hasPreviousPage\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactSchedulesSchedule on NewSchedule {\n  id\n  description\n  endsAt\n  name\n  startsAt\n  scheduledFact {\n    id\n    name\n    avatar {\n      src\n      alt\n      height\n      width\n      __typename\n    }\n    link\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactSponsors on Fact {\n  id\n  sponsors {\n    id\n    name\n    link\n    image {\n      src\n      alt\n      height\n      width\n      __typename\n    }\n    __typename\n  }\n  template {\n    id\n    primaryColor\n    panels {\n      id\n      config {\n        show\n        sponsorHeading\n        sponsorDescription\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactTargets on Fact {\n  id\n  challenges {\n    id\n    updatedAt\n    active\n    ...DefaultTemplateFactTargetsTarget\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactTargetsTarget on Challenge {\n  id\n  name\n  amount {\n    value\n    currency\n    __typename\n  }\n  amountRaised {\n    value\n    currency\n    __typename\n  }\n  endsAt\n  __typename\n}\n\nfragment DefaultTemplateFactTeamStats on Fact {\n  id\n  publishedAt\n  teamMemberCount\n  supportingFactsCount(usageTypes: [CAMPAIGN])\n  template {\n    id\n    primaryColor\n    panels {\n      id\n      config {\n        show\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactToolkit on Fact {\n  id\n  template {\n    id\n    primaryColor\n    panels {\n      id\n      config {\n        show\n        toolkitUrl\n        toolkitHeading\n        toolkitDescription\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactElements on FactTemplate {\n  id\n  primaryFont\n  secondaryFont\n  panels {\n    id\n    name\n    config {\n      backgroundColor\n      customBackgroundColor\n      __typename\n    }\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactUpdates on Fact {\n  id\n  factUpdates {\n    id\n    ...DefaultTemplateFactUpdatesFactUpdate\n    __typename\n  }\n  __typename\n}\n\nfragment DefaultTemplateFactUpdatesFactUpdate on FactUpdate {\n  id\n  description\n  insertedAt\n  title\n  image {\n    src\n    alt\n    height\n    width\n    __typename\n  }\n  __typename\n}`;
+
     const request: RequestInit = {
         body: JSON.stringify({
-            "operationName": "get_cause_and_fe_by_slug",
+            "operationName": "get_default_template_fact",
             "variables": {
-                "causeSlug": causeSlug,
-                "feSlug": fundraiserSlug
+                "id": id
             },
-            "query": "query get_cause_and_fe_by_slug($feSlug: String!, $causeSlug: String!) { fundraisingEvent(slug: $feSlug, causeSlug: $causeSlug) { amountRaised { currency value } rewards { quantity remaining } totalAmountRaised { value } } }"
+            "query": query
         }),
         ...TILTIFY_API_OPTIONS
     };
 
     const response = await fetch(TILTIFY_API_ENDPOINT, request);
-    return ((await response.json()) as BaseTiltifyResponse<{ fundraisingEvent: TiltifyFundraisingEvent}>)?.data?.fundraisingEvent || null;
+    const data = (await response.json()) as TiltifyTemplateFactResponse;
+    return data?.data?.fact || null;
 }
 
 /*
@@ -68,22 +44,70 @@ export async function getEvent(causeSlug: string, fundraiserSlug: string): Promi
         - Listing Out Campaigns
         - Calculating Raised for each Cause
 */
-export async function getCampaigns(fundraiserPublicId: string, offset: number): Promise<FundraisingEventCampaignsData> {
+export async function getCampaigns(fundraiserPublicId: string, offset: number): Promise<TiltifyMultiSearchResult> {
     const request: RequestInit = {
         body: JSON.stringify({
-            "operationName": "get_campaigns_by_fundraising_event_id",
+            "queries": [
+                {
+                    "indexUid": "facts",
+                    "filter": [
+                        "fundraising_event_public_id = " + fundraiserPublicId + " AND public = true"
+                    ],
+                    "attributesToHighlight": [
+                        "*"
+                    ],
+                    "highlightPreTag": "__ais-highlight__",
+                    "highlightPostTag": "__/ais-highlight__",
+                    "hitsPerPage": 100,
+                    "page": offset
+                }
+            ]
+        }),
+        method: "POST",
+        headers: {
+            "content-type": "application/json",
+            "Authorization": "Bearer 4ab7c79d998483a2cc90cb98d682f2b256981087fbdf1bcc2a45a70ed606d139",
+        },
+    };
+
+    const response = await fetch(TILTIFY_MULTI_SEARCH_ENDPOINT, request);
+    const data = (await response.json()) as TiltifyMultiSearchResponse;
+    
+    return data?.results?.[0] as TiltifyMultiSearchResult || {
+        indexUid: "facts",
+        hits: [],
+        query: "",
+        processingTimeMs: 0,
+        hitsPerPage: 100,
+        page: offset,
+        totalPages: 0,
+        totalHits: 0
+    };
+}
+
+/*
+    Gets user data by slug
+
+    Used for:
+        - Fetching user profile information
+        - Getting user's total amount raised
+        - Getting user's team memberships
+*/
+export async function getUserBySlug(slug: string): Promise<TiltifyUser | null> {
+    const query = `query get_user_by_slug($slug: String!) {\n  user(slug: $slug) {\n    id\n    username\n    slug\n    description\n    createdAt\n    totalAmountRaised {\n      currency\n      value\n      __typename\n    }\n    avatar {\n      alt\n      src\n      __typename\n    }\n    social {\n      twitter\n      discord\n      facebook\n      website\n      snapchat\n      instagram\n      youtube\n      tiktok\n      twitch\n      linkedin\n      __typename\n    }\n    teamMemberships {\n      publicId\n      roles {\n        publicId\n        name\n        description\n        __typename\n      }\n      team {\n        id\n        publicId\n        slug\n        name\n        description\n        avatar {\n          src\n          alt\n          width\n          height\n          __typename\n        }\n        totalAmountRaised {\n          value\n          currency\n          __typename\n        }\n        memberCount\n        __typename\n      }\n      __typename\n    }\n    publishedCampaigns(first: 4) {\n      edges {\n        node {\n          ...campaignProfileAttributes\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    publishedAuctionHouses(first: 10) {\n      edges {\n        node {\n          publicId\n          avatar {\n            src\n            __typename\n          }\n          name\n          slug\n          cause {\n            name\n            __typename\n          }\n          totalAmountRaised {\n            value\n            currency\n            __typename\n          }\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    retiredCampaigns(first: 6) {\n      edges {\n        cursor\n        node {\n          ...campaignProfileAttributes\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    profileBadges {\n      earned\n      id\n      key\n      description\n      name\n      rank\n      translationKey\n      shareText\n      image {\n        src\n        __typename\n      }\n      smallImage {\n        src\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n  badgeGroups {\n    description\n    key\n    name\n    rank\n    translationKey\n    badges(userId: 3) {\n      earned\n      id\n      key\n      description\n      name\n      rank\n      translationKey\n      shareText\n      image {\n        src\n        __typename\n      }\n      smallImage {\n        src\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment campaignProfileAttributes on Campaign {\n  publicId\n  name\n  slug\n  live\n  goal {\n    value\n    currency\n    __typename\n  }\n  totalAmountRaised {\n    value\n    currency\n    __typename\n  }\n  avatar {\n    src\n    __typename\n  }\n  cardImage {\n    src\n    __typename\n  }\n  cause {\n    id\n    name\n    slug\n    avatar {\n      src\n      alt\n      __typename\n    }\n    __typename\n  }\n  livestream {\n    channel\n    type\n    __typename\n  }\n  user {\n    id\n    username\n    slug\n    avatar {\n      src\n      __typename\n    }\n    __typename\n  }\n  team {\n    id\n    name\n    slug\n    avatar {\n      src\n      __typename\n    }\n    __typename\n  }\n  publishedAt\n  __typename\n}`;
+
+    const request: RequestInit = {
+        body: JSON.stringify({
+            "operationName": "get_user_by_slug",
             "variables": {
-                "limit": 20,
-                "offset": offset,
-                "query": null,
-                "regionId": null,
-                "publicId": fundraiserPublicId
+                "slug": slug
             },
-            "query": "query get_campaigns_by_fundraising_event_id($publicId: String!, $limit: Int!, $query: String, $offset: Int, $regionId: Int) { fundraisingEvent(publicId: $publicId) { publishedCampaigns( limit: $limit offset: $offset query: $query regionId: $regionId ) { pagination { hasNextPage limit offset total } edges { node {... on Campaign { publishedAt description name slug user { avatar { src } id username slug social { twitch } } region { id } totalAmountRaised { value } livestream { channel type } goal { value } } } } } } }"
+            "query": query
         }),
         ...TILTIFY_API_OPTIONS
     };
 
     const response = await fetch(TILTIFY_API_ENDPOINT, request);
-    return ((await response.json()) as BaseTiltifyResponse<{ fundraisingEvent: FundraisingEventCampaignsData}>)?.data?.fundraisingEvent || null;
+    const data = (await response.json()) as TiltifyUserResponse;
+    return data?.data?.user || null;
 }

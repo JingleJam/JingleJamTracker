@@ -14,8 +14,30 @@ function getRandomFloat(min: number, max: number): number {
   return Math.random() * (max - min) + min;
 }
 
+/**
+ * Generates a URL-friendly slug from a string.
+ * 
+ * @param input - The string to convert to a slug
+ * @returns A URL-friendly slug string
+ */
+function generateSlug(input: string | null): string | null {
+  if (!input) return null;
+  
+  return input
+    .toLowerCase()
+    .trim()
+    .replace(/&/g, ' and ')          // Replace & with " and " (with spaces)
+    .replace(/\|/g, ' or ')          // Replace | with " or " (with spaces)
+    .replace(/\s+/g, '-')            // Replace spaces with hyphens
+    .replace(/_/g, '-')              // Replace underscores with hyphens
+    .replace(/[^a-z0-9-]/g, '')      // Remove any non-alphanumeric characters except hyphens
+    .replace(/-+/g, '-')             // Replace multiple consecutive hyphens with a single hyphen
+    .replace(/^-+|-+$/g, '');        // Remove leading and trailing hyphens
+}
+
 export {
   roundAmount,
   sortByKey,
-  getRandomFloat
+  getRandomFloat,
+  generateSlug
 };

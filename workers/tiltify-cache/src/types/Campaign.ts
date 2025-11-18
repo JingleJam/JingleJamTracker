@@ -2,17 +2,20 @@ export interface Campaign {
     causeId: string | null;
     name: string;
     description: string;
+    id: string;
     slug: string;
     url: string;
-    startTime: string;
+    startTime: string | null;
     raised: number;
     goal: number;
-    livestream: {
-        channel: string | null;
-        type: string | null;
-    };
+    type: string;
+    team: {
+        name: string;
+        slug: string;
+        avatar: string;
+        url: string;
+    } | null;
     user: {
-        id: number;
         name: string;
         slug: string;
         avatar: string;

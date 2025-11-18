@@ -9,18 +9,13 @@ export interface ApiResponse {
         start: Date;
         end: Date;
     };
-    avgConversionRate: number;
-    raised: {
-        yogscast: number;
-        fundraisers: number;
-    };
+    dollarConversionRate: number;
+    raised: number;
     collections: {
         redeemed: number;
         total: number;
     };
-    donations: {
-        count: number;
-    };
+    donations: number;
     history: DonationHistory[];
     causes: Cause[];
     campaigns: {
