@@ -61,12 +61,18 @@ GET /api/tiltify
 **DonationHistory:**
 ```typescript
 {
-  year: number;
+  year: number;                    // Event year
+  event: {
+    start: string;                 // Starting date for the event as an ISO 8601 date string
+    end: string;                   // Ending date for the event as an ISO 8601 date string
+  }
   total: {
-    dollars: number;
-    pounds: number;
+    dollars: number;               // Total amount raised this year in dollars
+    pounds: number;                // Total amount raised this year in pounds
   };
-  donations: number;
+  donations: number;               // Total number of donations this year
+  collections?: number;            // Total number of collections redeemed this year (optional, 2020 and later)
+  campaigns?: number;              // Total number of Tiltify campaigns this year (optional, 2021 and later)
 }
 ```
 
