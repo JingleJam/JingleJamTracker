@@ -12,6 +12,20 @@
 
 The Jingle Jam Tracker API provides real-time and historical donation data for the Jingle Jam charity event. All endpoints return JSON data and support CORS for cross-origin requests.
 
+## Table of Contents
+
+- [Endpoints](#endpoints)
+  - [1. GET /api/tiltify](#1-get-apitiltify)
+  - [2. GET /api/campaigns](#2-get-apicampaigns)
+  - [3. GET /api/graph/current](#3-get-apigraphcurrent)
+  - [4. GET /api/graph/previous](#4-get-apigraphprevious)
+- [Error Responses](#error-responses)
+- [CORS](#cors)
+- [Admin Endpoints](#admin-endpoints)
+  - [POST /api/tiltify](#post-apitiltify)
+  - [POST /api/graph/current](#post-apigraphcurrent)
+- [Notes](#notes)
+
 ## Endpoints
 
 ### 1. GET /api/tiltify
@@ -148,12 +162,18 @@ curl https://dashboard.jinglejam.co.uk/api/tiltify
   "donations": 15000,
   "history": [
     {
-      "year": 2024,
-      "total": {
-        "dollars": 5000000,
-        "pounds": 4000000
-      },
-      "donations": 50000
+        "year": 2024,
+        "event": {
+            "start": "2024-12-01T17:00:00.000Z",
+            "end": "2024-12-15T00:00:00.000Z"
+        },
+        "total": {
+            "dollars": 3398349.81,
+            "pounds": 2673906.16
+        },
+        "donations": 62609,
+        "collections": 53341,
+        "campaigns": 787
     }
   ],
   "causes": [
@@ -198,7 +218,124 @@ curl https://dashboard.jinglejam.co.uk/api/tiltify
 
 ---
 
-### 2. GET /api/graph/current
+### 2. GET /api/campaigns
+
+Returns a paginated list of all campaigns for the current year. This endpoint provides access to the complete campaign list, whereas `/api/tiltify` only returns the top 100 campaigns.
+
+#### Request
+
+```http
+GET /api/campaigns?limit=100&offset=0
+```
+
+#### Query Parameters
+
+- **limit** (optional): Number of campaigns to return per page
+  - **Type:** integer
+  - **Range:** 1-100 (inclusive)
+  - **Default:** 100
+  - **Validation:** Returns `400 Bad Request` if less than 1 or greater than 100
+
+- **offset** (optional): Number of campaigns to skip before returning results
+  - **Type:** integer
+  - **Range:** 0 or greater
+  - **Default:** 0
+  - **Validation:** Returns `400 Bad Request` if negative
+
+#### Response
+
+**Status Code:** `200 OK`
+
+**Content-Type:** `application/json;charset=UTF-8`
+
+**Response Body:**
+
+```typescript
+{
+  campaigns: Campaign[];    // Array of campaign objects (see Campaign type below)
+  total: number;            // Total number of campaigns available
+  limit: number;            // The limit value used (or default)
+  offset: number;           // The offset value used (or default)
+}
+```
+
+The `Campaign` type is the same as documented in the `/api/tiltify` endpoint (see above).
+
+#### Error Responses
+
+**400 Bad Request**
+
+Returned when invalid query parameters are provided.
+
+**Response:**
+```json
+{
+  "error": "Invalid limit parameter. Limit must be between 1 and 100."
+}
+```
+
+or
+
+```json
+{
+  "error": "Invalid offset parameter. Offset must be a positive number (0 or greater)."
+}
+```
+
+#### Example Request
+
+```bash
+# Get first 50 campaigns
+curl https://dashboard.jinglejam.co.uk/api/campaigns?limit=50&offset=0
+
+# Get next 50 campaigns
+curl https://dashboard.jinglejam.co.uk/api/campaigns?limit=50&offset=50
+
+# Get campaigns with default limit (100)
+curl https://dashboard.jinglejam.co.uk/api/campaigns
+```
+
+#### Example Response
+
+```json
+{
+  "campaigns": [
+    {
+      "causeId": "cause-1",
+      "name": "Example Campaign",
+      "description": "Campaign description",
+      "id": "campaign-1",
+      "slug": "example-campaign",
+      "url": "https://example.com/campaign",
+      "startTime": "2025-12-01T17:00:00.000Z",
+      "raised": 50000,
+      "goal": 100000,
+      "type": "campaign",
+      "team": null,
+      "user": {
+        "name": "John Doe",
+        "slug": "johndoe",
+        "avatar": "https://example.com/avatar.png",
+        "url": "https://example.com/user"
+      }
+    }
+  ],
+  "total": 150,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+#### Notes
+
+- Campaigns are sorted by amount raised (descending), same as in `/api/tiltify`
+- This endpoint provides access to all campaigns, not just the top 100
+- Use pagination to retrieve campaigns in batches
+- The endpoint automatically fetches campaigns if none are currently cached
+
+---
+
+### 3. GET /api/graph/current
 
 Returns time-series data points tracking the amount raised over time for the current year. Data points are added every 10 minutes during the event.
 
@@ -266,7 +403,7 @@ curl https://dashboard.jinglejam.co.uk/api/graph/current
 
 ---
 
-### 3. GET /api/graph/previous
+### 4. GET /api/graph/previous
 
 Returns historical time-series data points for previous years (going back to 2016). This data is used for plotting historical trends on graphs.
 
@@ -342,6 +479,17 @@ curl https://dashboard.jinglejam.co.uk/api/graph/previous
 
 All endpoints may return the following error responses:
 
+### 400 Bad Request
+
+Returned when invalid query parameters are provided (see specific endpoint documentation for details).
+
+**Response:**
+```json
+{
+  "error": "Error message describing the validation failure"
+}
+```
+
 ### 404 Not Found
 
 Returned when an invalid endpoint is accessed.
@@ -407,5 +555,6 @@ Manually update the cached current year graph data.
 - Dollar amounts are calculated using the current conversion rate provided in the `/api/tiltify` endpoint
 - Timestamps use Unix milliseconds for `/api/graph/current` and ISO 8601 strings for `/api/graph/previous`
 - The `/api/tiltify` endpoint returns the top 100 campaigns sorted by amount raised
+- The `/api/campaigns` endpoint provides access to all campaigns with pagination support
 - Historical data in `/api/graph/previous` may have varying data point frequencies depending on the year
 

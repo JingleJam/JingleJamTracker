@@ -1,5 +1,5 @@
 import { Env } from "tiltify-cache/types/env";
-import { roundAmount } from "tiltify-cache/utils";
+import { roundAmount, Router } from "tiltify-cache/utils";
 import { CurrentGraphPoint } from "tiltify-cache/types/CurrentGraphPoint";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
 import { GRAPH_API_PATH, TILTIFY_API_PATH } from "tiltify-cache/constants";
@@ -12,22 +12,24 @@ import { GRAPH_API_PATH, TILTIFY_API_PATH } from "tiltify-cache/constants";
 export class GraphData {
     storage: DurableObjectStorage;
     env: Env;
+    private router: Router;
 
     constructor(state: DurableObjectState, env: Env) {
         this.storage = state.storage;
         this.env = env;
+        this.router = this.setupRouter();
     }
 
-    // Handle HTTP requests from clients.
-    async fetch(request: Request): Promise<Response> {
-        const url = new URL(request.url);
-        console.log('Called ' + url.pathname);
+    private setupRouter(): Router {
+        const router = new Router();
 
-        // Get the current cached graph list
-        if (request.method === 'GET' && url.pathname === GRAPH_API_PATH) {
+        // GET route: Get the current cached graph list
+        router.get(GRAPH_API_PATH, async (request, url) => {
+            console.log('Called ' + url.pathname);
+            
             let data: any[] | null = await this.storage.get(this.env.DURABLE_OBJECT_CACHE_KEY) || [];
 
-            // If the cached value is not found first time load), create a default object and save it to the cache
+            // If the cached value is not found (first time load), create a default object and save it to the cache
             if (!data || data.length === 0) {
                 data = await this.defaultObject();
                 await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, data);
@@ -40,21 +42,31 @@ export class GraphData {
             }
 
             return new Response(JSON.stringify(data));
-        }
-        // Manually update the current cached graph list
-        else if (request.method === 'POST' && url.pathname === GRAPH_API_PATH) {
-            // Check if the request is authorized
-            if (!this.env.ADMIN_TOKEN || request.headers.get('Authorization') !== this.env.ADMIN_TOKEN) {
-                return new Response("Unauthorized", { status: 401 });
+        });
+
+        // POST route: Manually update the current cached graph list
+        router.post(
+            GRAPH_API_PATH,
+            async (request, url) => {
+                console.log('Called ' + url.pathname);
+                
+                // Set the graph list to the new data manually
+                const data = await request.json();
+                await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, data);
+                return new Response("Manual Update Success", { status: 200 });
+            },
+            {
+                requiresAuth: true,
+                authToken: this.env.ADMIN_TOKEN,
             }
+        );
 
-            // Set the graph list to the new data manually
-            const data = await request.json();
-            await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, data);
-            return new Response("Manual Update Success", { status: 200 });
-        }
+        return router;
+    }
 
-        return new Response("Not found", { status: 404 });
+    // Handle HTTP requests from clients.
+    async fetch(request: Request): Promise<Response> {
+        return this.router.handle(request);
     }
 
     async alarm(): Promise<void> {
@@ -109,7 +121,7 @@ export class GraphData {
         }
         // Data exists in the graph list, add the new data point
         else {
-            const pounds = roundAmount(tiltifyData.raised.yogscast + tiltifyData.raised.fundraisers);
+            const pounds = roundAmount(tiltifyData.raised);
             graphData.push(this.formatGraphData(date, pounds, roundAmount(pounds * tiltifyData.dollarConversionRate)));
         }
 
