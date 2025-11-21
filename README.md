@@ -12,7 +12,6 @@ The API and Web UI powering the official [Jingle Jam Tracker](https://www.jingle
 ## Table of Contents
 
 - [API Documentation](#api-documentation)
-- [API Endpoints](#api-endpoints)
 - [Usage Guidelines](#usage-guidelines)
 - [Architecture](#architecture)
 - [Development](#development)
@@ -22,34 +21,7 @@ The API and Web UI powering the official [Jingle Jam Tracker](https://www.jingle
 
 ## API Documentation
 
-📖 **[Complete API Documentation](./API.md)** - Detailed API specification with request/response formats, examples, and type definitions.
-
-## API Endpoints
-
-### **/api/tiltify**
-Real-time Jingle Jam donation data for the current year.
-
-**Response includes:**
-- Event Information
-- Amount Raised
-- Collections Redeemed
-- Historical Data
-- Raised for each Cause
-- List of top 100 Campaigns
-
-**Refresh Rate:** Every 10 seconds
-
-### **/api/graph/current**
-Tracks the amount raised over time as a list of data points.
-
-- Data points are added every 10 minutes
-- Used for plotting the current year's data on the graph
-
-### **/api/graph/previous**
-Historical amount raised over time as a list of data points going back to 2016.
-
-- Data points for previous years amount raised over time
-- Used for plotting previous years' data on the graph
+📖 **[API Documentation](./API.md)** - Detailed API specification with request/response formats, examples, and type definitions.
 
 ## Usage Guidelines
 

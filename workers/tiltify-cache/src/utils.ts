@@ -41,3 +41,6 @@ export {
   getRandomFloat,
   generateSlug
 };
+
+export { Router } from './utils/router';
+export type { HttpMethod, RouteHandler, RouteConfig } from './utils/router';
