@@ -12,7 +12,6 @@ import { TiltifyTemplateFact } from "./types/tiltify/TiltifyTemplateFact";
 import { TiltifyUser } from "./types/tiltify/TiltifyUser";
 
 const maxSim = 6; // Maximum number of simultaneous fetches
-const maxNumOfCampaigns = 100;
 const maxDescriptionLength = 1024;
 const maxCampaigns = (20 * 900) - 2; // Maximum number of campaigns that can be fetched
 const allCharitiesRegionId = "566";
@@ -246,7 +245,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
 
     // Sort the campaigns by the amount raised and limit the number of campaigns
     apiResponse.campaigns.count = campaignsComputed.length;
-    apiResponse.campaigns.list = sortByKey(campaignsComputed, 'raised').slice(0, maxNumOfCampaigns);
+    apiResponse.campaigns.list = sortByKey(campaignsComputed, 'raised');
 
     // Remove the legacyId from the causes
     for(const cause of apiResponse.causes){
