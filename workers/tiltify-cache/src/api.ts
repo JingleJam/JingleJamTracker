@@ -310,8 +310,8 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
 }
 
 
-const debugStartDate = new Date(2025, 10, 6, 7, 27, 0);
-const debugEndDate = new Date(2025, 10, 10, 22, 10, 0);
+const debugStartDate = new Date(Date.now() + 1 * 60 * 1000);
+const debugEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
 // Create fake data for debugging purposes
 async function getDebugData(env: Env): Promise<ApiResponse> {
