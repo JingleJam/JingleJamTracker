@@ -728,7 +728,7 @@
         '2022': '#6ba950',
         '2023': '#d64538',
         '2024': '#6e4ee0',
-        '2025': '#de8b47'
+        '2025': '#3ed0dd'
     }
     let myChart;
 
@@ -864,6 +864,13 @@
                     title: {
                         display: false,
                         text: 'Amount Raised Over Time'
+                    },
+                    legend: {
+                        labels: {
+                            sort: function(a, b) {
+                                return parseInt(a.text) - parseInt(b.text);
+                            }
+                        }
                     },
                     tooltip: {
                         callbacks: {
