@@ -74,11 +74,14 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
 
     // If the average donation is less than 10, don't use the donations from the Yogscast API
     try {
+      apiResponse.donations = apiResponse.collections.redeemed;
+      /*
       if(yogscastAPI?.donations && (apiResponse.raised/yogscastAPI?.donations) > 10) {
         apiResponse.donations = yogscastAPI?.donations || 0;
       } else {
         apiResponse.donations = apiResponse.collections.redeemed;
       }
+        */
     } catch {
       apiResponse.donations = apiResponse.collections.redeemed;
     }
@@ -291,7 +294,7 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
     event: {
       year: env.YEAR,
       start: new Date(Date.UTC(env.YEAR, 11, 1, 17, 0, 0)),
-      end: new Date(Date.UTC(env.YEAR, 11, 15, 0, 0, 0)),
+      end: new Date(Date.UTC(env.YEAR, 11, 15, 9, 0, 0)),   //December 15 (ending 09:00 AM GMT)
     },
     raised: 0,
     dollarConversionRate: env.CONVERSION_RATE,
