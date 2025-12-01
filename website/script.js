@@ -3,7 +3,7 @@
         model: null,
         oldModel: null,
         current: [],
-        previous: [],
+        previous: new Map(),
         refreshTime: 10000,         //How often to wait for an API refresh
         waitTime: 5000,             //How long to wait for the data on the backend to be updated
         minRefreshTime: 5000,       //Minimum refresh time for the API
@@ -314,6 +314,23 @@
         return parseInt(x).toLocaleString();
     }
 
+    //Formats an integer value with an ordinal suffix
+    function formatOrdinal(x) {
+        let f = formatInt(x);
+        let j = x % 10,
+            k = x % 100;
+        if (j === 1 && k !== 11) {
+            return f + "st";
+        }
+        if (j === 2 && k !== 12) {
+            return f + "nd";
+        }
+        if (j === 3 && k !== 13) {
+            return f + "rd";
+        }
+        return f + "th";
+    }
+
     //Animates a counter (targetPrimary = pounds, tagetSecondary = dollars for currency values)
     function animateCount(elem, format, targetPrimary, targetSecondary = null) {
         let number = parseFloat($(elem).data('value'));
@@ -487,9 +504,29 @@
         for (let year of JingleJam.model.history) {
             let value = JingleJam.settings.isPounds ? year.total.pounds : year.total.dollars;
             let percentage = maxValue > 0 ? (value / maxValue) * 100 : 0;
+            let data = JingleJam.previous.get(year.year);
+
             table += `<tr>`
-            table += `<td label="Year" class="year-label">${year.year}</td>`
-            table += `<td label="Raised" class="year-value">${JingleJam.settings.isPounds ? formatCurrency(year.total.pounds) : formatCurrency(year.total.dollars)}</td>`
+
+            table += `<td label="Year" class="year-label">${year.year}`;
+            if (data && data.length > 0) {
+                let startTime = new Date(data[0].timestamp);
+                let endTime = new Date(data[data.length - 1].timestamp);
+                let startMonth = startTime.toLocaleString('en-GB', { month: 'short' });
+                let endMonth = endTime.toLocaleString('en-GB', { month: 'short' });
+                table += `<br/><small>${formatOrdinal(startTime.getUTCDate())}${startMonth === endMonth ? '' : ' ' + startMonth} - ${formatOrdinal(endTime.getUTCDate())} ${endMonth}</small>`;
+            }
+            table += `</td>`;
+
+            table += `<td label="Raised" class="year-value">${formatCurrency(value)}`;
+            if (data && data.length > 0) {
+                let startTime = new Date(data[0].timestamp);
+                let endTime = new Date(data[data.length - 1].timestamp);
+                let days = Math.ceil((endTime - startTime) / (1000 * 60 * 60 * 24));
+                table += `<br/><small>${formatCurrency(value / days, 2)} / day</small>`;
+            }
+            table += `</td>`;
+
             table += '</tr>'
             table += `<tr class="progress-row">`
             table += `<td colspan="2" class="progress-cell"><div class="progress-bar-track"><div class="progress-bar-fill" style="width: ${percentage}%"></div></div></td>`
@@ -699,6 +736,9 @@
         }
 
         JingleJam.previous = groupBy(points, x => x.year);
+
+        //Update the tables with start/end dates
+        setTables();
     }
 
     function getDateTimeInGMT(date) {
