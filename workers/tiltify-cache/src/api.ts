@@ -291,7 +291,7 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
     event: {
       year: env.YEAR,
       start: new Date(Date.UTC(env.YEAR, 11, 1, 17, 0, 0)),
-      end: new Date(Date.UTC(env.YEAR, 11, 15, 9, 0, 0)),   //December 15 (ending 09:00 AM GMT)
+      end: new Date(Date.UTC(env.YEAR, 11, 15, 8, 0, 0)),   //December 15 (ending 08:00 AM GMT)
     },
     raised: 0,
     dollarConversionRate: env.CONVERSION_RATE,
