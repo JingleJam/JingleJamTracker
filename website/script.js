@@ -502,10 +502,7 @@
         //Get the current data
         let conversion = JingleJam.model.dollarConversionRate;
 
-        let totalPounds = JingleJam.model.history.reduce((sum, a) => sum + a.total.pounds, 0) + JingleJam.model.raised
-        let totalDollars = JingleJam.model.history.reduce((sum, a) => sum + a.total.dollars, 0) + JingleJam.model.raised * conversion;
-
-        let avgDollars = !JingleJam.model.donations ? 0 : totalDollars / JingleJam.model.donations;
+        let avgDollars = !JingleJam.model.donations ? 0 : (JingleJam.model.raised * conversion) / JingleJam.model.donations;
         let avgPounds = !JingleJam.model.donations ? 0 : (JingleJam.model.raised) / JingleJam.model.donations;
 
         //Update the components instantly
@@ -521,8 +518,6 @@
                 setCount('#embedContainer #donationCount', 0, (x) => formatInt(x));
                 setCount('#embedContainer #averageDonation', 0, (x) => formatCurrency(x, 2));
             }
-
-            setCount('#embedContainer #raisedEntire', (JingleJam.settings.isPounds ? totalPounds : totalDollars), formatCurrency);
         }
         //Update the components by counting up
         else {
@@ -564,8 +559,6 @@
                 animateCount('#embedContainer #donationCount', (x) => formatInt(x), 0);
                 animateCount('#embedContainer #averageDonation', (x) => formatCurrency(x, 2), 0, 0);
             }
-
-            animateCount('#embedContainer #raisedEntire', formatCurrency, totalPounds, totalDollars);
         }
 
         updateCards(instant);
