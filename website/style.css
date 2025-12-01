@@ -516,7 +516,7 @@
     }
 }
 
-@media screen and (max-width: 5450px) {
+@media screen and (max-width: 450px) {
     div[data-status="countdown"] #mainCounter {
         font-size: 2.1em !important;
     }
