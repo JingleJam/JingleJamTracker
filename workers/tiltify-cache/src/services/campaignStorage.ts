@@ -1,6 +1,6 @@
 import { Campaign } from "tiltify-cache/types/Campaign";
 
-const MAX_VALUE_SIZE = 128 * 1024; // 128 KiB limit for key-value storage
+const MAX_VALUE_SIZE = 100 * 1024; // 128 KiB limit for key-value storage
 const CHUNK_KEY_PREFIX = 'fullCampaigns:';
 const CHUNK_META_KEY = 'fullCampaigns:meta';
 
