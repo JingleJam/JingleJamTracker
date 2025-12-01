@@ -307,7 +307,7 @@
 
 #embedContainer .top-stats-container .main-stat-card {
     flex: 1;
-    min-width: 400px;
+    min-width: 350px;
 }
 
 #embedContainer .top-stat-cards {
@@ -511,6 +511,12 @@
 }
 
 @media screen and (max-width: 550px) {
+    div[data-status="countdown"] #mainCounter {
+        font-size: 2.5em !important;
+    }
+}
+
+@media screen and (max-width: 5450px) {
     div[data-status="countdown"] #mainCounter {
         font-size: 2.1em !important;
     }
@@ -1094,7 +1100,7 @@
 }
 
 /* Responsive Design for New Dashboard */
-@media screen and (max-width: 1200px) {
+@media screen and (max-width: 1310px) {
 
     #embedContainer .stat-value {
         font-size: 36px;
@@ -1190,11 +1196,11 @@
 
 @media screen and (max-width: 550px) {
     #embedContainer .main-stat-value {
-        font-size: 36px;
+        font-size: 34px;
     }
 
     #embedContainer .top-stat-cards .stat-card .stat-value {
-        font-size: 36px;
+        font-size: 34px;
     }
 
     #embedContainer .previous-years-card {

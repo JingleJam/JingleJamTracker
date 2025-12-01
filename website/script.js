@@ -122,7 +122,7 @@
         JingleJam.timeLeft = getTimeLeft();
         if (!JingleJam.isWaiting() || JingleJam.timeLeft.totalTime < 0) {
             $('[data-status]').attr('data-status', 'live')
-            $('#mainCounterHeader').html('<i class="money icon"></i>Raised This Year');
+            $('#mainCounterHeader').html('<i class="money icon"></i>Amount Raised');
             if ($('#mainCounter').text().includes('h')) {
                 updateGraph();
                 updateCounts(true);
