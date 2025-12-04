@@ -75,7 +75,8 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
     // If the average donation is less than 10, don't use the donations from the Yogscast API
     try {
       if(yogscastAPI?.donations && (apiResponse.raised/yogscastAPI?.donations) > 10) {
-        apiResponse.donations = (yogscastAPI?.donations - yogscastAPI?.donations_with_reward) + apiResponse.collections.redeemed || 0;
+        //apiResponse.donations = (yogscastAPI?.donations - yogscastAPI?.donations_with_reward) + apiResponse.collections.redeemed || 0;
+        apiResponse.donations = yogscastAPI?.donations || 0;
       } else {
         apiResponse.donations = apiResponse.collections.redeemed;
       }
