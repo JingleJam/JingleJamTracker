@@ -117,6 +117,11 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
       // Cycle through all campaigns and calculate the amount raised for each cause
       let campaignAmountPounds = 0;
       for (const campaign of campaigns) {
+        // Skip campaigns that are part of a team events since they are included in the team event object
+        if(campaign.team_event_public_id !== null){
+          continue;
+        }
+
         const campaignRegionId = campaign.region_id?.toString() || null;
         const isAllCauseCampaign = !campaignRegionId || campaignRegionId === allCharitiesRegionId;
 
