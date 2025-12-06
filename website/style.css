@@ -522,6 +522,12 @@
     }
 }
 
+@media screen and (max-width: 350px) {
+    div #mainCounter {
+        font-size: 2.1em !important;
+    }
+}
+
 
 #embedContainer .subtext-label {
     position: absolute;
@@ -622,6 +628,7 @@
     font-weight: 900;
     color: #2b9652;
     transform: scale(.9);
+    white-space: nowrap;
 }
 
 /* Change counter in new main stat card */
