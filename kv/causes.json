@@ -8,7 +8,7 @@
     "color": "#00a691",
     "url": "https://www.autistica.org.uk/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=974be205-3c5f-4f8c-9dd4-892b6b1e53d2",
-    "override": 0
+    "override": 5155.625
   },
   {
     "id": "1b61ce0a-d32c-4dde-bf0a-4849317cce65",
@@ -19,7 +19,7 @@
     "color": "#e94633",
     "url": "https://becomecharity.org.uk/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=1b61ce0a-d32c-4dde-bf0a-4849317cce65",
-    "override": 0
+    "override": 9844.625
   },
   {
     "id": "3d4fb356-891f-4f1e-9374-984aa5fdfdf5",
@@ -30,7 +30,7 @@
     "color": "#cbf900",
     "url": "https://www.thecalmzone.net/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=3d4fb356-891f-4f1e-9374-984aa5fdfdf5",
-    "override": 0
+    "override": 2340.625
   },
   {
     "id": "5cff6632-f97a-4f6e-96f1-7cd1c3fdb259",
@@ -41,7 +41,7 @@
     "color": "#3e9cd8",
     "url": "https://www.grandappeal.org.uk/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=5cff6632-f97a-4f6e-96f1-7cd1c3fdb259",
-    "override": 0
+    "override": 6092.625
   },
   {
     "id": "5350a34a-8b94-4513-bb1d-22becc2df6e4",
@@ -52,7 +52,7 @@
     "color": "#0063b8",
     "url": "https://worldwish.org/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=5350a34a-8b94-4513-bb1d-22becc2df6e4",
-    "override": 0
+    "override": 5155.625
   },
   {
     "id": "809dfb7b-faef-4e2d-b78d-d5e197975dac",
@@ -63,7 +63,7 @@
     "color": "#ef5b41",
     "url": "https://www.thetrevorproject.org/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=809dfb7b-faef-4e2d-b78d-d5e197975dac",
-    "override": 0
+    "override": 2340.625
   },
   {
     "id": "18cb6ffd-3067-4ca8-8414-74eb733d79fd",
@@ -74,7 +74,7 @@
     "color": "#cc232a",
     "url": "https://www.warchild.org.uk/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=18cb6ffd-3067-4ca8-8414-74eb733d79fd",
-    "override": 0
+    "override": 6092.625
   },
   {
     "id": "d02de896-6904-4f80-9755-253afddac343",
@@ -85,6 +85,6 @@
     "color": "#000000",
     "url": "https://www.wwf.org.uk/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=d02de896-6904-4f80-9755-253afddac343",
-    "override": 0
+    "override": 4219.625
   }
 ]
