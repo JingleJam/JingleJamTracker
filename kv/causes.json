@@ -5,7 +5,7 @@
     "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/become.webp",
     "name": "Become",
     "description": "Helping care-experienced young people get the guidance, support, and community that everyone needs.",
-    "color": "#e94633",
+    "color": "#2b2f88",
     "url": "https://becomecharity.org.uk/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=1eab2296-cf54-4c47-8640-951795d5b76b",
     "override": 0
@@ -25,9 +25,9 @@
     "id": "1e060cf5-49e2-4887-b302-3a0a9b518b64",
     "legacyId": "",
     "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/gosh-charity.webp",
-    "name": "Great Ormond Street Hospital Charity",
+    "name": "GOSH Charity",
     "description": "Supporting the GOSH Play Team, who help make hospital a bit less hard and a lot more fun for seriously ill children.",
-    "color": "#0ad7ff",
+    "color": "#09d7ff",
     "url": "https://www.gosh.org/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=1e060cf5-49e2-4887-b302-3a0a9b518b64",
     "override": 0
@@ -49,7 +49,7 @@
     "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/specialeffect.webp",
     "name": "SpecialEffect",
     "description": "Supporting people with physical disabilities to access gaming through the innovative use of assistive technology.",
-    "color": "#0072b6",
+    "color": "#0073b6",
     "url": "https://www.specialeffect.org.uk/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=b25aeef5-0206-411e-9711-be7005b23722",
     "override": 0
@@ -71,7 +71,7 @@
     "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/war-child.webp",
     "name": "War Child",
     "description": "Protecting, educating and advocating for children impacted by war worldwide, including in Lebanon, Gaza and Ukraine.",
-    "color": "#cc232a",
+    "color": "#cb222d",
     "url": "https://www.warchild.org.uk/",
     "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=a030eee8-edfc-4782-ade9-a883b46a317a",
     "override": 0
