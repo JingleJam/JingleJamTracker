@@ -26,6 +26,7 @@ const allCharitiesRegionId = "18749320-68eb-4c62-b800-90593bf4a16a";
 // Pre-2023 Jingle Jam dollar amount = 3371741.16
 // End of 2023 yogscast dollar amount = 5747814.82
 // Pre-2024 Jingle Jam dollar amount = 8215739.75
+// End of 2025 yogscast dollar amount = 10544622.38
 async function getSummaryData(env: Env): Promise<ApiResponse> {
   let campaignsComputed: Campaign[] = [];
   
