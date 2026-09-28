@@ -2,7 +2,7 @@ import { Env } from "tiltify-cache/types/env";
 import { TILTIFY_API_PATH, CAMPAIGNS_API_PATH } from "tiltify-cache/constants";
 import { getLatestData } from "tiltify-cache/api";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
-import { Router } from "tiltify-cache/utils";
+import { getCacheKey, Router } from "tiltify-cache/utils";
 import { Campaign } from "tiltify-cache/types/Campaign";
 import { CampaignStorageService } from "tiltify-cache/services/campaignStorage";
 
@@ -26,7 +26,7 @@ export class TiltifyData {
         router.get(TILTIFY_API_PATH, async (request, url) => {
             console.log('Called ' + url.pathname);
             
-            let data: ApiResponse | undefined = await this.storage.get(this.env.DURABLE_OBJECT_CACHE_KEY);
+            let data: ApiResponse | undefined = await this.storage.get(getCacheKey(this.env.YEAR));
 
             // Start the alarm if it is currently not started
             let currentAlarm = await this.storage.getAlarm();
@@ -37,7 +37,7 @@ export class TiltifyData {
             // If the cached value is null, fetch the latest data and save it to the cache
             if (!data) {
                 data = await this.fetchLatestData();
-                await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, data);
+                await this.storage.put(getCacheKey(this.env.YEAR), data);
             }
 
             return new Response(JSON.stringify(data));
@@ -122,7 +122,7 @@ export class TiltifyData {
                 console.log('Called ' + url.pathname);
                 
                 const data = await request.json();
-                await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, data);
+                await this.storage.put(getCacheKey(this.env.YEAR), data);
                 return new Response("Manual Update Success", { status: 200 });
             },
             {
@@ -153,7 +153,7 @@ export class TiltifyData {
         console.log(`Finished Fetching, caching result Tiltify data... (${endTime.getTime() - startTime.getTime()}ms)`);
 
         // Get the current cached value
-        let data: ApiResponse | undefined = await this.storage.get(this.env.DURABLE_OBJECT_CACHE_KEY);
+        let data: ApiResponse | undefined = await this.storage.get(getCacheKey(this.env.YEAR));
         const oldFullCampaigns = await this.campaignStorage.getCampaigns();
 
         // Update the cached value if it's valid
@@ -174,7 +174,7 @@ export class TiltifyData {
                 }
             }
 
-            await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, newData);
+            await this.storage.put(getCacheKey(this.env.YEAR), newData);
         }
 
         console.log(`Finished Caching data... (${new Date().getTime() - endTime.getTime()}ms)`);

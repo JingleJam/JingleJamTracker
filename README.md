@@ -68,7 +68,7 @@ The Jingle Jam Tracker API & Web UI provides API access to the caching service a
 
 ### Prerequisites
 
-1. **Node.js** and **npm** installed
+1. **Node.js** 22+ and **npm** installed (required by Wrangler 4; CI uses Node 24)
 2. **Wrangler CLI** installed and configured
    ```bash
    npm install -g wrangler

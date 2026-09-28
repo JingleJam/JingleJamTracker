@@ -35,11 +35,22 @@ function generateSlug(input: string | null): string | null {
     .replace(/^-+|-+$/g, '');        // Remove leading and trailing hyphens
 }
 
+/**
+ * Gets the Durable Object storage key (and TiltifyData instance name) for a given event year.
+ *
+ * @param year - The Jingle Jam event year
+ * @returns The cache key, e.g. "tiltify-data-2026"
+ */
+function getCacheKey(year: number): string {
+  return `tiltify-data-${year}`;
+}
+
 export {
   roundAmount,
   sortByKey,
   getRandomFloat,
-  generateSlug
+  generateSlug,
+  getCacheKey
 };
 
 export { Router } from './utils/router';

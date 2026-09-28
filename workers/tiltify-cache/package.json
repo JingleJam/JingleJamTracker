@@ -6,19 +6,18 @@
     "private": true,
     "scripts": {
         "dev": "wrangler dev --name tiltify-cache",
-        "deploy:production": "wrangler deploy",
+        "deploy:production": "wrangler deploy --env=\"\"",
         "deploy:development": "wrangler deploy -e development",
-        "kv-causes:production": "wrangler kv key put causes --path=../../kv/causes.json --namespace-id=9d285e05684c4887acb7731de7a41a4e",
-        "kv-summary:production": "wrangler kv key put summary --path=../../kv/summary.json --namespace-id=9d285e05684c4887acb7731de7a41a4e",
-        "kv-causes:development": "wrangler kv key put causes --path=../../kv/causes.json --namespace-id=c9634f49deeb4618b3c3f1980f777f7a",
-        "kv-summary:development": "wrangler kv key put summary --path=../../kv/summary.json --namespace-id=c9634f49deeb4618b3c3f1980f777f7a",
+        "kv-causes:production": "wrangler kv key put causes --path=../../kv/causes.json --namespace-id=9d285e05684c4887acb7731de7a41a4e --remote",
+        "kv-summary:production": "wrangler kv key put summary --path=../../kv/summary.json --namespace-id=9d285e05684c4887acb7731de7a41a4e --remote",
+        "kv-causes:development": "wrangler kv key put causes --path=../../kv/causes.json --namespace-id=c9634f49deeb4618b3c3f1980f777f7a --remote",
+        "kv-summary:development": "wrangler kv key put summary --path=../../kv/summary.json --namespace-id=c9634f49deeb4618b3c3f1980f777f7a --remote",
         "kv-causes:local": "wrangler kv key put causes --path=../../kv/causes.json --namespace-id=6a08d74af525475baefa19a93f0ba136 --preview --local",
         "kv-summary:local": "wrangler kv key put summary --path=../../kv/summary.json --namespace-id=6a08d74af525475baefa19a93f0ba136 --preview --local"
     },
     "devDependencies": {
-        "@cloudflare/workers-types": "^4.20240925.0",
-        "esbuild": "^0.24.0",
-        "typescript": "^5.6.2",
-        "wrangler": "^3.15.0"
+        "@cloudflare/workers-types": "^5.20260928.1",
+        "typescript": "^7.0.2",
+        "wrangler": "^4.143.0"
     }
 }

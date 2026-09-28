@@ -5,6 +5,9 @@ on:
     branches:
       - develop
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     name: Deploy to DEV
@@ -12,35 +15,43 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v7
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v7
         with:
-            node-version: '20'
+          node-version: '24'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            workers/tiltify-cache/package-lock.json
 
       - name: Install Cache dependencies
         working-directory: ./workers/tiltify-cache
-        run: npm install
+        run: npm ci
 
       - name: Install Web UI & API dependencies
         working-directory: ./
-        run: npm install
+        run: npm ci
+
+      - name: Type check
+        run: |
+          npx tsc -p .
+          npx tsc -p ./workers/tiltify-cache
 
       - name: Publish Pages to Development
-        uses: cloudflare/pages-action@v1
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: jingle-jam-tracker
-          directory: website
-          wranglerVersion: '3'
+          command: pages deploy website --project-name=jingle-jam-tracker --branch=${{ github.ref_name }}
 
       - name: Publish Worker to Development
         run: npm run deploy:development
         working-directory: ./workers/tiltify-cache
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Publish KV's to Development
         run: |
@@ -50,3 +61,4 @@ jobs:
           npm run kv-summary:development
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

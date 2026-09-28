@@ -1,5 +1,5 @@
 name = "jingle-jam-tracker"
-compatibility_date = "2024-09-02"
+compatibility_date = "2026-09-28"
 pages_build_output_dir = "./website"
 
 kv_namespaces = [
