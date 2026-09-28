@@ -14,7 +14,7 @@ import { TiltifyUser } from "./types/tiltify/TiltifyUser";
 const maxSim = 6; // Maximum number of simultaneous fetches
 const maxDescriptionLength = 1024;
 const maxCampaigns = (20 * 900) - 2; // Maximum number of campaigns that can be fetched
-const allCharitiesRegionId = "566";
+const allCharitiesRegionId = "18749320-68eb-4c62-b800-90593bf4a16a";
 
 // Old Team Data
 // End of 2020 yogscast dollar amount = 2827226.00
@@ -122,7 +122,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
           continue;
         }
 
-        const campaignRegionId = campaign.region_id?.toString() || null;
+        const campaignRegionId = campaign.region_public_id || null;
         const isAllCauseCampaign = !campaignRegionId || campaignRegionId === allCharitiesRegionId;
 
         // Determine the cause amount
@@ -139,7 +139,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
         // Add the amount to the correct cause
         for (const cause of apiResponse.causes) {
           // If the campaign is for a specific cause or applies to all causes
-          if (cause.legacyId === campaignRegionId || isAllCauseCampaign) {
+          if (cause.id === campaignRegionId || isAllCauseCampaign) {
             cause.raised += causeAmount;
           }
         }
@@ -186,12 +186,6 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
     }
 
 
-    // Generate legacy cause id to cause id mapping
-    const legacyCauseIdToCauseId: Record<string, string> = {};
-    for (const cause of apiResponse.causes) {
-      legacyCauseIdToCauseId[cause.legacyId!] = cause.id;
-    }
-
     // Create and format the campaign list from the Tiltify API data
     for (const campaign of campaigns) {
       const description = campaign.description?.length > maxDescriptionLength
@@ -210,8 +204,8 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
       const userSlug = generateSlug(campaign.username) || '';
       const teamSlug = generateSlug(campaign.team_name) || '';
 
-      // Get the cause id from the legacy cause id
-      const causeId = legacyCauseIdToCauseId[campaign.region_id?.toString() ?? ''];
+      // Get the cause id from the campaign's region
+      const causeId = apiResponse.causes.find(cause => cause.id === campaign.region_public_id)?.id;
 
       // Increment the campaign count for the cause
       if (causeId) {
@@ -253,11 +247,6 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
     apiResponse.campaigns.count = campaignsComputed.length;
     apiResponse.campaigns.list = sortByKey(campaignsComputed, 'raised');
 
-    // Remove the legacyId from the causes
-    for(const cause of apiResponse.causes){
-      delete cause.legacyId;
-    }
-
   } catch (e) {
     console.error(e);
   }
@@ -281,7 +270,6 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
 
   const causeObjects: Cause[] = causes?.map(cause => ({
     id: cause.id,
-    legacyId: cause.legacyId || '',
     name: cause.name,
     logo: cause.logo,
     description: cause.description,

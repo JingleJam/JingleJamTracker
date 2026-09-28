@@ -1,6 +1,5 @@
 export interface Cause {
     id: string;
-    legacyId?: string | undefined;
     name: string;
     logo: string;
     description: string;
