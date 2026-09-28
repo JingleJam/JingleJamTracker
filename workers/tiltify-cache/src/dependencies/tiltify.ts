@@ -2,7 +2,7 @@ import { TiltifyMultiSearchResponse, TiltifyMultiSearchResult } from "tiltify-ca
 import { TiltifyTemplateFact, TiltifyTemplateFactResponse } from "tiltify-cache/types/tiltify/TiltifyTemplateFact";
 import { TiltifyUser, TiltifyUserResponse } from "tiltify-cache/types/tiltify/TiltifyUser";
 
-const TILTIFY_MULTI_SEARCH_ENDPOINT = 'https://site-search.tiltify.com/multi-search';
+const TILTIFY_MULTI_SEARCH_ENDPOINT = 'https://api.tiltify.com/search/multi-search';
 const TILTIFY_API_ENDPOINT = "https://api.tiltify.com/";
 const TILTIFY_API_OPTIONS: RequestInit = {
     method: "POST",
@@ -51,7 +51,7 @@ export async function getCampaigns(fundraiserPublicId: string, offset: number): 
                 {
                     "indexUid": "facts",
                     "filter": [
-                        "fundraising_event_public_id = " + fundraiserPublicId + " AND public = true"
+                        "public = true AND fundraising_event_public_id = " + fundraiserPublicId
                     ],
                     "attributesToHighlight": [
                         "*"
@@ -66,7 +66,7 @@ export async function getCampaigns(fundraiserPublicId: string, offset: number): 
         method: "POST",
         headers: {
             "content-type": "application/json",
-            "Authorization": "Bearer 4ab7c79d998483a2cc90cb98d682f2b256981087fbdf1bcc2a45a70ed606d139",
+            "Origin": "https://jinglejam.tiltify.com",
         },
     };
 
@@ -81,7 +81,8 @@ export async function getCampaigns(fundraiserPublicId: string, offset: number): 
         hitsPerPage: 100,
         page: offset,
         totalPages: 0,
-        totalHits: 0
+        totalHits: 0,
+        requestUid: ""
     };
 }
 

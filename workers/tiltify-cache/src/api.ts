@@ -211,7 +211,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
       const teamSlug = generateSlug(campaign.team_name) || '';
 
       // Get the cause id from the legacy cause id
-      const causeId = legacyCauseIdToCauseId[campaign.region_id?.toString()];
+      const causeId = legacyCauseIdToCauseId[campaign.region_id?.toString() ?? ''];
 
       // Increment the campaign count for the cause
       if (causeId) {
