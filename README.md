@@ -21,7 +21,7 @@ The API and Web UI powering the official [Jingle Jam Tracker](https://www.jingle
 
 ## API Documentation
 
-📖 **[API Documentation](./API.md)** - Detailed API specification with request/response formats, examples, and type definitions.
+📖 **[API Documentation](./docs/API.md)** - Detailed API specification with request/response formats, examples, and type definitions.
 
 ## Usage Guidelines
 
@@ -33,36 +33,7 @@ Our API is free to use, but we kindly ask that you adhere to the following usage
 
 ## Architecture
 
-The Jingle Jam Tracker consists of two main services:
-
-### Caching Service (`workers/tiltify-cache`)
-The Caching Service aggregates Jingle Jam data available from multiple services into a single data object, allowing for quick fetching. 
-
-**Technology Stack:**
-- Powered by Cloudflare Workers
-- Uses Cloudflare Durable Objects for real-time data caching
-- Uses Cloudflare KV for static data storage
-
-**How it works:**
-- Aggregates multiple Tiltify endpoints into a single data object
-- Stores aggregated data in a Cloudflare Durable Object
-- A Durable Object alarm is triggered every 10 seconds to refresh the data
-- Static data (cause information, historical records, etc.) are stored and fetched from Cloudflare Worker KV
-
-This service acts as a background job to update the state of the Durable Object. Fetching the current objects stored in the cache requires the API, which hooks in directly to the Caching Service's Durable Object.
-
-### API & Web UI (Root Project)
-The Jingle Jam Tracker API & Web UI provides API access to the caching service and hosts the web content for the Jingle Jam Tracker.
-
-**Technology Stack:**
-- Cloudflare Pages for the Web UI
-- Cloudflare Functions for the API
-- Frontend: jQuery with [Fomantic UI](https://fomantic-ui.com/) for UI components
-- Charts: [Chart.js](https://www.chartjs.org/) for graph visualization
-
-**Integration:**
-- The API integrates directly into the caching service to serve real-time content
-- Cloudflare KV is used for serving static content (specifically, the `/api/graph/previous` endpoint)
+🏗️ **[Architecture](./docs/ARCHITECTURE.md)** - How data flows from Tiltify to the website, where it is stored, and how fresh it is.
 
 ## Development
 
@@ -237,6 +208,7 @@ python migrate-trend-data.py
 
 ```
 JingleJamTracker/
+├── docs/                  # Documentation (API, architecture)
 ├── functions/              # Cloudflare Functions (API endpoints)
 │   ├── api/
 │   │   ├── graph/         # Graph data endpoints
