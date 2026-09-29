@@ -1,109 +1,55 @@
 import { Campaign } from "tiltify-cache/types/Campaign";
 
-const MAX_VALUE_SIZE = 100 * 1024; // 128 KiB limit for key-value storage
-const CHUNK_KEY_PREFIX = 'fullCampaigns:';
-const CHUNK_META_KEY = 'fullCampaigns:meta';
+// Legacy keys from when the full campaign list was chunked into Durable Object storage
+const LEGACY_CHUNK_KEY_PREFIX = 'fullCampaigns:';
+const LEGACY_CHUNK_META_KEY = 'fullCampaigns:meta';
+const MAX_DELETE_KEYS = 128; // Durable Object storage.delete() accepts at most 128 keys per call
 
 /**
  * Campaign Storage Service
- * 
- * Handles storing and retrieving campaigns in chunks to work around the 128 KiB
- * value size limit of key-value backed Durable Objects.
+ *
+ * Persists the full campaign list as a single KV value. KV bills per operation rather than per byte
+ * (values up to 25 MiB), so one large write is far cheaper than chunked Durable Object storage writes.
+ *
+ * The live list is held in the TiltifyData Durable Object's memory; this is only a snapshot used to
+ * serve campaigns after a cold start until the next Tiltify refresh completes.
  */
 export class CampaignStorageService {
-    private storage: DurableObjectStorage;
+    private kv: KVNamespace;
+    private key: string;
 
-    constructor(storage: DurableObjectStorage) {
-        this.storage = storage;
+    constructor(kv: KVNamespace, year: number) {
+        this.kv = kv;
+        this.key = `campaigns-${year}`;
     }
 
     /**
-     * Store campaigns in chunks to work around the 128 KiB value size limit
+     * Store the full campaign list
      */
     async storeCampaigns(campaigns: Campaign[]): Promise<void> {
-        // Delete old chunks first
-        const existingChunks = await this.storage.list({ prefix: CHUNK_KEY_PREFIX });
-        for (const [key] of existingChunks) {
-            await this.storage.delete(key);
-        }
+        await this.kv.put(this.key, JSON.stringify(campaigns));
+    }
 
-        if (campaigns.length === 0) {
-            await this.storage.put(CHUNK_META_KEY, { total: 0, chunkCount: 0 });
+    /**
+     * Retrieve the full campaign list, or an empty list if none is stored
+     */
+    async getCampaigns(): Promise<Campaign[]> {
+        return (await this.kv.get<Campaign[]>(this.key, 'json')) || [];
+    }
+
+    /**
+     * Delete the legacy chunked campaign list from Durable Object storage, if it still exists
+     */
+    static async deleteLegacyChunks(storage: DurableObjectStorage): Promise<void> {
+        const meta = await storage.get<{ total: number; chunkCount: number }>(LEGACY_CHUNK_META_KEY);
+        if (!meta) {
             return;
         }
 
-        // Try to fit campaigns into chunks, ensuring each chunk is under 128KB
-        // We need to account for JSON array overhead (brackets, commas) - reserve ~1KB buffer
-        const SAFE_CHUNK_SIZE = MAX_VALUE_SIZE - 1024; // Reserve 1KB for array overhead
-        const chunks: Campaign[][] = [];
-        let currentChunk: Campaign[] = [];
-        let currentChunkSize = 0;
-
-        for (const campaign of campaigns) {
-            const campaignSize = JSON.stringify(campaign).length;
-            // Account for comma separator (add 1 byte per campaign after the first)
-            const sizeWithOverhead = currentChunk.length > 0 
-                ? currentChunkSize + campaignSize + 1 // +1 for comma
-                : currentChunkSize + campaignSize;
-            
-            // If adding this campaign would exceed the safe limit, start a new chunk
-            if (sizeWithOverhead > SAFE_CHUNK_SIZE && currentChunk.length > 0) {
-                chunks.push(currentChunk);
-                currentChunk = [campaign];
-                currentChunkSize = campaignSize;
-            } else {
-                currentChunk.push(campaign);
-                currentChunkSize = sizeWithOverhead;
-            }
+        const keys = Array.from({ length: meta.chunkCount }, (_, i) => `${LEGACY_CHUNK_KEY_PREFIX}${i}`);
+        for (let i = 0; i < keys.length; i += MAX_DELETE_KEYS) {
+            await storage.delete(keys.slice(i, i + MAX_DELETE_KEYS));
         }
-
-        // Don't forget the last chunk
-        if (currentChunk.length > 0) {
-            chunks.push(currentChunk);
-        }
-
-        // Store each chunk
-        const storageOps: Promise<void>[] = [];
-        for (let i = 0; i < chunks.length; i++) {
-            storageOps.push(this.storage.put(`${CHUNK_KEY_PREFIX}${i}`, chunks[i]));
-        }
-
-        // Store metadata
-        storageOps.push(this.storage.put(CHUNK_META_KEY, { 
-            total: campaigns.length, 
-            chunkCount: chunks.length 
-        }));
-
-        await Promise.all(storageOps);
-    }
-
-    /**
-     * Retrieve all campaigns from chunks
-     */
-    async getCampaigns(): Promise<Campaign[]> {
-        const meta = await this.storage.get<{ total: number; chunkCount: number }>(CHUNK_META_KEY);
-        
-        if (!meta || meta.chunkCount === 0) {
-            return [];
-        }
-
-        // Fetch all chunks in parallel
-        const chunkPromises: Promise<Campaign[] | undefined>[] = [];
-        for (let i = 0; i < meta.chunkCount; i++) {
-            chunkPromises.push(this.storage.get<Campaign[]>(`${CHUNK_KEY_PREFIX}${i}`));
-        }
-
-        const chunks = await Promise.all(chunkPromises);
-        
-        // Combine all chunks
-        const campaigns: Campaign[] = [];
-        for (const chunk of chunks) {
-            if (chunk) {
-                campaigns.push(...chunk);
-            }
-        }
-
-        return campaigns;
+        await storage.delete(LEGACY_CHUNK_META_KEY);
     }
 }
-

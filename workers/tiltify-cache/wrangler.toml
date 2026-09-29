@@ -1,7 +1,7 @@
 name = "tiltify-cache"
 main = "./src/index.ts"
 account_id = "b5ef135c0a2feed17e7ba1c44698c5f4"
-compatibility_date = "2024-09-02"
+compatibility_date = "2026-09-28"
 workers_dev = true
 logpush = true
 kv_namespaces = [
@@ -26,15 +26,14 @@ tag = "v2"
 new_classes = ["GraphData"]
 
 [vars]
-YEAR = 2025
+YEAR = 2026
 COLLECTIONS_AVAILABLE = 100000
-DOLLAR_OFFSET = 8215739.75
+DOLLAR_OFFSET = 10544622.38
 DONATION_DIFFERENCE = 0
-CONVERSION_RATE = 1.32
+CONVERSION_RATE = 1.33
 CAUSE_SLUG = "jingle-jam"
-FUNDRAISER_PUBLIC_ID = "8bd643d3-07ae-4aab-bc2e-5179064bfebf"
+FUNDRAISER_PUBLIC_ID = "bc549958-e87b-41b6-b145-02c63d59e98b"
 YOGSCAST_USERNAME = "yogscast"
-DURABLE_OBJECT_CACHE_KEY = "tiltify-data-2025"
 LIVE_REFRESH_TIME = 10
 ENABLE_REFRESH = false
 GRAPH_REFRESH_TIME = 600
@@ -54,15 +53,14 @@ bindings = [
 ]
 
 [env.development.vars]
-YEAR = 2025
+YEAR = 2026
 COLLECTIONS_AVAILABLE = 100000
-DOLLAR_OFFSET = 8215739.75
+DOLLAR_OFFSET = 10544622.38
 DONATION_DIFFERENCE = 0
-CONVERSION_RATE = 1.32
+CONVERSION_RATE = 1.33
 CAUSE_SLUG = "jingle-jam"
-FUNDRAISER_PUBLIC_ID = "8bd643d3-07ae-4aab-bc2e-5179064bfebf"
+FUNDRAISER_PUBLIC_ID = "bc549958-e87b-41b6-b145-02c63d59e98b"
 YOGSCAST_USERNAME = "yogscast"
-DURABLE_OBJECT_CACHE_KEY = "tiltify-data-2025"
 LIVE_REFRESH_TIME = 10
 ENABLE_REFRESH = false
 GRAPH_REFRESH_TIME = 600

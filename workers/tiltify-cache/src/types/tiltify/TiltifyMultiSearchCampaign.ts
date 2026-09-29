@@ -19,11 +19,11 @@ export interface TiltifyMultiSearchCampaign {
     username: string;
     cause_avatar: TiltifyAvatar;
     description: string;
-    region_id: number;
+    region_id: number | null;
+    region_public_id: string | null;
     milestone_ratio: number;
     public: boolean;
-    user_auction_house: string | null;
-    plan_tier: number;
+    user_auction_house: boolean | null;
     short_description: string | null;
     currency: string;
     team_name: string | null;
@@ -35,7 +35,7 @@ export interface TiltifyMultiSearchCampaign {
     status: string;
     url: string;
     user_avatar: TiltifyAvatar;
-    last_donation_at_utc: string | null;
+    last_donation_at_utc: number | null;
     fundraising_event_public_id: string;
     campaign_fact_public_id: string | null;
     team_public_id: string | null;
@@ -50,7 +50,7 @@ export interface TiltifyMultiSearchCampaign {
     goal_ratio: number;
     name: string;
     sort_name: string;
-    avatar: TiltifyAvatar | null;
+    avatar: string | null;
     country: string;
     team_avatar: TiltifyAvatar | null;
     fact_avatar: TiltifyAvatar;
@@ -60,6 +60,8 @@ export interface TiltifyMultiSearchCampaign {
     auction_eligible: boolean;
     supportable: boolean;
     total_amount_raised: number;
+    amount_raised: number;
+    fee_amount: boolean;
     team_event_public_id: string | null;
     required_fee: boolean;
     required_registration: boolean;
@@ -71,10 +73,11 @@ export interface TiltifyMultiSearchCampaign {
         username: string;
         cause_avatar: TiltifyFormattedAvatar;
         description: string;
-        region_id: string;
+        region_id: string | null;
+        region_public_id: string | null;
         milestone_ratio: string;
         public: boolean;
-        user_auction_house: string | null;
+        user_auction_house: boolean | null;
         plan_tier: string;
         short_description: string | null;
         currency: string;
@@ -102,7 +105,7 @@ export interface TiltifyMultiSearchCampaign {
         goal_ratio: string;
         name: string;
         sort_name: string;
-        avatar: TiltifyFormattedAvatar | null;
+        avatar: string | null;
         country: string;
         team_avatar: TiltifyFormattedAvatar | null;
         fact_avatar: TiltifyFormattedAvatar;
@@ -112,6 +115,8 @@ export interface TiltifyMultiSearchCampaign {
         auction_eligible: boolean;
         supportable: boolean;
         total_amount_raised: string;
+        amount_raised: string;
+        fee_amount: boolean;
         team_event_public_id: string | null;
         required_fee: boolean;
         required_registration: boolean;
@@ -128,6 +133,7 @@ export interface TiltifyMultiSearchResult {
     page: number;
     totalPages: number;
     totalHits: number;
+    requestUid: string;
 }
 
 export interface TiltifyMultiSearchResponse {

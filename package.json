@@ -4,15 +4,28 @@
     "description": "Jingle Jam Tracker API & Web UI",
     "main": "src/index.js",
     "private": true,
+    "engines": {
+        "node": ">=22"
+    },
+    "workspaces": [
+        "workers/*"
+    ],
     "scripts": {
-        "dev": "wrangler pages dev",
-        "kv-trends-previous:production": "wrangler kv key put trends-previous --path=kv/trends-previous.json --namespace-id=9d285e05684c4887acb7731de7a41a4e",
-        "kv-trends-previous:development": "wrangler kv key put trends-previous --path=kv/trends-previous.json --namespace-id=c9634f49deeb4618b3c3f1980f777f7a",
-        "kv-trends-previous:local": "wrangler kv key put trends-previous --path=kv/trends-previous.json --namespace-id=6a08d74af525475baefa19a93f0ba136 --preview --local"
+        "predev": "node scripts/clean-dev-registry.mjs && npm run seed",
+        "dev": "concurrently --kill-others --names worker,web --prefix-colors magenta,cyan \"npm:dev:worker\" \"npm:dev:web\"",
+        "dev:web": "wrangler pages dev --persist-to .wrangler/state --inspector-port 9230",
+        "dev:worker": "npm run dev --workspace tiltify-cache",
+        "seed": "node scripts/seed-kv.mjs",
+        "reset": "node -e \"require('fs').rmSync('.wrangler/state',{recursive:true,force:true})\" && npm run seed",
+        "clean": "node -e \"for (const d of ['.wrangler','workers/tiltify-cache/.wrangler']) require('fs').rmSync(d,{recursive:true,force:true})\"",
+        "typecheck": "tsc -p . && tsc -p workers/tiltify-cache",
+        "kv-trends-previous:production": "wrangler kv key put trends-previous --path=kv/trends-previous.json --namespace-id=9d285e05684c4887acb7731de7a41a4e --remote",
+        "kv-trends-previous:development": "wrangler kv key put trends-previous --path=kv/trends-previous.json --namespace-id=c9634f49deeb4618b3c3f1980f777f7a --remote"
     },
     "devDependencies": {
-        "@cloudflare/workers-types": "^4.20240925.0",
-        "typescript": "^5.6.2",
-        "wrangler": "^3.15.0"
+        "@cloudflare/workers-types": "^5.20260928.1",
+        "concurrently": "^10.0.5",
+        "typescript": "^7.0.2",
+        "wrangler": "^4.143.0"
     }
 }

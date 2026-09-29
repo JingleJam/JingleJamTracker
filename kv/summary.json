@@ -175,5 +175,19 @@
         "donations": 62609,
         "collections": 53341,
         "campaigns": 787
+    },
+    {
+        "year": 2025,
+        "event": {
+            "start": "2025-12-01T17:00:00.000Z",
+            "end": "2025-12-15T00:00:00.000Z"
+        },
+        "total": {
+            "dollars": 4656037.58,
+            "pounds": 3501369.21
+        },
+        "donations": 71216,
+        "collections": 54917,
+        "campaigns": 944
     }
 ]

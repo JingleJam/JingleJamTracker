@@ -1,0 +1,7 @@
+# Copy to .dev.vars (gitignored). Values here override [vars] in wrangler.toml for local dev.
+ADMIN_TOKEN="change-me"
+
+# Uncomment to poll Tiltify on a timer locally. Values are strings, so only set these to enable:
+# any non-empty value (even "false") is treated as true.
+# ENABLE_REFRESH="true"
+# ENABLE_GRAPH_REFRESH="true"

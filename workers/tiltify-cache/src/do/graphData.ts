@@ -1,5 +1,5 @@
 import { Env } from "tiltify-cache/types/env";
-import { roundAmount, Router } from "tiltify-cache/utils";
+import { getCacheKey, roundAmount, Router } from "tiltify-cache/utils";
 import { CurrentGraphPoint } from "tiltify-cache/types/CurrentGraphPoint";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
 import { GRAPH_API_PATH, TILTIFY_API_PATH } from "tiltify-cache/constants";
@@ -27,12 +27,12 @@ export class GraphData {
         router.get(GRAPH_API_PATH, async (request, url) => {
             console.log('Called ' + url.pathname);
             
-            let data: any[] | null = await this.storage.get(this.env.DURABLE_OBJECT_CACHE_KEY) || [];
+            let data: any[] | null = await this.storage.get(getCacheKey(this.env.YEAR)) || [];
 
             // If the cached value is not found (first time load), create a default object and save it to the cache
             if (!data || data.length === 0) {
                 data = await this.defaultObject();
-                await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, data);
+                await this.storage.put(getCacheKey(this.env.YEAR), data);
             }
 
             // Start the alarm if it is currently not started and it should be
@@ -52,7 +52,7 @@ export class GraphData {
                 
                 // Set the graph list to the new data manually
                 const data = await request.json();
-                await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, data);
+                await this.storage.put(getCacheKey(this.env.YEAR), data);
                 return new Response("Manual Update Success", { status: 200 });
             },
             {
@@ -86,7 +86,7 @@ export class GraphData {
 
         // Cache the latest graph data if it is not null
         if (graphData !== null) {
-            await this.storage.put(this.env.DURABLE_OBJECT_CACHE_KEY, graphData);
+            await this.storage.put(getCacheKey(this.env.YEAR), graphData);
         }
     }
 
@@ -112,7 +112,7 @@ export class GraphData {
         // Get the previous graph data points
         let graphData: CurrentGraphPoint[] = [];
         try {
-            graphData = (await this.storage.get(this.env.DURABLE_OBJECT_CACHE_KEY)) || [];
+            graphData = (await this.storage.get(getCacheKey(this.env.YEAR))) || [];
         } catch (e) { }
 
         // If the graph data is empty, create a default object
@@ -152,7 +152,7 @@ export class GraphData {
 
     // Get the latest tiltify data from the real-time API endpoint
     async getLatestData(): Promise<ApiResponse> {
-        const id = this.env.TILTIFY_DATA.idFromName(this.env.DURABLE_OBJECT_CACHE_KEY);
+        const id = this.env.TILTIFY_DATA.idFromName(getCacheKey(this.env.YEAR));
         const obj = this.env.TILTIFY_DATA.get(id);
         const resp = await obj.fetch("http://127.0.0.1" + TILTIFY_API_PATH);
         return await resp.json();
