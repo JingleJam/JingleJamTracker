@@ -52,6 +52,7 @@ npm run dev                                                      # seeds local K
 ```
 
 - **Web UI**: http://127.0.0.1:8788/tracker
+- **Cause Web UI**: http://127.0.0.1:8788/tracker/{cause} (e.g. `/tracker/gosh-charity`, one per cause in `kv/causes.json`)
 - **API**: http://127.0.0.1:8788/api/tiltify
 
 `npm run dev` starts the caching service (`[worker]`, port 8787) and the API & Web UI (`[web]`, port 8788) in one terminal. The API reaches the caching service's Durable Objects through Wrangler's local dev registry. Ctrl+C stops both.
@@ -168,6 +169,7 @@ JingleJamTracker/
 ├── docs/                  # Documentation (API, architecture)
 ├── functions/             # Cloudflare Functions (API endpoints)
 │   ├── api/
+│   │   ├── causes/        # Single cause endpoint
 │   │   ├── graph/         # Graph data endpoints
 │   │   ├── handler.ts     # Main API handler
 │   │   └── tiltify.ts     # Tiltify data endpoint
@@ -178,6 +180,8 @@ JingleJamTracker/
 │   └── trends-previous.json
 ├── scripts/               # Local dev scripts (seed, sample data)
 ├── website/              # Frontend files
+│   ├── _redirects        # Serves /tracker/{cause} from causeTracker.html
+│   ├── causeTracker.html # Cause tracker (indexCause.html, scriptCause.js)
 │   ├── index.html
 │   ├── script.js
 │   ├── style.css

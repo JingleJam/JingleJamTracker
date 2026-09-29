@@ -8,6 +8,8 @@ export interface Campaign {
     startTime: string | null;
     raised: number;
     goal: number;
+    live: boolean;
+    donationMatchMultiplier: number;
     type: string;
     team: {
         name: string;

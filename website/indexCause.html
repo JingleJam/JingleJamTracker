@@ -1,0 +1,81 @@
+<div id="embedContainer" class="cause-tracker" data-status="live">
+  <div class="ui segment" id="loader">
+    <div class="ui active inverted dimmer" style="background-color: #1b1c1d00">
+      <div class="ui massive text loader">Loading</div>
+    </div>
+    <p></p>
+  </div>
+  <div class="ui segment" id="error" style="display: none;">
+    <div class="ui active inverted dimmer" style="background-color: #1b1c1d00">
+      <div><i class="times icon huge"></i></div>
+      <span class="ui big text" id="errorMessage">Error Loading Tracker</span>
+    </div>
+  </div>
+  <div id="trackerContent" style="display: none;">
+    <div class="ui compact huge segment" id="currencySelectorObj" style="right: 20px; background-color: white;">
+      <label style="margin-right: 11px;">$</label>
+      <div class="ui slider checkbox">
+        <input type="checkbox" id="currencyCheckbox">
+        <label>£</label>
+      </div>
+    </div>
+    <div class="guttered">
+      <div class="guttered-section" style="margin-top: 43px;">
+        <div class="top-stats-container">
+          <div class="ui segment main-stat-card">
+            <div class="main-stat-header" id="mainCounterHeader"></div>
+            <div id="liveUpdatingRow" class="hide-live-update">
+              <label class="subtext-label right" id="updatingRealTime">
+                <div class="ui active slow loader mini"></div>
+                <div class="loading-circle">
+                  <i class="live-icon icon circle"></i>
+                </div> Live
+              </label>
+            </div>
+            <div class="main-stat-body">
+              <div class="main-stat-value" id="mainCounter"> </div>
+            </div>
+            <div class="change-counter-div">
+              <div class="change-counter hide">
+                <div class="change-counter-text" id="mainCounterChange"></div>
+              </div>
+            </div>
+          </div>
+          <div class="top-stat-cards">
+            <div class="ui segment stat-card" style="min-width: 280px !important;">
+              <div class="stat-header"><i class="flag icon"></i>Campaigns</div>
+              <div class="stat-value" id="campaignCount"> 0 </div>
+              <div class="stat-subtext" id="campaignActivity" style="display: none;"></div>
+            </div>
+            <div class="ui segment stat-card" style="min-width: 280px !important;">
+              <div class="stat-header"><i class="chart pie icon"></i>Share of Jingle Jam</div>
+              <div class="stat-value" id="shareOfTotal"> 0% </div>
+            </div>
+          </div>
+        </div>
+        <div id="lastUpdatedRow" class="hide-live-update">
+          <label class="subtext-label right" id="labelDate"> Last Updated: N/A </label>
+        </div>
+        <div class="ui segment cause-info">
+          <img class="cause-info-logo" id="causeLogo" alt="">
+          <div class="cause-info-content">
+            <div class="cause-info-name" id="causeName"></div>
+            <div class="cause-info-description" id="causeDescription"></div>
+          </div>
+          <div class="cause-info-links">
+            <a class="cause-link" id="causeDonateLink" target="_blank" rel="noopener"><i class="heart icon"></i>Donate</a>
+            <a class="cause-link" id="causeWebsiteLink" target="_blank" rel="noopener"><i class="external alternate icon"></i>Website</a>
+          </div>
+        </div>
+        <div class="ui segment campaigns-card">
+          <div class="charities-header-text"><i class="trophy icon"></i>Top Campaigns</div>
+          <div class="charities-description">
+            The top fundraisers supporting <span class="jj-cause-name"></span> in the <span class="jj-year"></span> Jingle Jam. Campaigns supporting all causes are shared equally between every cause and are not listed here.
+          </div>
+          <div class="campaign-list" id="campaignList"></div>
+          <div class="campaigns-empty" id="campaignsEmpty" style="display: none;">No campaigns have been started for this cause yet.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

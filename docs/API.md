@@ -17,8 +17,9 @@ The Jingle Jam Tracker API provides real-time and historical donation data for t
 - [Endpoints](#endpoints)
   - [1. GET /api/tiltify](#1-get-apitiltify)
   - [2. GET /api/campaigns](#2-get-apicampaigns)
-  - [3. GET /api/graph/current](#3-get-apigraphcurrent)
-  - [4. GET /api/graph/previous](#4-get-apigraphprevious)
+  - [3. GET /api/causes/{cause}](#3-get-apicausescause)
+  - [4. GET /api/graph/current](#4-get-apigraphcurrent)
+  - [5. GET /api/graph/previous](#5-get-apigraphprevious)
 - [Error Responses](#error-responses)
 - [CORS](#cors)
 - [Admin Endpoints](#admin-endpoints)
@@ -94,6 +95,7 @@ GET /api/tiltify
 ```typescript
 {
   id: string;                     // Tiltify UUID representing the cause
+  slug: string;                   // URL-friendly name of the cause (e.g. "gosh-charity"), used by /api/causes/{cause}
   name: string;                   // Name of the cause
   logo: string;                   // URL to cause logo
   description: string;            // Description explaining the cause
@@ -117,6 +119,8 @@ GET /api/tiltify
   startTime: string | null;       // Campaign start date in ISO 8601 date string, or null
   raised: number;                 // Amount raised in pounds
   goal: number;                   // Campaign goal in pounds
+  live: boolean;                  // Whether the campaign is currently live streaming
+  donationMatchMultiplier: number; // Donation matching multiplier (1 = no match, 2 = donations matched 2x, 3 = 3x, etc.)
   type: string;                   // 'campaign' or 'team_event'
   team: {                         // (Optional) team object if the campaign is part of a team
     name: string;                 // Team name
@@ -179,6 +183,7 @@ curl https://dashboard.jinglejam.co.uk/api/tiltify
   "causes": [
     {
       "id": "cause-1",
+      "slug": "example-cause",
       "name": "Example Cause",
       "logo": "https://example.com/logo.png",
       "description": "A great cause",
@@ -202,6 +207,8 @@ curl https://dashboard.jinglejam.co.uk/api/tiltify
         "startTime": "2025-12-01T17:00:00.000Z",
         "raised": 50000,
         "goal": 100000,
+        "live": false,
+        "donationMatchMultiplier": 1,
         "type": "campaign",
         "team": null,
         "user": {
@@ -310,6 +317,8 @@ curl https://dashboard.jinglejam.co.uk/api/campaigns
       "startTime": "2025-12-01T17:00:00.000Z",
       "raised": 50000,
       "goal": 100000,
+      "live": false,
+      "donationMatchMultiplier": 1,
       "type": "campaign",
       "team": null,
       "user": {
@@ -335,7 +344,147 @@ curl https://dashboard.jinglejam.co.uk/api/campaigns
 
 ---
 
-### 3. GET /api/graph/current
+### 3. GET /api/causes/{cause}
+
+Returns real-time summary data for a single cause, along with the top campaigns raising money for it. This powers the dedicated cause trackers at `/tracker/{cause}`.
+
+#### Request
+
+```http
+GET /api/causes/{cause}?limit=10
+```
+
+#### Path Parameters
+
+- **cause** (required): The cause's `slug` (e.g. `gosh-charity`) or `id`, as returned in the `causes` list of `/api/tiltify`
+  - **Validation:** Returns `404 Not Found` if no cause matches
+
+#### Query Parameters
+
+- **limit** (optional): Number of top campaigns to return
+  - **Type:** integer
+  - **Range:** 1-100 (inclusive)
+  - **Default:** 10
+  - **Validation:** Returns `400 Bad Request` if less than 1 or greater than 100
+
+#### Response
+
+**Status Code:** `200 OK`
+
+**Content-Type:** `application/json;charset=UTF-8`
+
+**Response Body:**
+
+```typescript
+{
+  date: string;                    // Last API Refresh as an ISO 8601 date string
+  event: {
+    year: number;                  // Event year (e.g., 2025)
+    start: string;                 // ISO 8601 date string
+    end: string;                   // ISO 8601 date string
+  };
+  dollarConversionRate: number;    // Current GBP to USD conversion rate
+  raised: number;                  // Total amount raised by the whole event in pounds
+  cause: Cause;                    // The cause, including the amount raised for it
+  campaigns: {
+    count: number;                 // Total number of campaigns for this cause
+    live: number;                  // Number of campaigns for this cause currently live
+    matching: number;              // Number of campaigns for this cause with an active donation match
+    list: Campaign[];              // Top campaigns for this cause (sorted by raised amount)
+  };
+}
+```
+
+The `Cause` and `Campaign` types are the same as documented in the `/api/tiltify` endpoint (see above).
+
+#### Error Responses
+
+**400 Bad Request**
+
+```json
+{
+  "error": "Invalid limit parameter. Limit must be between 1 and 100."
+}
+```
+
+**404 Not Found**
+
+```json
+{
+  "error": "Cause not found."
+}
+```
+
+#### Example Request
+
+```bash
+curl https://dashboard.jinglejam.co.uk/api/causes/gosh-charity?limit=5
+```
+
+#### Example Response
+
+```json
+{
+  "date": "2025-12-01T12:00:00.000Z",
+  "event": {
+    "year": 2025,
+    "start": "2025-12-01T17:00:00.000Z",
+    "end": "2025-12-15T08:00:00.000Z"
+  },
+  "dollarConversionRate": 1.25,
+  "raised": 1000000.50,
+  "cause": {
+    "id": "cause-1",
+    "slug": "example-cause",
+    "name": "Example Cause",
+    "logo": "https://example.com/logo.png",
+    "description": "A great cause",
+    "color": "#FF5733",
+    "url": "https://example.com/cause",
+    "donateUrl": "https://example.com/donate",
+    "raised": 100000,
+    "campaigns": 10
+  },
+  "campaigns": {
+    "count": 10,
+    "live": 2,
+    "matching": 1,
+    "list": [
+      {
+        "causeId": "cause-1",
+        "name": "Example Campaign",
+        "description": "Campaign description",
+        "id": "campaign-1",
+        "slug": "example-campaign",
+        "url": "https://example.com/campaign",
+        "startTime": "2025-12-01T17:00:00.000Z",
+        "raised": 50000,
+        "goal": 100000,
+        "live": false,
+        "donationMatchMultiplier": 1,
+        "type": "campaign",
+        "team": null,
+        "user": {
+          "name": "John Doe",
+          "slug": "johndoe",
+          "avatar": "https://example.com/avatar.png",
+          "url": "https://example.com/user"
+        }
+      }
+    ]
+  }
+}
+```
+
+#### Notes
+
+- The slug is generated from the cause name (lowercase, spaces replaced with hyphens), so new causes get an endpoint and tracker page automatically
+- `cause.raised` includes the cause's share of campaigns supporting all causes, but `campaigns` only lists campaigns dedicated to this cause
+- Data is refreshed every **10 seconds**, the same as `/api/tiltify`
+
+---
+
+### 4. GET /api/graph/current
 
 Returns time-series data points tracking the amount raised over time for the current year. Data points are added every 10 minutes during the event.
 
@@ -403,7 +552,7 @@ curl https://dashboard.jinglejam.co.uk/api/graph/current
 
 ---
 
-### 4. GET /api/graph/previous
+### 5. GET /api/graph/previous
 
 Returns historical time-series data points for previous years (going back to 2016). This data is used for plotting historical trends on graphs.
 
@@ -556,5 +705,6 @@ Manually update the cached current year graph data.
 - Timestamps use Unix milliseconds for `/api/graph/current` and ISO 8601 strings for `/api/graph/previous`
 - The `/api/tiltify` endpoint returns the top 100 campaigns sorted by amount raised
 - The `/api/campaigns` endpoint provides access to all campaigns with pagination support
+- The `/api/causes/{cause}` endpoint returns a single cause with its top campaigns
 - Historical data in `/api/graph/previous` may have varying data point frequencies depending on the year
 

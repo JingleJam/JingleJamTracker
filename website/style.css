@@ -1290,3 +1290,509 @@
         text-align: center;
     }
 }
+
+/*
+
+    CAUSE TRACKER (/tracker/<cause>)
+    Colours come from the cause and are set as variables on #embedContainer by scriptCause.js
+
+*/
+
+#embedContainer.cause-tracker {
+    --cause-rgb: 226, 18, 81;
+    --cause-color: #e21251;
+    --cause-gradient-start: #e21251;
+    --cause-gradient-end: #c20d45;
+    --cause-text: #ffffff;
+    --cause-accent: #e21251;
+}
+
+/* Main Stat Card - Cause Gradient */
+#embedContainer.cause-tracker .main-stat-card {
+    background: linear-gradient(135deg, var(--cause-gradient-start) 0%, var(--cause-gradient-end) 100%);
+    box-shadow: 0 4px 20px rgba(var(--cause-rgb), 0.25), 0 0 30px rgba(var(--cause-rgb), 0.15), 0 2px 8px rgba(0, 0, 0, 0.12);
+}
+
+#embedContainer.cause-tracker .main-stat-header,
+#embedContainer.cause-tracker .main-stat-value,
+#embedContainer.cause-tracker #liveUpdatingRow .subtext-label,
+#embedContainer.cause-tracker #liveUpdatingRow .live-icon {
+    color: var(--cause-text);
+}
+
+#embedContainer.cause-tracker .ui.slider .inner .track-fill {
+    background-color: var(--cause-color) !important;
+}
+
+/* Cause Info Card */
+#embedContainer .ui.segment.cause-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: white;
+    border: none !important;
+    border-left: 4px solid var(--cause-color) !important;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+    margin: 0 0 30px 0 !important;
+}
+
+#embedContainer .cause-info-logo {
+    width: 60px;
+    height: 60px;
+    min-width: 60px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+#embedContainer .cause-info-content {
+    flex: 1;
+    min-width: 0;
+}
+
+#embedContainer .cause-info-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #000;
+    line-height: 1.3;
+    margin-bottom: 6px;
+}
+
+#embedContainer .cause-info-description {
+    font-size: 14px;
+    color: #000;
+    line-height: 1.5;
+}
+
+#embedContainer .cause-info-links {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-right: 16px;
+}
+
+#embedContainer .cause-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--cause-accent);
+    white-space: nowrap;
+    text-decoration: none;
+}
+
+#embedContainer .cause-link i.icon {
+    margin: 0;
+    height: auto;
+}
+
+#embedContainer .cause-link:hover {
+    text-decoration: underline;
+}
+
+/* Top Campaigns Card */
+#embedContainer .ui.segment.campaigns-card {
+    background: transparent;
+    border: none !important;
+    box-shadow: none;
+    padding: 0;
+    margin: 0 0 20px 0 !important;
+    width: 100%;
+}
+
+#embedContainer .campaign-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+#embedContainer .campaigns-empty {
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+    padding: 32px;
+    text-align: center;
+    color: #666;
+    font-size: 16px;
+}
+
+/* Rank, avatar and total span both rows; the goal progress sits under the name */
+#embedContainer .campaign-item {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    grid-template-areas:
+        "rank avatar content  total"
+        "rank avatar progress total";
+    align-items: center;
+    column-gap: 20px;
+    padding: 18px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+    border-left: 4px solid var(--cause-color);
+    text-decoration: none;
+    color: #000;
+    transition: box-shadow 0.1s ease, border-left-width 0.1s ease;
+}
+
+#embedContainer .campaign-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.20);
+    border-left-width: 6px;
+}
+
+#embedContainer .campaign-rank {
+    grid-area: rank;
+    min-width: 36px;
+    text-align: center;
+    font-size: 22px;
+    font-weight: 700;
+    color: #999;
+    font-feature-settings: 'tnum';
+}
+
+#embedContainer .campaign-item[data-index="0"] .campaign-rank,
+#embedContainer .campaign-item[data-index="1"] .campaign-rank,
+#embedContainer .campaign-item[data-index="2"] .campaign-rank {
+    color: var(--cause-accent);
+}
+
+#embedContainer .campaign-avatar {
+    grid-area: avatar;
+    position: relative;
+    width: 72px;
+    height: 72px;
+    min-width: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: rgba(var(--cause-rgb), 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#embedContainer .campaign-avatar-initial {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--cause-accent);
+}
+
+#embedContainer .campaign-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+#embedContainer .campaign-content {
+    grid-area: content;
+    min-width: 0;
+}
+
+#embedContainer .campaign-name-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+}
+
+#embedContainer .campaign-badges {
+    display: flex;
+    gap: 6px;
+    flex: none;
+}
+
+#embedContainer .campaign-badges:empty {
+    display: none;
+}
+
+#embedContainer .campaign-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+#embedContainer .campaign-badge i.icon,
+#embedContainer .stat-subtext i.icon {
+    margin: 0;
+    height: auto;
+    font-size: 0.85em;
+}
+
+#embedContainer .campaign-badge.live {
+    background: #e21212;
+    color: white;
+}
+
+#embedContainer .campaign-badge.live .live-icon {
+    color: white;
+    font-size: 0.7em;
+}
+
+#embedContainer .campaign-badge.matching {
+    background: #f3e8ff;
+    color: #6b21a8;
+}
+
+/* Live / matching counts under the campaign count */
+#embedContainer .stat-subtext {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 16px;
+    margin-top: 14px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+#embedContainer .stat-subtext > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+#embedContainer .stat-subtext .activity-matching {
+    color: #6b21a8;
+}
+
+#embedContainer .campaign-name {
+    min-width: 0;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #000;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#embedContainer .campaign-owner {
+    font-size: 14px;
+    color: #666;
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#embedContainer .campaign-progress {
+    grid-area: progress;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+#embedContainer .campaign-progress .progress-bar-track {
+    flex: 1;
+    max-width: 360px;
+    height: 12px;
+    background-color: #f0f0f0;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+#embedContainer .campaign-progress .progress-bar-fill {
+    height: 100%;
+    width: 0;
+    background: var(--cause-color);
+    border-radius: 6px;
+    transition: width 0.3s ease, background-color 0.3s ease;
+}
+
+#embedContainer .campaign-goal {
+    font-size: 13px;
+    color: #666;
+    white-space: nowrap;
+    font-feature-settings: 'tnum';
+}
+
+#embedContainer .campaign-goal i.icon {
+    margin: 0 4px 0 0;
+    height: auto;
+}
+
+/* Goal reached */
+#embedContainer .campaign-progress.goal-met .progress-bar-fill {
+    background: linear-gradient(90deg, #21ba45 0%, #2ecc71 100%);
+}
+
+#embedContainer .campaign-progress.goal-met .campaign-goal {
+    color: #1e9e3c;
+    font-weight: 700;
+}
+
+#embedContainer .campaign-total {
+    grid-area: total;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    align-self: center;
+    min-width: 130px;
+}
+
+#embedContainer .campaign-total .raised-total {
+    display: block;
+    line-height: 1.1;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--cause-accent);
+    letter-spacing: -0.5px;
+}
+
+#embedContainer .campaign-total .raised-label {
+    font-size: 11px;
+    font-weight: 500;
+    color: #999;
+    letter-spacing: 0.5px;
+    margin-top: 4px;
+}
+
+@media screen and (max-width: 768px) {
+    #embedContainer .ui.segment.cause-info {
+        flex-wrap: wrap;
+        gap: 14px;
+        padding: 18px;
+    }
+
+    #embedContainer .cause-info-logo {
+        width: 50px;
+        height: 50px;
+        min-width: 50px;
+    }
+
+    #embedContainer .cause-info-links {
+        flex-direction: row;
+        justify-content: center;
+        gap: 20px;
+        width: 100%;
+        margin-right: 0;
+    }
+
+    /*
+        Mobile campaign card:
+          [avatar + rank badge] [name / owner]
+          [full-width progress bar          ]
+          [£ raised               goal text]
+    */
+    #embedContainer .campaign-item {
+        grid-template-columns: 48px minmax(0, 1fr) auto;
+        grid-template-areas:
+            "avatar content content"
+            "bar    bar     bar"
+            "total  total   goal";
+        align-items: center;
+        column-gap: 14px;
+        padding: 16px 16px 14px 16px;
+    }
+
+    /* Rank sits as a small badge on the avatar's corner */
+    #embedContainer .campaign-rank {
+        grid-area: avatar;
+        align-self: start;
+        justify-self: start;
+        z-index: 2;
+        min-width: 22px;
+        height: 22px;
+        padding: 0 5px;
+        margin: -6px 0 0 -6px;
+        border-radius: 11px;
+        border: 2px solid white;
+        background: #6a6a6a;
+        color: white !important;
+        font-size: 11px;
+        line-height: 18px;
+        box-sizing: border-box;
+    }
+
+    #embedContainer .campaign-item[data-index="0"] .campaign-rank,
+    #embedContainer .campaign-item[data-index="1"] .campaign-rank,
+    #embedContainer .campaign-item[data-index="2"] .campaign-rank {
+        background: var(--cause-color);
+        color: var(--cause-text) !important;
+    }
+
+    #embedContainer .campaign-avatar {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        align-self: start;
+    }
+
+    #embedContainer .campaign-avatar-initial {
+        font-size: 20px;
+    }
+
+    #embedContainer .campaign-name {
+        font-size: 16px;
+        white-space: normal;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+    }
+
+    #embedContainer .campaign-owner {
+        font-size: 13px;
+        margin-top: 2px;
+    }
+
+    /* Badges drop below the name so they never squeeze it */
+    #embedContainer .campaign-name-row {
+        flex-wrap: wrap;
+        row-gap: 6px;
+    }
+
+    #embedContainer .campaign-name-row .campaign-name {
+        flex: 1 1 100%;
+    }
+
+    /* Split the progress into the full-width bar and the goal text beside the total */
+    #embedContainer .campaign-progress {
+        display: contents;
+    }
+
+    #embedContainer .campaign-progress .progress-bar-track {
+        grid-area: bar;
+        max-width: none;
+        height: 10px;
+        margin-top: 14px;
+    }
+
+    #embedContainer .campaign-goal {
+        grid-area: goal;
+        align-self: baseline;
+        justify-self: end;
+        margin-top: 10px;
+        font-size: 12px;
+    }
+
+    #embedContainer .campaign-total {
+        grid-area: total;
+        flex-direction: row;
+        align-items: baseline;
+        justify-content: flex-start;
+        align-self: baseline;
+        gap: 6px;
+        min-width: 0;
+        margin-top: 10px;
+    }
+
+    #embedContainer .campaign-total .raised-total {
+        font-size: 20px;
+    }
+
+    #embedContainer .campaign-total .raised-label {
+        margin-top: 0;
+    }
+}

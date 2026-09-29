@@ -26,9 +26,9 @@ flowchart LR
 
 | Component | Location | Job |
 |---|---|---|
-| Website | [website/](../website/) | Static pages that call `/api/*` and animate the totals. |
+| Website | [website/](../website/) | Static pages that call `/api/*` and animate the totals. `/tracker/{cause}` is rewritten to the cause tracker page by [_redirects](../website/_redirects). |
 | Pages Functions | [functions/api/](../functions/api/) | Thin proxy. Each API call is forwarded to one Durable Object (or reads static data from KV). |
-| `TiltifyData` Durable Object | [workers/tiltify-cache/src/do/tiltifyData.ts](../workers/tiltify-cache/src/do/tiltifyData.ts) | Fetches from Tiltify and Yogscast, holds the live data in memory, serves `/api/tiltify` and `/api/campaigns`. |
+| `TiltifyData` Durable Object | [workers/tiltify-cache/src/do/tiltifyData.ts](../workers/tiltify-cache/src/do/tiltifyData.ts) | Fetches from Tiltify and Yogscast, holds the live data in memory, serves `/api/tiltify`, `/api/campaigns` and `/api/causes/{cause}`. |
 | `GraphData` Durable Object | [workers/tiltify-cache/src/do/graphData.ts](../workers/tiltify-cache/src/do/graphData.ts) | Reads the latest totals from `TiltifyData` every minute and records a graph point every 10 minutes. Serves `/api/graph/current`. |
 | KV (`JINGLE_JAM_DATA`) | [kv/](../kv/) | Static data uploaded by hand (causes, history, previous years' graph) plus the campaign list backup. |
 
@@ -44,7 +44,7 @@ Tiltify returns each campaign's details (name, description, etc.) and amount rai
 
 ### 2. API request
 
-1. The website calls `/api/tiltify` or `/api/campaigns`.
+1. The website calls `/api/tiltify`, `/api/campaigns` or `/api/causes/{cause}`.
 2. The Pages Function forwards the request to `TiltifyData`.
 3. `TiltifyData` answers from memory. No storage is read.
 

@@ -227,6 +227,8 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
         startTime: campaign.published_at_utc ? new Date(campaign.published_at_utc * 1000).toISOString(): null,
         raised: roundAmount(campaign.total_amount_raised || 0),
         goal: roundAmount(campaign.goal || 0),
+        live: campaign.live === true,
+        donationMatchMultiplier: (campaign.match_count || 0) + 1,   // match_count is the number of extra matches (1 = 2x)
         causeId: causeId || null,
         type: campaign.type,
         team: campaign.team_public_id ? {
@@ -271,6 +273,7 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
 
   const causeObjects: Cause[] = causes?.map(cause => ({
     id: cause.id,
+    slug: cause.slug || generateSlug(cause.name) || cause.id,
     name: cause.name,
     logo: cause.logo,
     description: cause.description,

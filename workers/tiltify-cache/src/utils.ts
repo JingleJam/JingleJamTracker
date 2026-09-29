@@ -54,4 +54,4 @@ export {
 };
 
 export { Router } from './utils/router';
-export type { HttpMethod, RouteHandler, RouteConfig } from './utils/router';
+export type { HttpMethod, RouteHandler, RouteConfig, RouteParams } from './utils/router';

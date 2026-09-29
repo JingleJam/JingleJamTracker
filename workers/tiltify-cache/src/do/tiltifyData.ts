@@ -2,17 +2,21 @@ import { Env } from "tiltify-cache/types/env";
 import {
     TILTIFY_API_PATH,
     CAMPAIGNS_API_PATH,
+    CAUSE_API_PATH,
     SNAPSHOT_INTERVAL_MS,
     IDLE_REFRESH_TIME,
     EVENT_WINDOW_PADDING_MS
 } from "tiltify-cache/constants";
 import { getLatestData } from "tiltify-cache/api";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
-import { getCacheKey, Router } from "tiltify-cache/utils";
+import { generateSlug, getCacheKey, Router } from "tiltify-cache/utils";
 import { Campaign } from "tiltify-cache/types/Campaign";
+import { Cause } from "tiltify-cache/types/Cause";
 import { CampaignStorageService } from "tiltify-cache/services/campaignStorage";
 
 const MAIN_CAMPAIGN_LIMIT = 100; // Number of campaigns included in the main cached response
+const CAUSE_CAMPAIGN_DEFAULT_LIMIT = 10; // Default number of top campaigns included in a cause response
+const CAUSE_CAMPAIGN_MAX_LIMIT = 100; // Maximum number of top campaigns included in a cause response
 
 /*
   Tiltify Data Durable Object
@@ -110,18 +114,7 @@ export class TiltifyData {
 
             await this.ensureAlarm();
 
-            // After a cold start, serve the KV snapshot until the next refresh, or fetch if there is none
-            if (!this.campaigns) {
-                const snapshot = await this.campaignStorage.getCampaigns();
-                if (!this.campaigns && snapshot.length > 0) {
-                    this.campaigns = snapshot;
-                }
-            }
-            if (!this.campaigns) {
-                await this.refresh();
-            }
-
-            const fullCampaigns = this.campaigns || [];
+            const fullCampaigns = await this.getCampaignList();
 
             // Apply pagination
             const paginatedCampaigns = fullCampaigns.slice(offset, offset + limit);
@@ -131,6 +124,62 @@ export class TiltifyData {
                 total: fullCampaigns.length,
                 limit,
                 offset
+            }), {
+                headers: { 'Content-Type': 'application/json' }
+            });
+        });
+
+        // GET route: Get the summary and top campaigns for a single cause, looked up by slug or id
+        router.get(CAUSE_API_PATH, async (request, url, params) => {
+            console.log('Called ' + url.pathname);
+
+            // Validate limit parameter
+            const limitParam = url.searchParams.get('limit');
+            const limit = limitParam !== null ? parseInt(limitParam, 10) : CAUSE_CAMPAIGN_DEFAULT_LIMIT;
+            if (isNaN(limit) || limit < 1 || limit > CAUSE_CAMPAIGN_MAX_LIMIT) {
+                return new Response(JSON.stringify({
+                    error: `Invalid limit parameter. Limit must be between 1 and ${CAUSE_CAMPAIGN_MAX_LIMIT}.`
+                }), {
+                    status: 400,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+
+            await this.ensureAlarm();
+
+            // If there is no cached value (first time load), fetch the latest data
+            if (!this.summary) {
+                await this.refresh();
+            }
+
+            const summary = this.summary;
+            const causeKey = params.cause.toLowerCase();
+            const cause = summary?.causes.find(c => getCauseSlug(c) === causeKey || c.id.toLowerCase() === causeKey);
+
+            if (!summary || !cause) {
+                return new Response(JSON.stringify({
+                    error: 'Cause not found.'
+                }), {
+                    status: 404,
+                    headers: { 'Content-Type': 'application/json' }
+                });
+            }
+
+            // Campaigns dedicated to this cause (already sorted by amount raised)
+            const causeCampaigns = (await this.getCampaignList()).filter(campaign => campaign.causeId === cause.id);
+
+            return new Response(JSON.stringify({
+                date: summary.date,
+                event: summary.event,
+                dollarConversionRate: summary.dollarConversionRate,
+                raised: summary.raised,
+                cause: { ...cause, slug: getCauseSlug(cause) },
+                campaigns: {
+                    count: causeCampaigns.length,
+                    live: causeCampaigns.filter(campaign => campaign.live).length,
+                    matching: causeCampaigns.filter(campaign => campaign.donationMatchMultiplier > 1).length,
+                    list: causeCampaigns.slice(0, limit)
+                }
             }), {
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -159,6 +208,21 @@ export class TiltifyData {
     // Handle HTTP requests from clients.
     async fetch(request: Request): Promise<Response> {
         return this.router.handle(request);
+    }
+
+    // Get the full sorted campaign list, serving the KV snapshot after a cold start until the next refresh, or fetching if there is none
+    private async getCampaignList(): Promise<Campaign[]> {
+        if (!this.campaigns) {
+            const snapshot = await this.campaignStorage.getCampaigns();
+            if (!this.campaigns && snapshot.length > 0) {
+                this.campaigns = snapshot;
+            }
+        }
+        if (!this.campaigns) {
+            await this.refresh();
+        }
+
+        return this.campaigns || [];
     }
 
     async alarm(): Promise<void> {
@@ -266,6 +330,11 @@ export class TiltifyData {
             }
         }
     }
+}
+
+// Summaries persisted before causes had a slug won't include one, so fall back to generating it from the name
+function getCauseSlug(cause: Cause): string {
+    return (cause.slug || generateSlug(cause.name) || cause.id).toLowerCase();
 }
 
 async function hash(value: unknown): Promise<string> {

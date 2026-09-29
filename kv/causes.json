@@ -1,82 +1,90 @@
 [
   {
-    "id": "1eab2296-cf54-4c47-8640-951795d5b76b",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/become.webp",
-    "name": "Become",
-    "description": "Helping care-experienced young people get the guidance, support, and community that everyone needs.",
-    "color": "#2b2f88",
-    "url": "https://becomecharity.org.uk/",
-    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=1eab2296-cf54-4c47-8640-951795d5b76b",
-    "override": 0
+    "id": "974be205-3c5f-4f8c-9dd4-892b6b1e53d2",
+    "legacyId": "582",
+    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/autistica.webp",
+    "name": "Autistica",
+    "description": "Building evidence-based solutions for young autistic people to make society more inclusive by 2030.",
+    "color": "#00a691",
+    "url": "https://www.autistica.org.uk/",
+    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=974be205-3c5f-4f8c-9dd4-892b6b1e53d2",
+    "override": 5155.625
   },
   {
-    "id": "46fb567a-6d11-462a-8945-cd85b39735a6",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/calm.webp",
+    "id": "1b61ce0a-d32c-4dde-bf0a-4849317cce65",
+    "legacyId": "1267",
+    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/become.webp",
+    "name": "Become",
+    "description": "Helping young people with experience of foster and residential care get the guidance, support, and community that everyone needs.",
+    "color": "#e94633",
+    "url": "https://becomecharity.org.uk/",
+    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=1b61ce0a-d32c-4dde-bf0a-4849317cce65",
+    "override": 9844.625
+  },
+  {
+    "id": "3d4fb356-891f-4f1e-9374-984aa5fdfdf5",
+    "legacyId": "575",
+    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/calm.webp",
     "name": "CALM",
-    "description": "Supporting their life-saving suicide prevention helpline and creating vital online resources for anyone struggling with life.",
+    "description": "Hosting a life-saving suicide prevention helpline and vital online mental health resources for anyone who needs them.",
     "color": "#cbf900",
     "url": "https://www.thecalmzone.net/",
-    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=46fb567a-6d11-462a-8945-cd85b39735a6",
-    "override": 0
+    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=3d4fb356-891f-4f1e-9374-984aa5fdfdf5",
+    "override": 2340.625
   },
   {
-    "id": "1e060cf5-49e2-4887-b302-3a0a9b518b64",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/gosh-charity.webp",
-    "name": "GOSH Charity",
-    "description": "Supporting the GOSH Play Team, who help make hospital a bit less hard and a lot more fun for seriously ill children.",
-    "color": "#09d7ff",
-    "url": "https://www.gosh.org/",
-    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=1e060cf5-49e2-4887-b302-3a0a9b518b64",
-    "override": 0
+    "id": "5cff6632-f97a-4f6e-96f1-7cd1c3fdb259",
+    "legacyId": "565",
+    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/the-grand-appeal.webp",
+    "name": "The Grand Appeal",
+    "description": "Creating 'Jingle Jam Building', a unique facility that will help sick children and their families at Bristol Children's Hospital.", 
+    "color": "#3e9cd8",
+    "url": "https://www.grandappeal.org.uk/",
+    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=5cff6632-f97a-4f6e-96f1-7cd1c3fdb259",
+    "override": 6092.625
   },
   {
-    "id": "8544df59-538f-4750-8352-1acb6cd27c1a",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/make-a-wish.webp",
+    "id": "5350a34a-8b94-4513-bb1d-22becc2df6e4",
+    "legacyId": "1265",
+    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/make-a-wish.webp",
     "name": "Make-A-Wish",
-    "description": "Granting life-changing wishes for children with critical illnesses, creating moments of hope, strength, and joy when they're needed most.",
+    "description": "Granting wishes to children with critical illnesses to inspire hope and celebrate culture and belonging.",
     "color": "#0063b8",
     "url": "https://worldwish.org/",
-    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=8544df59-538f-4750-8352-1acb6cd27c1a",
-    "override": 0
+    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=5350a34a-8b94-4513-bb1d-22becc2df6e4",
+    "override": 5155.625
   },
   {
-    "id": "b25aeef5-0206-411e-9711-be7005b23722",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/specialeffect.webp",
-    "name": "SpecialEffect",
-    "description": "Supporting people with physical disabilities to access gaming through the innovative use of assistive technology.",
-    "color": "#0073b6",
-    "url": "https://www.specialeffect.org.uk/",
-    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=b25aeef5-0206-411e-9711-be7005b23722",
-    "override": 0
-  },
-  {
-    "id": "8a1edcb6-d5d1-4b0a-a84c-38ebd4c7c191",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/the-trevor-project.webp",
+    "id": "809dfb7b-faef-4e2d-b78d-d5e197975dac",
+    "legacyId": "1229",
+    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/the-trevor-project.webp",
     "name": "The Trevor Project",
-    "description": "Providing 24/7 crisis intervention services to LGBTQ+ young people backed by research, education, advocacy, and peer support.",
+    "description": "Providing 24/7 crisis intervention services to LGBTQ+ young people—backed by research, education, advocacy, and peer support.",
     "color": "#ef5b41",
     "url": "https://www.thetrevorproject.org/",
-    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=8a1edcb6-d5d1-4b0a-a84c-38ebd4c7c191",
-    "override": 0
+    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=809dfb7b-faef-4e2d-b78d-d5e197975dac",
+    "override": 2340.625
   },
   {
-    "id": "a030eee8-edfc-4782-ade9-a883b46a317a",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/war-child.webp",
+    "id": "18cb6ffd-3067-4ca8-8414-74eb733d79fd",
+    "legacyId": "588",
+    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/war-child.webp",
     "name": "War Child",
-    "description": "Protecting, educating and advocating for children impacted by war worldwide, including in Lebanon, Gaza and Ukraine.",
-    "color": "#cb222d",
+    "description": "Protecting, educating, and advocating for the rights of children impacted by the ongoing conflicts in Gaza, Ukraine and worldwide.",
+    "color": "#cc232a",
     "url": "https://www.warchild.org.uk/",
-    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=a030eee8-edfc-4782-ade9-a883b46a317a",
-    "override": 0
+    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=18cb6ffd-3067-4ca8-8414-74eb733d79fd",
+    "override": 6092.625
   },
   {
-    "id": "4cf222bd-6fcd-4126-9b34-4aebc97a1957",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/wwf.webp",
+    "id": "d02de896-6904-4f80-9755-253afddac343",
+    "legacyId": "1266",
+    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/wwf.webp",
     "name": "WWF",
     "description": "Leading the fight against climate change for a world where nature and wildlife can thrive for future generations.",
     "color": "#000000",
     "url": "https://www.wwf.org.uk/",
-    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=4cf222bd-6fcd-4126-9b34-4aebc97a1957",
-    "override": 0
+    "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=d02de896-6904-4f80-9755-253afddac343",
+    "override": 4219.625
   }
 ]

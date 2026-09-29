@@ -1,5 +1,6 @@
 export interface Cause {
     id: string;
+    slug: string;
     name: string;
     logo: string;
     description: string;
