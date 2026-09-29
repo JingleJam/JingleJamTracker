@@ -2,60 +2,48 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Add Local KV's",
-            "type": "f5anything",
-            "request": "launch",
-            "command": "cd ${workspaceFolder} ; npm run kv-trends-previous:local ; cd ${workspaceFolder}/workers/tiltify-cache ; npm run kv-causes:local ; npm run kv-summary:local",
-            "terminalName": "Other",
-            "terminalIndex": 0,
-            "showTerminal": true
-        },
-        {
-            "name": "Run Website & API",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "run",
-                "dev"
-            ],
-            "cwd": "${workspaceFolder}",
-            "console": "integratedTerminal",
-            "outputCapture": "std"
-        },
-        {
-            "name": "Run Cache Service",
-            "type": "node",
-            "request": "launch",
-            "runtimeExecutable": "npm",
-            "runtimeArgs": [
-                "run",
-                "dev"
-            ],
-            "cwd": "${workspaceFolder}/workers/tiltify-cache",
-            "console": "integratedTerminal",
-            "outputCapture": "std"
-        },
-        {
-            "name": "Attach Debugger to Cache Service",
+            "name": "Attach: Cache Service",
             "type": "node",
             "request": "attach",
             "port": 9229,
+            "restart": true,
+            "timeout": 30000,
             "cwd": "${workspaceFolder}/workers/tiltify-cache",
             "resolveSourceMapLocations": null,
             "attachExistingChildren": false,
-            "autoAttachChildProcesses": false,
-
+            "autoAttachChildProcesses": false
+        },
+        {
+            "name": "Attach: Website & API",
+            "type": "node",
+            "request": "attach",
+            "port": 9230,
+            "restart": true,
+            "timeout": 30000,
+            "cwd": "${workspaceFolder}",
+            "resolveSourceMapLocations": null,
+            "attachExistingChildren": false,
+            "autoAttachChildProcesses": false
         }
     ],
     "compounds": [
         {
             "name": "Debug System",
+            "preLaunchTask": "Dev",
             "configurations": [
-                "Run Cache Service",
-                "Attach Debugger to Cache Service",
-                "Run Website & API"
-            ]
+                "Attach: Cache Service",
+                "Attach: Website & API"
+            ],
+            "stopAll": true
+        },
+        {
+            "name": "Debug System (Clean)",
+            "preLaunchTask": "Clean Dev",
+            "configurations": [
+                "Attach: Cache Service",
+                "Attach: Website & API"
+            ],
+            "stopAll": true
         }
     ]
 }
