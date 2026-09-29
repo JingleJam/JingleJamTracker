@@ -64,7 +64,7 @@
         }
 
         //Set Chart Defaults
-        Chart.defaults.font.family = 'Montserrat';
+        Chart.defaults.font.family = '"JJ Montserrat", Montserrat, sans-serif';
         Chart.defaults.font.size = 14;
 
         //Domain lookup
