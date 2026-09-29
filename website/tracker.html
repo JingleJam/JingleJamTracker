@@ -16,7 +16,8 @@
 
         <script>
             (function(){
-                const domain = './';
+                // Served at /tracker and /tracker/, so every path must be absolute
+                const domain = '/';
 
                 let element = document.querySelector('#myContainer');
 

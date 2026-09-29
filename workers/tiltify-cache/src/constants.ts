@@ -7,7 +7,7 @@ const CAUSE_API_PATH = '/api/causes/:cause'; // API Path for a single cause's su
 const EVENT_NAME = 'Jingle Jam';
 const EVENT_COLOR = '#e21251';
 const EVENT_WEBSITE_URL = 'https://www.jinglejam.co.uk';
-const EVENT_LOGO_PATH = '/assets/jingle-jam-logo.png';
+const EVENT_LOGO_PATH = '/assets/jingle-jam-2026-logo.webp';
 
 const SNAPSHOT_INTERVAL_MS = 60 * 1000; // Minimum time between persisted snapshots of the live data (KV reads are cached for ~60s)
 const IDLE_REFRESH_TIME = 5 * 60; // Refresh interval (seconds) outside the event window

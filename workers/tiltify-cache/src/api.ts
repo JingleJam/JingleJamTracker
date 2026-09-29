@@ -280,6 +280,7 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
     slug: cause.slug || generateSlug(cause.name) || cause.id,
     name: cause.name,
     logo: cause.logo,
+    borderedLogo: cause.borderedLogo || cause.logo,
     description: cause.description,
     color: cause.color,
     url: cause.url,

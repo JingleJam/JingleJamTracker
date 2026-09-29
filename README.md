@@ -1,202 +1,114 @@
+<div align="center">
+
+<img src="website/assets/jingle-jam-2026-logo.webp" alt="Jingle Jam" width="280">
+
 # Jingle Jam Tracker
 
-The API and Web UI powering the official [Jingle Jam Tracker](https://www.jinglejam.co.uk/tracker). 
+**The live fundraising tracker and public API behind the [Jingle Jam](https://www.jinglejam.co.uk/tracker).**
 
-**API Endpoints:**
-- **Production:** `https://dashboard.jinglejam.co.uk/`
-- **Development:** `https://develop.jingle-jam-tracker.pages.dev/`
-- **Local:** `http://127.0.0.1:8788/`
+[![CI](https://github.com/JingleJam/JingleJamTracker/actions/workflows/ci.yml/badge.svg)](https://github.com/JingleJam/JingleJamTracker/actions/workflows/ci.yml)
+![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-Pages%20%2B%20Workers-F38020?logo=cloudflare&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
 
-> **Note:** The `Development` API includes previous years' data for testing purposes.
+[**API**](docs/API.md) · [**Web Pages**](docs/WEB-PAGES.md) · [**Architecture**](docs/ARCHITECTURE.md) · [**Local Development**](docs/LOCAL-DEVELOPMENT.md)
 
-## Table of Contents
+</div>
 
-- [API Documentation](#api-documentation)
-- [Usage Guidelines](#usage-guidelines)
-- [Architecture](#architecture)
-- [Development](#development)
-- [Admin Management](#admin-management)
-- [Project Structure](#project-structure)
+<br>
 
-## API Documentation
+![The main Jingle Jam tracker](docs/images/main-tracker.png)
 
-📖 **[API Documentation](./docs/API.md)** - Detailed API specification with request/response formats, examples, and type definitions.
+## What is this?
 
-## Usage Guidelines
+The Jingle Jam is the Yogscast's annual charity fundraiser, run on [Tiltify](https://tiltify.com) through the first two weeks of December. This repository has two parts:
 
-Our API is free to use, but we kindly ask that you adhere to the following usage guidelines to ensure optimal performance for everyone:
+- **A public JSON API** with the event total, per-cause totals, every fundraising campaign, and a graph of the total over time. Anyone can use it, free, with no API key.
+- **The tracker web pages** built on that API: the main tracker embedded on jinglejam.co.uk, a tracker for each cause, and a full-screen TV mode for streams and venues.
 
-**Rate Limit**: Please limit your requests to 1 request per second across your entire user base.
+## Using the API
 
-**Higher Usage Needs**: If you expect many users to access your application, we recommend implementing a caching layer between your application and the API. This will help reduce unnecessary load and costs on our API while improving the performance of your application.
-
-## Architecture
-
-🏗️ **[Architecture](./docs/ARCHITECTURE.md)** - How data flows from Tiltify to the website, where it is stored, and how fresh it is.
-
-## Development
-
-### Prerequisites
-
-1. **Node.js** 22+ and **npm** (required by Wrangler 4; CI uses Node 24, pinned in `.nvmrc`)
-2. **Visual Studio Code** (optional) for the bundled tasks and debug configurations
-
-Wrangler is installed as a project dependency, so no global install is needed. Local development runs entirely against local storage and does not need `wrangler login`; that is only required for deploying or writing to remote KV.
-
-### Quick Start
+The API is open to everyone. It needs no key and no sign-up, and CORS is enabled, so it can be called directly from a browser.
 
 ```bash
-npm install                                                      # installs the root project and workers/tiltify-cache (npm workspaces)
-cp workers/tiltify-cache/.dev.vars.example workers/tiltify-cache/.dev.vars   # then set ADMIN_TOKEN
-npm run dev                                                      # seeds local KV, then starts both services
+curl https://dashboard.jinglejam.co.uk/api/tiltify
 ```
 
-- **Web UI**: http://127.0.0.1:8788/tracker
-- **Cause Web UI**: http://127.0.0.1:8788/tracker/{cause} (e.g. `/tracker/gosh-charity`, one per cause in `kv/causes.json`)
-  - `/tracker/jingle-jam` shows the same page for the whole event (every cause)
-  - Add `?tv` (or click the TV icon) for a non-scrolling TV view with a scrolling ticker of top campaigns
-- **API**: http://127.0.0.1:8788/api/tiltify
+```js
+const res = await fetch('https://dashboard.jinglejam.co.uk/api/tiltify');
+const data = await res.json();
 
-`npm run dev` starts the caching service (`[worker]`, port 8787) and the API & Web UI (`[web]`, port 8788) in one terminal. The API reaches the caching service's Durable Objects through Wrangler's local dev registry. Ctrl+C stops both.
+console.log(`£${data.raised.toLocaleString()} raised from ${data.donations.toLocaleString()} donations`);
+```
 
-### Local Data
+| Endpoint | Returns |
+|---|---|
+| [`GET /api/tiltify`](docs/API.md#get-apitiltify) | Event totals, per-cause totals, yearly history and the top 100 campaigns |
+| [`GET /api/campaigns`](docs/API.md#get-apicampaigns) | Every campaign, paginated |
+| [`GET /api/causes/{cause}`](docs/API.md#get-apicausescause) | One cause's total and its top campaigns |
+| [`GET /api/graph/current`](docs/API.md#get-apigraphcurrent) | This year's total over time, one point every 10 minutes |
+| [`GET /api/graph/previous`](docs/API.md#get-apigraphprevious) | Previous years' totals over time (2016 onwards) |
 
-Both services share one local state directory, `.wrangler/state` in the repository root, so KV and Durable Object data is visible to both.
+**Base URL:** `https://dashboard.jinglejam.co.uk`
 
-- **Static KV data** (`kv/causes.json`, `kv/summary.json`, `kv/trends-previous.json`) is written to local KV by `npm run seed`. This runs automatically before every `npm run dev`, so edits to those files are picked up on the next start.
-- **Live Tiltify & graph data** is fetched from Tiltify on the first request to `/api/tiltify` when the cache is empty. Timed refreshes are off locally (`ENABLE_REFRESH` / `ENABLE_GRAPH_REFRESH` in `wrangler.toml`); enable them in `.dev.vars` if you need them.
-- **Reset**: `npm run reset` deletes all local state and re-seeds KV.
+📖 See the **[API reference](docs/API.md)** for every field, error and example.
 
-### npm Scripts
+### Usage guidelines
 
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Clear stale dev registry entries, seed local KV, then run the caching service and API & Web UI together |
-| `npm run dev:web` | Run only the API & Web UI (port 8788, inspector 9230) |
-| `npm run dev:worker` | Run only the caching service (port 8787, inspector 9229) |
-| `npm run seed` | Write `kv/*.json` to local KV |
-| `npm run reset` | Delete all local state and re-seed KV |
-| `npm run typecheck` | Type check both projects (same check as CI) |
+The API is free to use. To keep it fast for everyone, please follow these guidelines:
 
-### VS Code
+1. **Make at most 1 request per second**, counted across all of your users combined, not per user.
+2. **Don't poll faster than every 10 seconds.** The data only refreshes every 10 seconds during the event (and less often outside it), so faster polling returns the same response. Every response has a `date` field saying when it was last refreshed, so you can schedule your next request for about 15 seconds after that time.
+3. **Put a cache in front of the API if you have many users.** If your app, bot or overlay is used by lots of people, fetch from your own server and serve those users from your cache, instead of having every client call the API directly.
+4. **Expect a quiet off-season.** Outside December, totals are zero or carry over from the last event, and `event.start` / `event.end` show when the next one begins.
 
-- **Run and Debug > Debug System** starts `npm run dev` as the **Dev** task and attaches the debugger to both the cache service (port 9229) and the API & Web UI (port 9230). The debugger reattaches when Wrangler reloads after a file change. Stopping the debugger leaves the servers running; stop them from the **Dev** terminal.
-- **Run and Debug > Debug System (Clean)** does the same, but deletes the `.wrangler` folders first so everything starts from freshly seeded data.
-- **Ctrl+Shift+B** runs the **Dev** task on its own.
-- **Terminal > Run Task** also has **Reset Local Data**, **Clear Local Data** (deletes both `.wrangler` folders) and **Type Check** (errors appear in the Problems panel).
+See [Usage guide](docs/API.md#usage-guide) for polling code examples.
 
-## Admin Management
+## The web pages
 
-The Jingle Jam Tracker provides admin endpoints for manually managing cached data. These endpoints require authentication via an API token.
+| Page | URL |
+|---|---|
+| Main tracker | [`/tracker`](https://dashboard.jinglejam.co.uk/tracker) |
+| Cause tracker | [`/tracker/{cause}`](https://dashboard.jinglejam.co.uk/tracker/calm), e.g. `/tracker/calm` |
+| Whole-event tracker | [`/tracker/jingle-jam`](https://dashboard.jinglejam.co.uk/tracker/jingle-jam) |
+| TV mode | Add `?tv` to any cause tracker URL |
 
-### Setup Admin Token
+<table>
+  <tr>
+    <td width="50%"><img src="docs/images/cause-tracker.png" alt="Cause tracker"></td>
+    <td width="50%"><img src="docs/images/tv-mode.png" alt="TV mode"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Cause tracker</sub></td>
+    <td align="center"><sub>TV mode</sub></td>
+  </tr>
+</table>
 
-**Local Development:**
+🖥️ See **[Web Pages](docs/WEB-PAGES.md)** for a tour of each page and its options.
 
-Copy `workers/tiltify-cache/.dev.vars.example` to `workers/tiltify-cache/.dev.vars` and set `ADMIN_TOKEN`:
+## Documentation
+
+| Document | For |
+|---|---|
+| 📖 [API](docs/API.md) | Developers using the API: endpoints, fields, errors, usage guide |
+| 🖥️ [Web Pages](docs/WEB-PAGES.md) | Everyone: what each page shows, URL options, TV mode |
+| 🏗️ [Architecture](docs/ARCHITECTURE.md) | Contributors: how data gets from Tiltify to the page, storage, freshness, deployment |
+| 🛠️ [Local Development](docs/LOCAL-DEVELOPMENT.md) | Contributors: setup, scripts, local data, debugging, admin endpoints |
+
+## Contributing
+
+Quick start (Node.js 22+):
 
 ```bash
+npm install
 cp workers/tiltify-cache/.dev.vars.example workers/tiltify-cache/.dev.vars
+npm run dev
 ```
 
-**Production/Development Environments:**
+Then open http://127.0.0.1:8788/tracker. See [Local Development](docs/LOCAL-DEVELOPMENT.md) for everything else.
 
-Set the secret using Wrangler:
+Work happens on `develop`, which deploys to the [development environment](https://develop.jingle-jam-tracker.pages.dev/tracker). Merging to `master` deploys to production.
 
-```bash
-cd workers/tiltify-cache
-npx wrangler secret put ADMIN_TOKEN
-# Enter your token when prompted
-```
-
-### Admin API Endpoints
-
-Both endpoints require the `Authorization` header with your admin token value.
-
-#### **POST /api/tiltify**
-
-Manually set the cached Tiltify donation data. This will overwrite the current cached data.
-
-**Request:**
-```bash
-curl -X POST http://127.0.0.1:8788/api/tiltify \
-  -H "Authorization: your-admin-token" \
-  -H "Content-Type: application/json" \
-  -d @tiltify-data.json
-```
-
-**Response:**
-- `200 OK` - "Manual Update Success"
-- `401 Unauthorized` - Invalid or missing admin token
-
-**Use Cases:**
-- Manually updating donation data for testing
-- Restoring data from a backup
-- Setting initial data before the automatic refresh starts
-
-#### **POST /api/graph/current**
-
-Manually set or clear the current year's graph data. This will overwrite the current cached graph data.
-
-**Request:**
-```bash
-# Set graph data
-curl -X POST http://127.0.0.1:8788/api/graph/current \
-  -H "Authorization: your-admin-token" \
-  -H "Content-Type: application/json" \
-  -d @graph-data.json
-
-# Clear graph data (send empty array)
-curl -X POST http://127.0.0.1:8788/api/graph/current \
-  -H "Authorization: your-admin-token" \
-  -H "Content-Type: application/json" \
-  -d '[]'
-```
-
-**Response:**
-- `200 OK` - "Manual Update Success"
-- `401 Unauthorized` - Invalid or missing admin token
-
-**Use Cases:**
-- Clearing graph data at the start of a new year
-- Manually setting graph data points
-- Resetting corrupted graph data
-
-**Note:** The graph data format should match the structure returned by `GET /api/graph/current` (array of objects with `date`, `p`, `d` fields).
-
-## Project Structure
-
-```
-JingleJamTracker/
-├── docs/                  # Documentation (API, architecture)
-├── functions/             # Cloudflare Functions (API endpoints)
-│   ├── api/
-│   │   ├── causes/        # Single cause endpoint
-│   │   ├── graph/         # Graph data endpoints
-│   │   ├── handler.ts     # Main API handler
-│   │   └── tiltify.ts     # Tiltify data endpoint
-│   └── types/             # TypeScript type definitions
-├── kv/                    # KV data files (JSON)
-│   ├── causes.json
-│   ├── summary.json
-│   └── trends-previous.json
-├── scripts/               # Local dev scripts (seed, sample data)
-├── website/              # Frontend files
-│   ├── _redirects        # Serves /tracker/{cause} from causeTracker.html
-│   ├── causeTracker.html # Cause tracker (indexCause.html, scriptCause.js)
-│   ├── index.html
-│   ├── script.js
-│   ├── style.css
-│   └── ...
-├── workers/
-│   └── tiltify-cache/    # Caching service worker
-│       ├── src/
-│       │   ├── api.ts
-│       │   ├── do/        # Durable Object implementations
-│       │   ├── dependencies/
-│       │   └── ...
-│       ├── .dev.vars.example # Local secrets and variable overrides
-│       └── package.json
-├── package.json          # Root project configuration (npm workspaces, dev scripts)
-└── wrangler.toml        # Cloudflare Pages configuration
-```
+<div align="center">
+<br>
+<sub>Donations go to the causes, not to this project. <a href="https://www.jinglejam.co.uk">jinglejam.co.uk</a></sub>
+</div>

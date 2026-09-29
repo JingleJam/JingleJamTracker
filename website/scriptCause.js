@@ -395,7 +395,7 @@
         document.title = isEvent ? 'Jingle Jam Tracker' : cause.name + ' - Jingle Jam Tracker';
 
         //The page can be embedded on other sites, so load the logo from the tracker's domain
-        $('#jjLogo').attr('src', JingleJam.domain + '/assets/jingle-jam-logo.png');
+        $('#jjLogo').attr('src', JingleJam.domain + '/assets/jingle-jam-2026-logo.webp');
         $('#jjLogoLink').attr('href', JingleJam.domain + '/tracker');
 
         $('.jj-year').text(JingleJam.model.event.year);
@@ -403,7 +403,9 @@
 
         $('#causeName').text(cause.name);
         $('#causeDescription').text(cause.description);
-        $('#causeLogo').attr('src', safeUrl(cause.logo)).attr('alt', cause.name);
+        //The bordered logo is shown by default, and the bare logo in TV mode (CSS picks which one is visible)
+        $('#causeLogo').attr('src', safeUrl(cause.borderedLogo || cause.logo)).attr('alt', cause.name);
+        $('#causeTvLogo').attr('src', safeUrl(cause.logo)).attr('alt', cause.name);
         $('#causeDonateLink').attr('href', safeUrl(cause.donateUrl));
         $('#causeWebsiteLink').attr('href', safeUrl(cause.url));
 

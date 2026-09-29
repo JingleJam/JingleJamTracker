@@ -362,6 +362,7 @@ function getEventCause(summary: ApiResponse, env: Env, url: URL): Cause {
         slug: env.CAUSE_SLUG,
         name: EVENT_NAME,
         logo: url.origin + EVENT_LOGO_PATH,
+        borderedLogo: url.origin + EVENT_LOGO_PATH,
         description: `Raising money for ${causeNames.length} causes: ${causeList}.`,
         color: EVENT_COLOR,
         url: EVENT_WEBSITE_URL,

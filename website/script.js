@@ -10,7 +10,7 @@
         graphTime: 1000 * 60 * 10,  //Graph should update every 10 minutes
         pageIsVisible: true,
         startYear: 2011,
-        domain: '.',
+        domain: '',                 //Root-relative, since the page is also served at /tracker/
         graphDates: {
             minDate: null,
             maxDate: null
@@ -438,7 +438,7 @@
             causesCards += `
             <a class="card" href="${(JingleJam.isLive() ? cause.donateUrl : cause.url)}" target="_blank" id="card${cause.id}" style="border-left: 3px solid ${accentColor}; --accent-color-rgb: ${rgb.r}, ${rgb.g}, ${rgb.b};">
               <div class="image">
-                <img src="${cause.logo}">
+                <img src="${cause.borderedLogo || cause.logo}">
               </div>
               <div class="content">
                 <div class="header-text">${cause.name}</div>

@@ -3,6 +3,7 @@ export interface Cause {
     slug: string;
     name: string;
     logo: string;
+    borderedLogo: string;
     description: string;
     color: string;
     url: string;

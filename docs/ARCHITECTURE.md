@@ -1,103 +1,219 @@
-# Architecture
+# 🏗️ Architecture
 
-Jingle Jam Tracker shows live fundraising totals for the Jingle Jam. It polls Tiltify every 10 seconds, keeps the latest data in memory, and serves it to the website.
+[← Back to README](../README.md) · [API](API.md) · [Web Pages](WEB-PAGES.md) · [Local Development](LOCAL-DEVELOPMENT.md)
+
+The tracker runs entirely on Cloudflare. A Durable Object polls Tiltify every 10 seconds and keeps the latest data in memory. The API endpoints are thin Pages Functions that forward each request to it.
 
 ```mermaid
 flowchart LR
-    Tiltify[Tiltify API] -->|every 10s| DO
-    Yogscast[Yogscast API] -->|every 10s| DO
-
-    subgraph Worker [tiltify-cache Worker]
-        DO[TiltifyData<br/>Durable Object<br/><i>live data in memory</i>]
-        Graph[GraphData<br/>Durable Object]
+    subgraph Sources
+        Tiltify[Tiltify API]
+        Yogscast[Yogscast API]
     end
 
-    DO -.->|backup every 1 min| KV[(KV<br/>campaign list)]
-    DO -.->|backup every 1 min| DOS[(DO storage<br/>summary)]
-    Graph -->|every 1 min| DO
+    subgraph Worker["tiltify-cache Worker"]
+        TD["<b>TiltifyData</b><br/>Durable Object<br/><i>live data in memory</i>"]
+        GD["<b>GraphData</b><br/>Durable Object<br/><i>graph points</i>"]
+    end
 
-    Site[Website] --> Pages[Pages Functions<br/>/api/*]
-    Pages --> DO
-    Pages --> Graph
-    Pages --> KVStatic[(KV<br/>static data)]
+    subgraph Pages["Cloudflare Pages"]
+        Site["Website<br/><i>website/</i>"]
+        Fn["Pages Functions<br/><i>functions/api/</i>"]
+    end
+
+    KV[("KV<br/>JINGLE_JAM_DATA")]
+    Browser((Visitors &<br/>API users))
+
+    Tiltify -- every 10s --> TD
+    Yogscast -- every 10s --> TD
+    GD -- reads total every 1 min --> TD
+    TD -. backup every 1 min .-> KV
+    KV -- causes, history --> TD
+
+    Browser --> Site
+    Browser --> Fn
+    Fn --> TD
+    Fn --> GD
+    Fn -- previous years' graph --> KV
 ```
 
 ## Components
 
-| Component | Location | Job |
+| Component | Code | Role |
 |---|---|---|
-| Website | [website/](../website/) | Static pages that call `/api/*` and animate the totals. `/tracker/{cause}` is rewritten to the cause tracker page by [_redirects](../website/_redirects). |
-| Pages Functions | [functions/api/](../functions/api/) | Thin proxy. Each API call is forwarded to one Durable Object (or reads static data from KV). |
-| `TiltifyData` Durable Object | [workers/tiltify-cache/src/do/tiltifyData.ts](../workers/tiltify-cache/src/do/tiltifyData.ts) | Fetches from Tiltify and Yogscast, holds the live data in memory, serves `/api/tiltify`, `/api/campaigns` and `/api/causes/{cause}`. |
-| `GraphData` Durable Object | [workers/tiltify-cache/src/do/graphData.ts](../workers/tiltify-cache/src/do/graphData.ts) | Reads the latest totals from `TiltifyData` every minute and records a graph point every 10 minutes. Serves `/api/graph/current`. |
-| KV (`JINGLE_JAM_DATA`) | [kv/](../kv/) | Static data uploaded by hand (causes, history, previous years' graph) plus the campaign list backup. |
+| **Website** | [website/](../website/) | Static pages that call `/api/*` and animate the totals. See [Web Pages](WEB-PAGES.md). |
+| **Pages Functions** | [functions/api/](../functions/api/) | One file per endpoint. Each forwards the request to a Durable Object (or reads KV) and adds CORS headers ([handler.ts](../functions/api/handler.ts)). [`_routes.json`](../_routes.json) sends only `/api/*` to Functions. |
+| **`TiltifyData`** Durable Object | [tiltifyData.ts](../workers/tiltify-cache/src/do/tiltifyData.ts) | Fetches from Tiltify and Yogscast, holds the live data in memory, and serves `/api/tiltify`, `/api/campaigns` and `/api/causes/{cause}`. |
+| **`GraphData`** Durable Object | [graphData.ts](../workers/tiltify-cache/src/do/graphData.ts) | Reads the total from `TiltifyData` every minute, records a point every 10 minutes, and serves `/api/graph/current`. |
+| **Data fetching** | [api.ts](../workers/tiltify-cache/src/api.ts), [dependencies/](../workers/tiltify-cache/src/dependencies/) | Calls Tiltify and Yogscast and builds the [`/api/tiltify`](API.md#get-apitiltify) response. |
+| **KV** (`JINGLE_JAM_DATA`) | [kv/](../kv/) | Hand-maintained data (causes, yearly history, previous years' graph), plus the campaign list backup. |
+
+The Durable Objects live in a separate Worker, `tiltify-cache` ([workers/tiltify-cache/](../workers/tiltify-cache/)), because Pages projects can't define Durable Objects. The Pages project binds to them by script name in [wrangler.toml](../wrangler.toml).
 
 ## How data flows
 
 ### 1. Refresh (every 10 seconds)
 
-1. An alarm fires in `TiltifyData`.
-2. It fetches the event total, rewards, every campaign and the Yogscast donation count, and combines them into one response.
-3. The result replaces what is in memory: the summary (totals, causes, top 100 campaigns) and the full sorted campaign list.
+1. An alarm fires in `TiltifyData`. It schedules the next alarm first, so a failed refresh doesn't stop the loop.
+2. It reads `causes` and `summary` (history) from KV.
+3. In parallel, it fetches the fundraiser's totals and rewards from Tiltify, the donation count from the Yogscast API, and the `@yogscast` user's lifetime dollar total (used for the conversion rate).
+4. It fetches every campaign from Tiltify, 6 pages of 100 at a time.
+5. It works out each cause's total, builds the campaign list sorted by amount raised, and replaces what is in memory:
+   - the **summary** (the `/api/tiltify` response, with the top 100 campaigns)
+   - the **full campaign list** (used by `/api/campaigns` and `/api/causes/{cause}`)
 
-Tiltify returns each campaign's details (name, description, etc.) and amount raised together, so everything is refreshed at once.
+If a refresh comes back with a total of 0 or no campaigns while the previous data had them, the previous data is kept. A brief Tiltify outage never blanks the tracker.
 
 ### 2. API request
 
-1. The website calls `/api/tiltify`, `/api/campaigns` or `/api/causes/{cause}`.
+1. A visitor's browser, or an API user, calls `/api/tiltify`, `/api/campaigns` or `/api/causes/{cause}`.
 2. The Pages Function forwards the request to `TiltifyData`.
-3. `TiltifyData` answers from memory. No storage is read.
+3. `TiltifyData` answers from memory without reading storage.
 
-One API call = one Durable Object request.
+The first request after a cold start also starts the alarm loop if it isn't already running.
 
-### 3. Backups
+### 3. Graph (every minute)
 
-A Durable Object has a single instance that handles every request, so values kept in its instance variables are shared between requests ([Cloudflare: in-memory state](https://developers.cloudflare.com/durable-objects/reference/in-memory-state/)). That memory is lost when the object restarts: on deploys, after 10 seconds idle (hibernation) or 70–140 seconds idle (eviction), or when Cloudflare moves it ([lifecycle](https://developers.cloudflare.com/durable-objects/concepts/durable-object-lifecycle/)). During the event, the 10 second alarm and constant viewer traffic keep it awake. Backups exist only so there is something to serve straight after a restart.
+`GraphData` has its own alarm that fires every minute. It reads the current total from `TiltifyData`. When the refresh time falls on a multiple of 10 minutes (`GRAPH_REFRESH_TIME`) and is inside the event, it appends a `{ date, p, d }` point to its storage. `/api/graph/previous` doesn't touch a Durable Object; it returns the `trends-previous` KV value.
 
-| Backup | Where | How often |
+### 4. Backups
+
+A Durable Object runs as a single instance, so data in its memory is shared by every request ([Cloudflare: in-memory state](https://developers.cloudflare.com/durable-objects/reference/in-memory-state/)). That memory is lost when the object restarts: on deploys, after it goes idle, or when Cloudflare moves it ([lifecycle](https://developers.cloudflare.com/durable-objects/concepts/durable-object-lifecycle/)). During the event, the 10-second alarm and constant traffic keep it running. Backups exist so there is something to serve straight after a restart.
+
+| Backup | Stored in | How often |
 |---|---|---|
-| Full campaign list | KV key `campaigns-{YEAR}` | At most every 1 minute, only if changed |
-| Summary (totals + top 100) | Durable Object storage | At most every 1 minute, only if changed |
+| Summary (totals and top 100) | Durable Object storage | At most once a minute |
+| Full campaign list | KV key `campaigns-{YEAR}` | At most once a minute, and only if it changed |
 
-After a restart, the backups are served until the next refresh (10 seconds or less during the event) replaces them with live data.
+After a restart the backups are served until the next refresh (at most 10 seconds during the event) replaces them.
+
+## How amounts are calculated
+
+| Figure | Calculation |
+|---|---|
+| **Total raised** | Tiltify's total for the fundraiser |
+| **Cause total** | The sum of campaigns for that cause, **plus** an equal share of campaigns that support all causes, **plus** an equal share of any money not assigned to a campaign (the fundraiser total minus the sum of all campaigns). Team-event member campaigns are skipped so they aren't counted twice. An optional `override` in `kv/causes.json` moves a fixed amount to one cause from the others. |
+| **Donations** | The Yogscast API's donation count. If that gives an average donation of £10 or less (a sign the count is wrong), the collections count is used instead. |
+| **Collections** | Tiltify reward quantity minus remaining |
+| **Dollar conversion rate** | The `@yogscast` user's dollar total this year (lifetime total minus `DOLLAR_OFFSET`) divided by their pound total. Falls back to `CONVERSION_RATE`. |
 
 ## How fresh is the data?
 
 | Data | Freshness |
 |---|---|
-| Totals, donation count, collections, cause totals | 10–15 seconds |
-| Campaign amounts raised and campaign details | 10–15 seconds |
-| Right after a restart | Up to ~1 minute, until the next refresh |
-| Graph | One point every 10 minutes (`GRAPH_REFRESH_TIME`) |
-| Causes, history, previous years | Whenever someone uploads new KV data |
+| Totals, donations, collections, cause totals | 10–15 seconds |
+| Campaign amounts and details | 10–15 seconds |
+| Straight after a restart | Up to about 1 minute, until the next refresh |
+| Current graph | A point every 10 minutes |
+| Causes, history, previous years' graph | Whenever the KV data is deployed |
 
-"10–15 seconds" is our 10 second poll plus Tiltify's own update delay.
+"10–15 seconds" is our 10-second poll plus Tiltify's own update delay.
 
 ## Refresh schedule
 
-| Period | Refresh interval |
-|---|---|
-| From 1 day before the event to 1 day after it | Every 10 seconds (`LIVE_REFRESH_TIME`) |
-| Rest of the year | Every 5 minutes (`IDLE_REFRESH_TIME`) |
+| Period | Interval | Setting |
+|---|---|---|
+| From 1 day before the event to 1 day after it | Every 10 seconds | `LIVE_REFRESH_TIME` |
+| The rest of the year | Every 5 minutes | `IDLE_REFRESH_TIME` in [constants.ts](../workers/tiltify-cache/src/constants.ts) |
 
-Refreshing is switched on with `ENABLE_REFRESH` in [wrangler.toml](../workers/tiltify-cache/wrangler.toml). Interval constants live in [constants.ts](../workers/tiltify-cache/src/constants.ts).
+Refreshing only runs while `ENABLE_REFRESH` (and `ENABLE_GRAPH_REFRESH` for the graph) is on in [workers/tiltify-cache/wrangler.toml](../workers/tiltify-cache/wrangler.toml). They are switched on for the event. When refreshing is off, the API serves whatever it last fetched, fetching once on the first request after a restart.
 
 ## Where each piece of data lives
 
 | Data | Source | Stored in |
 |---|---|---|
-| Totals, collections, campaigns | Tiltify | Durable Object memory (backed up to KV / DO storage) |
-| Donation count | Yogscast API | Durable Object memory |
-| Causes (names, logos, colours) | Uploaded by hand | KV key `causes` |
-| Yearly history | Uploaded by hand | KV key `summary` |
-| Previous years' graph | Uploaded by hand | KV key `trends-previous` |
-| Current graph | Built by `GraphData` | `GraphData` storage |
+| Totals, collections, campaigns | Tiltify | `TiltifyData` memory (backed up to DO storage and KV) |
+| Donation count | Yogscast API | `TiltifyData` memory |
+| Causes (names, logos, colours) | [kv/causes.json](../kv/causes.json) | KV key `causes` |
+| Yearly history | [kv/summary.json](../kv/summary.json) | KV key `summary` |
+| Previous years' graph | [kv/trends-previous.json](../kv/trends-previous.json) | KV key `trends-previous` |
+| Current year's graph | Built by `GraphData` | `GraphData` storage |
 
 ## Why it is built this way
 
-Durable Object storage is billed per 4 KB written. The campaign list is several megabytes, so writing it every 10 seconds cost hundreds of dollars a month. Keeping live data in memory makes requests free of storage costs, and KV (billed per write, not per byte) holds the one large backup cheaply.
+Durable Object storage is billed per 4 KB written. The campaign list is several megabytes, so writing it every 10 seconds used to cost hundreds of dollars a month. Keeping live data in memory means API requests read no storage at all, and KV (billed per write, not per byte) holds the one large backup cheaply.
 
-| Per 10 second refresh | Durable Object storage | KV |
+| Per 10-second refresh | Durable Object storage | KV |
 |---|---|---|
 | Reads | 0 | 2 (`causes` and `summary`) |
-| Writes | ~0 (only the alarm, plus a backup at most every 1 min) | ~0 (a backup at most every 1 min) |
+| Writes | ~0 (the alarm, plus a backup at most once a minute) | ~0 (a backup at most once a minute) |
+
+## Environments and deployment
+
+| Environment | Branch | Website & API | Worker | KV namespace |
+|---|---|---|---|---|
+| **Production** | `master` | `dashboard.jinglejam.co.uk` | `tiltify-cache` | `9d285e05…` |
+| **Development** | `develop` | `develop.jingle-jam-tracker.pages.dev` | `tiltify-cache-development` | `c9634f49…` |
+
+GitHub Actions deploys on every push to either branch:
+
+1. **Type check** (`npm run typecheck`)
+2. **Deploy the Pages project** (website and Functions)
+3. **Deploy the Worker** (`deploy:production` / `deploy:development`)
+4. **Upload the KV data** from [kv/](../kv/): `causes`, `summary` and `trends-previous`
+
+[CI](../.github/workflows/ci.yml) also runs on pull requests to `develop` and `master`. It type checks and does a dry-run build of the Functions and both Worker environments.
+
+| Workflow | Trigger |
+|---|---|
+| [ci.yml](../.github/workflows/ci.yml) | Push and pull request to `develop` / `master` |
+| [deploy-dev.yml](../.github/workflows/deploy-dev.yml) | Push to `develop` |
+| [deploy-production.yml](../.github/workflows/deploy-production.yml) | Push to `master` |
+
+Deployment needs the `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID` repository secrets. The Worker's `ADMIN_TOKEN` is a Wrangler secret (see [Local Development → Admin token](LOCAL-DEVELOPMENT.md#admin-token)).
+
+## Configuration
+
+Worker variables are set in [workers/tiltify-cache/wrangler.toml](../workers/tiltify-cache/wrangler.toml), separately for each environment.
+
+| Variable | Purpose |
+|---|---|
+| `YEAR` | Event year. Sets the event dates (1 Dec 17:00 to 15 Dec 08:00 UTC) and the storage keys. |
+| `FUNDRAISER_PUBLIC_ID` | Tiltify fundraiser (team event) ID for this year |
+| `YOGSCAST_USERNAME` | Tiltify user used for the dollar conversion rate |
+| `DOLLAR_OFFSET` | The Yogscast user's lifetime dollar total before this year, subtracted to get this year's total |
+| `CONVERSION_RATE` | Fallback GBP → USD rate |
+| `COLLECTIONS_AVAILABLE` | Fallback collections total if Tiltify's rewards can't be read |
+| `DONATION_DIFFERENCE` | Donation count adjustment (currently unused) |
+| `CAUSE_SLUG` | Slug for the whole-event view of `/api/causes/{cause}` (`jingle-jam`) |
+| `LIVE_REFRESH_TIME` | Seconds between refreshes during the event (`10`) |
+| `ENABLE_REFRESH` | Turns the Tiltify refresh loop on |
+| `GRAPH_REFRESH_TIME` | Seconds between graph points (`600`) |
+| `ENABLE_GRAPH_REFRESH` | Turns the graph loop on |
+| `ENABLE_DEBUG` | Serves generated fake totals instead of calling Tiltify |
+| `ADMIN_TOKEN` | *Secret.* Token for the [admin endpoints](API.md#admin-endpoints) |
+
+### Preparing for a new year
+
+1. Update `YEAR`, `FUNDRAISER_PUBLIC_ID` and `DOLLAR_OFFSET` for both environments in the Worker's `wrangler.toml`.
+2. Update [kv/causes.json](../kv/causes.json) with the new causes (Tiltify region IDs, logos, colours, descriptions).
+3. Add last year's final totals to [kv/summary.json](../kv/summary.json), and last year's graph to [kv/trends-previous.json](../kv/trends-previous.json).
+4. Turn on `ENABLE_REFRESH` and `ENABLE_GRAPH_REFRESH` before the event starts.
+
+## Repository layout
+
+```
+JingleJamTracker/
+├── website/                 Static pages (see Web Pages)
+├── functions/api/           Pages Functions, one per endpoint
+│   ├── tiltify.ts               → TiltifyData
+│   ├── campaigns.ts             → TiltifyData
+│   ├── causes/[cause].ts        → TiltifyData
+│   ├── graph/current.ts         → GraphData
+│   ├── graph/previous.ts        → KV
+│   └── handler.ts               Shared CORS and response handling
+├── workers/tiltify-cache/   The caching Worker
+│   └── src/
+│       ├── do/                  TiltifyData and GraphData Durable Objects
+│       ├── api.ts               Builds the summary from Tiltify and Yogscast
+│       ├── dependencies/        Tiltify and Yogscast API clients
+│       ├── services/            Campaign list backup (KV)
+│       ├── types/               Response and upstream API types
+│       ├── utils/router.ts      Minimal router with :param and admin auth
+│       └── constants.ts         Paths, intervals, whole-event details
+├── kv/                      Hand-maintained KV data
+├── scripts/                 Local dev helpers (seed KV, clean dev registry)
+├── docs/                    This documentation
+├── wrangler.toml            Pages project config
+└── package.json             npm workspaces and dev scripts
+```

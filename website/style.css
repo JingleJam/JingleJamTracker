@@ -1345,6 +1345,11 @@
     object-fit: contain;
 }
 
+/* The bare logo is only used in TV mode */
+#embedContainer .cause-info-logo-tv {
+    display: none;
+}
+
 #embedContainer .cause-info-content {
     flex: 1;
     min-width: 0;
@@ -1998,7 +2003,7 @@ html.jj-tv-mode body {
 /* Header: cause details on the left, Jingle Jam logo above the stat cards */
 #embedContainer.tv-mode .cause-header {
     grid-area: logo;
-    justify-content: flex-end;
+    justify-content: center;
     margin: 0;
 }
 
@@ -2010,10 +2015,11 @@ html.jj-tv-mode body {
     height: calc(var(--tv) * 9.6);
 }
 
+/* Cause details: open on the page background, lined up with the cards' left edge */
 #embedContainer.tv-mode .ui.segment.cause-info {
     grid-area: info;
-    gap: calc(var(--tv) * 2.56);
-    padding: 0 calc(var(--tv) * 0.71);
+    gap: calc(var(--tv) * 3);
+    padding: 0;
     margin: 0 !important;
     background: transparent;
     border: none !important;
@@ -2021,19 +2027,57 @@ html.jj-tv-mode body {
     box-shadow: none;
 }
 
-#embedContainer.tv-mode .cause-info-logo {
-    width: calc(var(--tv) * 11);
-    height: calc(var(--tv) * 11);
-    min-width: calc(var(--tv) * 11);
+/* TV mode swaps the square bordered logo for the bare logo: its width follows the logo's shape up to a max, and wide logos shrink in height to fit */
+#embedContainer.tv-mode #causeLogo {
+    display: none;
+}
+
+#embedContainer.tv-mode:not(.event-scope) .cause-info-logo-tv {
+    display: block;
+    width: auto;
+    height: auto;
+    min-width: 0;
+    max-width: calc(var(--tv) * 26);
+    max-height: calc(var(--tv) * 9);
+    flex-shrink: 0;
+}
+
+/* The text sits beside a divider bar (the event page has no cause logo, so no bar) */
+#embedContainer.tv-mode:not(.event-scope) .cause-info-content {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-left: calc(var(--tv) * 3);
+    position: relative;
+}
+
+/* A short cause-coloured bar between the logo and the text */
+#embedContainer.tv-mode:not(.event-scope) .cause-info-content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 12%;
+    bottom: 12%;
+    width: calc(var(--tv) * 0.5);
+    border-radius: calc(var(--tv) * 0.25);
+    background: var(--cause-color);
 }
 
 #embedContainer.tv-mode .cause-info-name {
-    font-size: calc(var(--tv) * 3.36);
-    margin-bottom: calc(var(--tv) * 0.48);
+    font-size: calc(var(--tv) * 4);
+    line-height: 1.15;
+    margin-bottom: calc(var(--tv) * 0.7);
 }
 
 #embedContainer.tv-mode .cause-info-description {
-    font-size: calc(var(--tv) * 2.28);
+    font-size: calc(var(--tv) * 2);
+    line-height: 1.4;
+    color: #6b6b73;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
 }
 
 /* Raised */
@@ -2460,15 +2504,21 @@ html.jj-tv-mode body {
     }
 
     #embedContainer.tv-mode #trackerContent {
-        grid-template-columns: minmax(0, 1fr) auto;
-        grid-template-rows: auto minmax(0, 1fr) calc(var(--tv) * 30) calc(var(--tvt) * 28);
+        grid-template-columns: minmax(0, 1fr);
+        grid-template-rows: auto auto minmax(0, 1fr) calc(var(--tv) * 30) calc(var(--tvt) * 28);
         grid-template-areas:
-            "info   logo"
-            "main   main"
-            "stats  stats"
-            "ticker ticker";
+            "logo"
+            "info"
+            "main"
+            "stats"
+            "ticker";
         gap: calc(var(--tv) * 3);
         padding: calc(var(--tv) * 4);
+    }
+
+    /* The Jingle Jam logo gets its own row, so the cause card can use the full width */
+    #embedContainer.tv-mode .jj-logo img {
+        height: calc(var(--tv) * 8);
     }
 
     #embedContainer.tv-mode .top-stat-cards {
