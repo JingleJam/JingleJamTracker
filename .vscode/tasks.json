@@ -1,0 +1,56 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Dev",
+            "detail": "Seed local KV, then run the cache service and API & Web UI",
+            "type": "npm",
+            "script": "dev",
+            "isBackground": true,
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": {
+                "owner": "wrangler",
+                "pattern": {
+                    "regexp": "^__no_match__(.*):(\\d+):(.*)$",
+                    "file": 1,
+                    "line": 2,
+                    "message": 3
+                },
+                "background": {
+                    "activeBegin": true,
+                    "beginsPattern": "Starting local server",
+                    "endsPattern": "\\[worker\\].*Ready on"
+                }
+            }
+        },
+        {
+            "label": "Reset Local Data",
+            "detail": "Delete .wrangler/state and re-seed KV",
+            "type": "npm",
+            "script": "reset",
+            "problemMatcher": []
+        },
+        {
+            "label": "Clear Local Data",
+            "detail": "Delete the .wrangler folders (local KV, Durable Objects and build cache)",
+            "type": "npm",
+            "script": "clean",
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean Dev",
+            "detail": "Clear local data, then run Dev",
+            "dependsOn": ["Clear Local Data", "Dev"],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "Type Check",
+            "detail": "Same check as CI",
+            "type": "npm",
+            "script": "typecheck",
+            "group": "test",
+            "problemMatcher": "$tsc"
+        }
+    ]
+}
