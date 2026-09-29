@@ -9,6 +9,8 @@
         waitTime: 5000,             //How long to wait for the data on the backend to be updated
         minRefreshTime: 5000,       //Minimum refresh time for the API
         pageIsVisible: true,
+        tvControlsTimeout: null,
+        tvTickerSpeed: 16,          //Seconds for the TV ticker to scroll one screen width
         domain: '',                 //Root-relative, since the page is served at /tracker/<cause>
         settings: {
             isPounds: true,
@@ -85,6 +87,11 @@
 
         //Set the data on load
         updateCounts();
+
+        //Open straight into TV mode with ?tv
+        if (new URLSearchParams(window.location.search).has('tv')) {
+            enterTvMode();
+        }
 
         //Position the change counter after counts are updated
         setTimeout(positionChangeCounter, 100);
@@ -210,6 +217,9 @@
             }
         });
 
+        //TV mode
+        setupTvMode();
+
         //Handle when tabbed out of the page
         let hidden;
         let visibilityChange;
@@ -243,11 +253,140 @@
         }
     }
 
+    //Setup the TV mode button and exit controls (TV mode fills the window, it does not make the browser fullscreen)
+    function setupTvMode() {
+        $('#tvModeButton').on('click', enterTvMode);
+        $('#tvExitButton').on('click', exitTvMode);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isTvMode())
+                exitTvMode();
+        });
+
+        //Only show the exit button and cursor while the mouse is moving
+        $(document).on('mousemove touchstart', () => {
+            if (isTvMode())
+                showTvControls();
+        });
+
+        //Rebuild the ticker to fit the new screen size
+        let resizeTimeout = null;
+        $(window).on('resize', () => {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(() => {
+                if (isTvMode())
+                    updateTicker(true);
+                positionChangeCounter();
+            }, 200);
+        });
+    }
+
+    function isTvMode() {
+        return $('#embedContainer').hasClass('tv-mode');
+    }
+
+    function enterTvMode() {
+        $('#embedContainer').addClass('tv-mode');
+        document.documentElement.classList.add('jj-tv-mode');
+
+        showTvControls();
+        updateTicker(true);
+        setTimeout(positionChangeCounter, 100);
+    }
+
+    function exitTvMode() {
+        $('#embedContainer').removeClass('tv-mode tv-controls-visible');
+        document.documentElement.classList.remove('jj-tv-mode');
+
+        setTimeout(positionChangeCounter, 100);
+    }
+
+    function showTvControls() {
+        $('#embedContainer').addClass('tv-controls-visible');
+        clearTimeout(JingleJam.tvControlsTimeout);
+        JingleJam.tvControlsTimeout = setTimeout(() => {
+            $('#embedContainer').removeClass('tv-controls-visible');
+        }, 3000);
+    }
+
+    //Creates or updates the scrolling TV ticker of top campaigns
+    function updateTicker(force = false) {
+        if (!isTvMode())
+            return;
+
+        let campaigns = JingleJam.model.campaigns.list;
+        let track = $('#tvTickerTrack');
+
+        $('#tvTickerEmpty').toggle(campaigns.length === 0);
+
+        //Rebuild when the campaigns or their order changed (or the screen size changed), otherwise update the values in place
+        let ids = campaigns.map(x => x.id).join(',');
+        if (force || track.attr('data-ids') !== ids) {
+            track.attr('data-ids', ids);
+
+            let set = campaigns.map((campaign, index) => createTickerItem(campaign, index)).join('');
+            track.html(set);
+
+            //Repeat the campaigns enough times to always fill the screen, then scroll by exactly one set so it loops seamlessly
+            let setWidth = track[0].scrollWidth;
+            let windowWidth = track.parent().width();
+            if (setWidth > 0) {
+                let copies = Math.max(2, Math.ceil(windowWidth / setWidth) + 1);
+                track.html(set.repeat(copies));
+
+                track[0].style.setProperty('--ticker-distance', `-${setWidth}px`);
+                track[0].style.setProperty('--ticker-duration', `${(setWidth / windowWidth) * JingleJam.tvTickerSpeed}s`);
+            }
+        }
+
+        campaigns.forEach((campaign, index) => {
+            let items = track.find(`.tv-campaign[data-index="${index}"]`);
+            items.find('.tv-campaign-total').text(formatCurrency(toCurrency(campaign.raised)));
+            items.find('.tv-campaign-badges').html(createCampaignBadges(campaign));
+
+            if (campaign.goal > 0) {
+                let goalMet = campaign.raised >= campaign.goal;
+                items.find('.tv-campaign-goal')
+                    .toggleClass('goal-met', goalMet)
+                    .html((goalMet ? '<i class="check circle icon"></i>' : '') + Math.floor((campaign.raised / campaign.goal) * 100) + '% of goal');
+            }
+        });
+    }
+
+    //Creates the HTML for a single campaign in the TV ticker
+    function createTickerItem(campaign, index) {
+        let owner = escapeHtml(campaign.user.name) + (campaign.team ? ' &middot; ' + escapeHtml(campaign.team.name) : '');
+        let avatar = campaign.user.avatar || (campaign.team && campaign.team.avatar) || '';
+        let initial = escapeHtml((campaign.user.name || campaign.name || '?').charAt(0).toUpperCase());
+
+        return `
+            <div class="tv-campaign" data-index="${index}">
+              <div class="tv-campaign-avatar">
+                <span class="campaign-avatar-initial">${initial}</span>
+                ${avatar ? `<img src="${escapeHtml(safeUrl(avatar))}" alt="" onerror="this.remove()">` : ''}
+                <span class="tv-campaign-rank">${index + 1}</span>
+              </div>
+              <div class="tv-campaign-content">
+                <div class="tv-campaign-name">${escapeHtml(campaign.name)}</div>
+                <div class="tv-campaign-owner">${owner}</div>
+                <div class="tv-campaign-meta">
+                  <span class="tv-campaign-total"></span>
+                  <span class="tv-campaign-badges"></span>
+                  ${campaign.goal > 0 ? '<span class="tv-campaign-goal"></span>' : ''}
+                </div>
+              </div>
+            </div>`;
+    }
+
     //Sets the cause name, logo, links and colours
     function setCauseDetails() {
         let cause = JingleJam.model.cause;
 
         document.title = cause.name + ' - Jingle Jam Tracker';
+
+        //The page can be embedded on other sites, so load the logo from the tracker's domain
+        $('#jjLogo').attr('src', JingleJam.domain + '/assets/jingle-jam-logo.png');
+        $('#jjLogoLink').attr('href', JingleJam.domain + '/tracker');
 
         $('.jj-year').text(JingleJam.model.event.year);
         $('.jj-cause-name').text(cause.name);
@@ -347,11 +486,6 @@
         return parseInt(x).toLocaleString();
     }
 
-    //Formats a percentage value
-    function formatPercent(x) {
-        return parseFloat(x).toFixed(1) + '%';
-    }
-
     //Converts a pounds amount to the selected currency
     function toCurrency(pounds) {
         return JingleJam.settings.isPounds ? pounds : pounds * JingleJam.model.dollarConversionRate;
@@ -435,7 +569,9 @@
         if(valueElement && counterDiv) {
             const valueRect = valueElement.getBoundingClientRect();
             const cardRect = valueElement.closest('.main-stat-card').getBoundingClientRect();
-            const leftOffset = valueRect.left - cardRect.left + valueRect.width + 5;
+            //Keep the counter inside the card when the value nearly fills it (e.g. in TV mode)
+            const counterWidth = counterDiv.getBoundingClientRect().width;
+            const leftOffset = Math.min(valueRect.left - cardRect.left + valueRect.width + 5, cardRect.width - counterWidth - 16);
             const topOffset = valueRect.top - cardRect.top - 55;
             counterDiv.style.left = leftOffset + 'px';
             counterDiv.style.right = 'auto';
@@ -559,24 +695,20 @@
         //Get the current data
         let conversion = JingleJam.model.dollarConversionRate;
         let cause = JingleJam.model.cause;
-        let share = !JingleJam.model.raised ? 0 : (cause.raised / JingleJam.model.raised) * 100;
+        let liveCount = JingleJam.model.campaigns.live || 0;
 
         //Update the components instantly
         if (instant) {
             if (!JingleJam.isWaiting()) {
                 setCount('#embedContainer #mainCounter', toCurrency(cause.raised), formatCurrency);
-                setCount('#embedContainer #shareOfTotal', share, formatPercent);
-            }
-            else {
-                setCount('#embedContainer #shareOfTotal', 0, formatPercent);
             }
             setCount('#embedContainer #campaignCount', JingleJam.model.campaigns.count, formatInt);
+            setCount('#embedContainer #liveCampaignCount', liveCount, formatInt);
         }
         //Update the components by counting up
         else {
             if (!JingleJam.isWaiting()) {
                 animateCount('#embedContainer #mainCounter', formatCurrency, cause.raised, cause.raised * conversion);
-                animateCount('#embedContainer #shareOfTotal', formatPercent, share);
 
                 if(JingleJam.oldModel){
                     let amount = toCurrency(cause.raised);
@@ -605,14 +737,13 @@
                     }
                 }
             }
-            else {
-                animateCount('#embedContainer #shareOfTotal', formatPercent, 0);
-            }
             animateCount('#embedContainer #campaignCount', formatInt, JingleJam.model.campaigns.count);
+            animateCount('#embedContainer #liveCampaignCount', formatInt, liveCount);
         }
 
         updateCampaigns(instant);
         updateCampaignActivity();
+        updateTicker();
 
         $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.date).toLocaleString());
     }

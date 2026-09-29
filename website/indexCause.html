@@ -12,15 +12,22 @@
     </div>
   </div>
   <div id="trackerContent" style="display: none;">
-    <div class="ui compact huge segment" id="currencySelectorObj" style="right: 20px; background-color: white;">
-      <label style="margin-right: 11px;">$</label>
-      <div class="ui slider checkbox">
-        <input type="checkbox" id="currencyCheckbox">
-        <label>£</label>
-      </div>
-    </div>
+    <button class="tv-exit-button" id="tvExitButton" type="button" title="Exit TV mode" aria-label="Exit TV mode"><i class="close icon"></i></button>
     <div class="guttered">
-      <div class="guttered-section" style="margin-top: 43px;">
+      <div class="guttered-section">
+        <div class="cause-header">
+          <a class="jj-logo" id="jjLogoLink" href="/tracker"><img id="jjLogo" alt="Jingle Jam"></a>
+          <div class="cause-toolbar">
+            <button class="tv-mode-button" id="tvModeButton" type="button" title="TV mode" aria-label="Open TV mode"><i class="tv icon"></i></button>
+            <div class="ui compact huge segment" id="currencySelectorObj" style="background-color: white;">
+              <label style="margin-right: 11px;">$</label>
+              <div class="ui slider checkbox">
+                <input type="checkbox" id="currencyCheckbox">
+                <label>£</label>
+              </div>
+            </div>
+          </div>
+        </div>
         <div class="top-stats-container">
           <div class="ui segment main-stat-card">
             <div class="main-stat-header" id="mainCounterHeader"></div>
@@ -42,14 +49,18 @@
             </div>
           </div>
           <div class="top-stat-cards">
-            <div class="ui segment stat-card" style="min-width: 280px !important;">
+            <div class="ui segment stat-card">
               <div class="stat-header"><i class="flag icon"></i>Campaigns</div>
-              <div class="stat-value" id="campaignCount"> 0 </div>
-              <div class="stat-subtext" id="campaignActivity" style="display: none;"></div>
+              <div class="stat-body">
+                <div class="stat-value" id="campaignCount"> 0 </div>
+                <div class="stat-subtext" id="campaignActivity" style="display: none;"></div>
+              </div>
             </div>
-            <div class="ui segment stat-card" style="min-width: 280px !important;">
-              <div class="stat-header"><i class="chart pie icon"></i>Share of Jingle Jam</div>
-              <div class="stat-value" id="shareOfTotal"> 0% </div>
+            <div class="ui segment stat-card">
+              <div class="stat-header"><i class="live-icon circle icon live-now-icon"></i>Live Now</div>
+              <div class="stat-body">
+                <div class="stat-value" id="liveCampaignCount"> 0 </div>
+              </div>
             </div>
           </div>
         </div>
@@ -75,6 +86,13 @@
           <div class="campaign-list" id="campaignList"></div>
           <div class="campaigns-empty" id="campaignsEmpty" style="display: none;">No campaigns have been started for this cause yet.</div>
         </div>
+      </div>
+    </div>
+    <div class="tv-ticker" id="tvTicker">
+      <div class="tv-ticker-label"><i class="trophy icon"></i><span>Top<br>Campaigns</span></div>
+      <div class="tv-ticker-window">
+        <div class="tv-ticker-track" id="tvTickerTrack"></div>
+        <div class="tv-ticker-empty" id="tvTickerEmpty">No campaigns have been started for this cause yet.</div>
       </div>
     </div>
   </div>

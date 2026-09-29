@@ -1324,26 +1324,24 @@
     background-color: var(--cause-color) !important;
 }
 
-/* Cause Info Card */
+/* Cause details - sits directly on the page rather than in a card */
 #embedContainer .ui.segment.cause-info {
     display: flex;
     align-items: center;
-    gap: 20px;
-    background: white;
+    gap: 18px;
+    background: transparent;
     border: none !important;
-    border-left: 4px solid var(--cause-color) !important;
-    border-radius: 12px;
-    padding: 20px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
-    margin: 0 0 30px 0 !important;
+    border-radius: 0;
+    padding: 0 4px;
+    box-shadow: none;
+    margin: 0 0 34px 0 !important;
 }
 
 #embedContainer .cause-info-logo {
-    width: 60px;
-    height: 60px;
-    min-width: 60px;
-    border-radius: 8px;
-    object-fit: cover;
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    object-fit: contain;
 }
 
 #embedContainer .cause-info-content {
@@ -1361,7 +1359,7 @@
 
 #embedContainer .cause-info-description {
     font-size: 14px;
-    color: #000;
+    color: #555;
     line-height: 1.5;
 }
 
@@ -1663,7 +1661,11 @@
     #embedContainer .ui.segment.cause-info {
         flex-wrap: wrap;
         gap: 14px;
-        padding: 18px;
+        padding: 0 4px;
+    }
+
+    #embedContainer .jj-logo img {
+        height: 40px;
     }
 
     #embedContainer .cause-info-logo {
@@ -1795,4 +1797,551 @@
     #embedContainer .campaign-total .raised-label {
         margin-top: 0;
     }
+}
+
+/*
+
+    CAUSE TRACKER - TOOLBAR & TV MODE
+    TV mode fills the browser window with a non-scrolling layout for showing the tracker on a TV:
+        [cause header                        ]
+        [raised (huge)          ] [stat cards]
+        [top campaigns ticker (scrolling)    ]
+
+*/
+
+/* Header row: Jingle Jam logo on the left, TV and currency controls on the right */
+#embedContainer .cause-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+#embedContainer .jj-logo {
+    display: block;
+    line-height: 0;
+}
+
+#embedContainer .jj-logo img {
+    height: 56px;
+    width: auto;
+}
+
+#embedContainer .cause-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+#embedContainer .cause-toolbar #currencySelectorObj {
+    position: static;
+}
+
+#embedContainer .tv-mode-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    border-radius: 10px;
+    background: transparent;
+    color: #3f3f3f;
+    font-size: 20px;
+    cursor: pointer;
+    transition: background-color 0.1s ease, color 0.1s ease;
+}
+
+#embedContainer .tv-mode-button:hover {
+    background: rgba(var(--cause-rgb), 0.15);
+    color: var(--cause-accent);
+}
+
+#embedContainer .tv-mode-button i.icon {
+    margin: 0;
+    height: auto;
+}
+
+/* Groups the stat value with its subtext, keeping them at the bottom of the card */
+#embedContainer.cause-tracker .stat-card .stat-body {
+    margin-top: auto;
+}
+
+/* Pulsing red dot for the Live Now stat */
+#embedContainer .stat-header i.icon.live-now-icon {
+    color: #e21212;
+    opacity: 1;
+    font-size: 0.75em;
+}
+
+/* Stat card sizing moved from inline styles so TV mode can override it */
+#embedContainer.cause-tracker .top-stat-cards .stat-card {
+    min-width: 280px;
+}
+
+#embedContainer .tv-exit-button,
+#embedContainer .tv-ticker,
+#embedContainer .tv-ticker-empty {
+    display: none;
+}
+
+html.jj-tv-mode,
+html.jj-tv-mode body {
+    overflow: hidden !important;
+}
+
+/* Layout: fixed to the window, with the existing sections placed into a grid */
+#embedContainer.tv-mode #trackerContent {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) 24vw;
+    grid-template-rows: auto minmax(0, 1fr) 19vh;
+    grid-template-areas:
+        "info logo"
+        "main stats"
+        "ticker ticker";
+    gap: 2.2vh 1.6vw;
+    padding: 3vh 2.5vw;
+    box-sizing: border-box;
+    overflow: hidden;
+    background: #f3f3f5;
+}
+
+#embedContainer.tv-mode:not(.tv-controls-visible) #trackerContent {
+    cursor: none;
+}
+
+#embedContainer.tv-mode .guttered,
+#embedContainer.tv-mode .guttered-section,
+#embedContainer.tv-mode .top-stats-container {
+    display: contents;
+}
+
+#embedContainer.tv-mode .cause-toolbar,
+#embedContainer.tv-mode #lastUpdatedRow,
+#embedContainer.tv-mode .campaigns-card,
+#embedContainer.tv-mode .cause-info-links {
+    display: none !important;
+}
+
+/* Exit button, only shown while the mouse is moving */
+#embedContainer.tv-mode .tv-exit-button {
+    position: fixed;
+    top: 1.5vh;
+    right: 1.2vw;
+    z-index: 1001;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+#embedContainer.tv-mode.tv-controls-visible .tv-exit-button {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+#embedContainer.tv-mode .tv-exit-button i.icon {
+    margin: 0;
+    height: auto;
+}
+
+/* Header: cause details on the left, Jingle Jam logo above the stat cards */
+#embedContainer.tv-mode .cause-header {
+    grid-area: logo;
+    justify-content: flex-end;
+    margin: 0;
+}
+
+#embedContainer.tv-mode .jj-logo {
+    pointer-events: none;
+}
+
+#embedContainer.tv-mode .jj-logo img {
+    height: 8vh;
+}
+
+#embedContainer.tv-mode .ui.segment.cause-info {
+    grid-area: info;
+    gap: 1.2vw;
+    padding: 0 0.4vw;
+    margin: 0 !important;
+}
+
+#embedContainer.tv-mode .cause-info-logo {
+    width: 7.5vh;
+    height: 7.5vh;
+    min-width: 7.5vh;
+}
+
+#embedContainer.tv-mode .cause-info-name {
+    font-size: 2.8vh;
+    margin-bottom: 0.4vh;
+}
+
+#embedContainer.tv-mode .cause-info-description {
+    font-size: 1.9vh;
+}
+
+/* Raised */
+#embedContainer.tv-mode .top-stats-container .main-stat-card {
+    grid-area: main;
+    min-width: 0;
+    min-height: 0;
+    width: auto;
+    padding: 4vh 3vw;
+    border-radius: 2.4vh;
+}
+
+#embedContainer.tv-mode .main-stat-header {
+    gap: 1.4vh;
+    font-size: 3vh;
+    margin-bottom: 0;
+}
+
+#embedContainer.tv-mode .main-stat-body {
+    justify-content: center;
+}
+
+#embedContainer.tv-mode .main-stat-value {
+    margin: auto 0;
+    font-size: min(9.9vw, 19.8vh);
+    letter-spacing: -0.03em;
+}
+
+#embedContainer.tv-mode[data-status="countdown"] .main-stat-value {
+    font-size: min(7vw, 16vh) !important;
+}
+
+#embedContainer.tv-mode #liveUpdatingRow {
+    top: 4vh;
+    right: 3vw;
+}
+
+#embedContainer.tv-mode #liveUpdatingRow .subtext-label {
+    display: flex;
+    align-items: center;
+    gap: 1vh;
+    font-size: 2.2vh;
+    line-height: 1;
+}
+
+/* Keep the dot vertically centred with the "Live" text at TV sizes */
+#embedContainer.tv-mode #liveUpdatingRow .loading-circle {
+    display: flex;
+    align-items: center;
+    margin: 0;
+}
+
+#embedContainer.tv-mode #liveUpdatingRow .live-icon {
+    margin: 0;
+    height: auto;
+    font-size: 1.4vh;
+    line-height: 1;
+}
+
+#embedContainer.tv-mode #updatingRealTime .ui.loader {
+    top: 0;
+    margin: 0;
+}
+
+/* The page sets a fixed 20px line height, so the pill needs its own to fit the larger TV text */
+#embedContainer.tv-mode .main-stat-card .change-counter-div .change-counter .change-counter-text {
+    font-size: 3vh;
+    line-height: 1.3 !important;
+    padding: 0.8vh 2.2vh;
+    border-radius: 999px;
+    box-shadow: 0 0.4vh 1.2vh rgba(0, 0, 0, 0.18);
+    transform: none;
+}
+
+#embedContainer.tv-mode .main-stat-card .change-counter-text .comma-value {
+    margin: 0 0.15em 0 0.05em;
+}
+
+/* Stat cards, stacked beside the raised amount */
+#embedContainer.tv-mode .top-stat-cards {
+    grid-area: stats;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    gap: 2.2vh;
+    min-width: 0;
+    min-height: 0;
+}
+
+/* Header pinned to the top, value centred in the space below it */
+#embedContainer.tv-mode.cause-tracker .top-stat-cards .stat-card {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    justify-content: flex-start;
+    padding: 3.2vh 1.8vw;
+    border-radius: 1.8vh;
+}
+
+#embedContainer.tv-mode .stat-header {
+    gap: 1.2vh;
+    margin-bottom: 0;
+    font-size: 3.2vh;
+    white-space: normal;
+}
+
+#embedContainer.tv-mode .stat-header i.icon {
+    font-size: 1em;
+}
+
+#embedContainer.tv-mode .stat-header i.icon.live-now-icon {
+    font-size: 0.7em;
+}
+
+#embedContainer.tv-mode.cause-tracker .stat-card .stat-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0;
+    text-align: center;
+}
+
+#embedContainer.tv-mode .stat-subtext {
+    justify-content: center;
+}
+
+#embedContainer.tv-mode .top-stat-cards .stat-card .stat-value {
+    margin-top: 0;
+    font-size: min(4.6vw, 8vh) !important;
+    letter-spacing: -0.02em;
+}
+
+#embedContainer.tv-mode .stat-subtext {
+    margin-top: 1.4vh;
+    font-size: 1.8vh;
+}
+
+/* Top campaigns ticker */
+#embedContainer.tv-mode .tv-ticker {
+    grid-area: ticker;
+    display: flex;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: 1.8vh;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+
+#embedContainer .tv-ticker-label {
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1vh;
+    padding: 0 2vw;
+    background: var(--cause-color);
+    color: var(--cause-text);
+    font-size: 2.2vh;
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+#embedContainer .tv-ticker-label i.icon {
+    margin: 0;
+    height: auto;
+    font-size: 3.6vh;
+}
+
+#embedContainer .tv-ticker-window {
+    position: relative;
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+    mask-image: linear-gradient(to right, transparent, black 3%, black 97%, transparent);
+}
+
+#embedContainer .tv-ticker-empty {
+    width: 100%;
+    text-align: center;
+    color: #666;
+    font-size: 2.2vh;
+}
+
+#embedContainer .tv-ticker-track {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    height: 100%;
+    animation: tv-ticker var(--ticker-duration, 60s) linear infinite;
+    will-change: transform;
+}
+
+@keyframes tv-ticker {
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(var(--ticker-distance, -50%));
+    }
+}
+
+/* Fixed width (no gaps) so every repeat of the list is exactly the same width */
+#embedContainer .tv-campaign {
+    flex: none;
+    display: flex;
+    align-items: center;
+    gap: 1.2vw;
+    width: 32vw;
+    height: 100%;
+    padding: 0 1.6vw;
+    box-sizing: border-box;
+    border-right: 1px solid #ececec;
+}
+
+#embedContainer .tv-campaign-avatar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 9vh;
+    height: 9vh;
+    min-width: 9vh;
+    border-radius: 50%;
+    background: rgba(var(--cause-rgb), 0.15);
+}
+
+#embedContainer .tv-campaign-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+}
+
+#embedContainer .tv-campaign-avatar .campaign-avatar-initial {
+    font-size: 3.6vh;
+}
+
+#embedContainer .tv-campaign-rank {
+    position: absolute;
+    top: -0.6vh;
+    left: -0.6vh;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3.4vh;
+    height: 3.4vh;
+    padding: 0 0.6vh;
+    box-sizing: border-box;
+    border: 0.3vh solid white;
+    border-radius: 1.7vh;
+    background: #6a6a6a;
+    color: white;
+    font-size: 1.7vh;
+    font-weight: 700;
+}
+
+#embedContainer .tv-campaign[data-index="0"] .tv-campaign-rank,
+#embedContainer .tv-campaign[data-index="1"] .tv-campaign-rank,
+#embedContainer .tv-campaign[data-index="2"] .tv-campaign-rank {
+    background: var(--cause-color);
+    color: var(--cause-text);
+}
+
+#embedContainer .tv-campaign-content {
+    flex: 1;
+    min-width: 0;
+}
+
+#embedContainer .tv-campaign-name {
+    overflow: hidden;
+    color: #000;
+    font-size: 2.4vh;
+    font-weight: 700;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#embedContainer .tv-campaign-owner {
+    overflow: hidden;
+    margin-top: 0.3vh;
+    color: #666;
+    font-size: 1.8vh;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#embedContainer .tv-campaign-meta {
+    display: flex;
+    align-items: center;
+    gap: 1.2vh;
+    margin-top: 0.4vh;
+    padding-bottom: 0.4vh;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+#embedContainer .tv-campaign-badges {
+    display: flex;
+    gap: 0.6vh;
+}
+
+#embedContainer .tv-campaign-badges .campaign-badge {
+    padding: 0.3vh 1vh;
+    font-size: 1.4vh;
+}
+
+#embedContainer .tv-campaign-goal {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #666;
+    font-size: 1.6vh;
+    white-space: nowrap;
+}
+
+#embedContainer .tv-campaign-goal.goal-met {
+    color: #1e9e3c;
+    font-weight: 700;
+}
+
+#embedContainer .tv-campaign-goal i.icon {
+    margin: 0 0.4vh 0 0;
+    height: auto;
+}
+
+#embedContainer .tv-campaign-total {
+    flex: none;
+    margin-right: 0.4vh;
+    color: var(--cause-accent);
+    font-size: 3.4vh;
+    line-height: 1.2;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-feature-settings: 'tnum';
 }
