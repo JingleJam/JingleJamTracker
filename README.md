@@ -53,6 +53,7 @@ npm run dev                                                      # seeds local K
 
 - **Web UI**: http://127.0.0.1:8788/tracker
 - **Cause Web UI**: http://127.0.0.1:8788/tracker/{cause} (e.g. `/tracker/gosh-charity`, one per cause in `kv/causes.json`)
+  - `/tracker/jingle-jam` shows the same page for the whole event (every cause)
   - Add `?tv` (or click the TV icon) for a non-scrolling TV view with a scrolling ticker of top campaigns
 - **API**: http://127.0.0.1:8788/api/tiltify
 

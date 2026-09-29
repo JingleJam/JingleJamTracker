@@ -3,13 +3,17 @@ import {
     TILTIFY_API_PATH,
     CAMPAIGNS_API_PATH,
     CAUSE_API_PATH,
+    EVENT_NAME,
+    EVENT_COLOR,
+    EVENT_WEBSITE_URL,
+    EVENT_LOGO_PATH,
     SNAPSHOT_INTERVAL_MS,
     IDLE_REFRESH_TIME,
     EVENT_WINDOW_PADDING_MS
 } from "tiltify-cache/constants";
 import { getLatestData } from "tiltify-cache/api";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
-import { generateSlug, getCacheKey, Router } from "tiltify-cache/utils";
+import { generateSlug, getCacheKey, roundAmount, Router } from "tiltify-cache/utils";
 import { Campaign } from "tiltify-cache/types/Campaign";
 import { Cause } from "tiltify-cache/types/Cause";
 import { CampaignStorageService } from "tiltify-cache/services/campaignStorage";
@@ -130,6 +134,7 @@ export class TiltifyData {
         });
 
         // GET route: Get the summary and top campaigns for a single cause, looked up by slug or id
+        // The CAUSE_SLUG env var returns the same summary for the whole event (every cause)
         router.get(CAUSE_API_PATH, async (request, url, params) => {
             console.log('Called ' + url.pathname);
 
@@ -154,7 +159,10 @@ export class TiltifyData {
 
             const summary = this.summary;
             const causeKey = params.cause.toLowerCase();
-            const cause = summary?.causes.find(c => getCauseSlug(c) === causeKey || c.id.toLowerCase() === causeKey);
+            const isEvent = !!summary && causeKey === this.env.CAUSE_SLUG.toLowerCase();
+            const cause = isEvent
+                ? getEventCause(summary, this.env, url)
+                : summary?.causes.find(c => getCauseSlug(c) === causeKey || c.id.toLowerCase() === causeKey);
 
             if (!summary || !cause) {
                 return new Response(JSON.stringify({
@@ -165,14 +173,16 @@ export class TiltifyData {
                 });
             }
 
-            // Campaigns dedicated to this cause (already sorted by amount raised)
-            const causeCampaigns = (await this.getCampaignList()).filter(campaign => campaign.causeId === cause.id);
+            // Campaigns dedicated to this cause, or every campaign for the event (already sorted by amount raised)
+            const allCampaigns = await this.getCampaignList();
+            const causeCampaigns = isEvent ? allCampaigns : allCampaigns.filter(campaign => campaign.causeId === cause.id);
 
             return new Response(JSON.stringify({
                 date: summary.date,
                 event: summary.event,
                 dollarConversionRate: summary.dollarConversionRate,
                 raised: summary.raised,
+                scope: isEvent ? 'event' : 'cause',
                 cause: { ...cause, slug: getCauseSlug(cause) },
                 campaigns: {
                     count: causeCampaigns.length,
@@ -330,6 +340,36 @@ export class TiltifyData {
             }
         }
     }
+}
+
+// Builds a cause for the whole event, so it can be served in the same shape as a single cause
+function getEventCause(summary: ApiResponse, env: Env, url: URL): Cause {
+    const causeNames = summary.causes.map(cause => cause.name);
+    const causeList = causeNames.length > 1
+        ? `${causeNames.slice(0, -1).join(', ')} and ${causeNames[causeNames.length - 1]}`
+        : causeNames.join('');
+
+    // Every cause's donate link points at the same Tiltify fundraiser, so use its home page
+    let donateUrl = EVENT_WEBSITE_URL;
+    try {
+        if (summary.causes[0]?.donateUrl) {
+            donateUrl = new URL(summary.causes[0].donateUrl).origin;
+        }
+    } catch { }
+
+    return {
+        id: env.FUNDRAISER_PUBLIC_ID,
+        slug: env.CAUSE_SLUG,
+        name: EVENT_NAME,
+        logo: url.origin + EVENT_LOGO_PATH,
+        description: `Raising money for ${causeNames.length} causes: ${causeList}.`,
+        color: EVENT_COLOR,
+        url: EVENT_WEBSITE_URL,
+        donateUrl: donateUrl,
+        raised: roundAmount(summary.raised),
+        campaigns: summary.campaigns.count,
+        live: summary.campaigns.live || 0,
+    };
 }
 
 // Summaries persisted before causes had a slug won't include one, so fall back to generating it from the name

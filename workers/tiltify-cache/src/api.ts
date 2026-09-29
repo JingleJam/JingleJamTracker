@@ -208,11 +208,14 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
       // Get the cause id from the campaign's region
       const causeId = apiResponse.causes.find(cause => cause.id === campaign.region_public_id)?.id;
 
-      // Increment the campaign count for the cause
+      // Increment the campaign (and live campaign) count for the cause
       if (causeId) {
         for (const cause of apiResponse.causes) {
           if (cause.id === causeId) {
             cause.campaigns++;
+            if (campaign.live === true) {
+              cause.live++;
+            }
             break;
           }
         } 
@@ -248,6 +251,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
 
     // Sort the campaigns by the amount raised and limit the number of campaigns
     apiResponse.campaigns.count = campaignsComputed.length;
+    apiResponse.campaigns.live = campaignsComputed.filter(campaign => campaign.live).length;
     apiResponse.campaigns.list = sortByKey(campaignsComputed, 'raised');
 
   } catch (e) {
@@ -282,6 +286,7 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
     donateUrl: cause.donateUrl,
     raised: 0,
     campaigns: 0,
+    live: 0,
   })) || [];
 
   return {
@@ -302,14 +307,15 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
     causes: causeObjects,
     campaigns: {
       count: 0,
+      live: 0,
       list: [],
     },
   };
 }
 
 
-const debugStartDate = new Date(Date.now() + 1 * 60 * 1000);
-const debugEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+const debugStartDate = new Date("2026-09-28T00:00:00Z");
+const debugEndDate = new Date("2026-12-15T08:00:00Z");
 
 // Create fake data for debugging purposes
 async function getDebugData(env: Env): Promise<ApiResponse> {

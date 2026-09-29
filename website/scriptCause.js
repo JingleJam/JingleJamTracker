@@ -88,8 +88,8 @@
         //Set the data on load
         updateCounts();
 
-        //Open straight into TV mode with ?tv
-        if (new URLSearchParams(window.location.search).has('tv')) {
+        //Open straight into TV mode with ?tv, or if TV mode was on when the page was last open
+        if (new URLSearchParams(window.location.search).has('tv') || localStorage.getItem('tvMode') === 'true') {
             enterTvMode();
         }
 
@@ -288,6 +288,7 @@
     function enterTvMode() {
         $('#embedContainer').addClass('tv-mode');
         document.documentElement.classList.add('jj-tv-mode');
+        localStorage.setItem('tvMode', true);
 
         showTvControls();
         updateTicker(true);
@@ -297,6 +298,7 @@
     function exitTvMode() {
         $('#embedContainer').removeClass('tv-mode tv-controls-visible');
         document.documentElement.classList.remove('jj-tv-mode');
+        localStorage.setItem('tvMode', false);
 
         setTimeout(positionChangeCounter, 100);
     }
@@ -342,13 +344,18 @@
         campaigns.forEach((campaign, index) => {
             let items = track.find(`.tv-campaign[data-index="${index}"]`);
             items.find('.tv-campaign-total').text(formatCurrency(toCurrency(campaign.raised)));
-            items.find('.tv-campaign-badges').html(createCampaignBadges(campaign));
+            //LIVE sits next to the user name, the donation match badge next to the amount
+            items.find('.tv-campaign-live').html(createCampaignBadges({ live: campaign.live }));
+            items.find('.tv-campaign-badges').html(createCampaignBadges({ donationMatchMultiplier: campaign.donationMatchMultiplier }));
 
+            //Goal pill: the fill shows progress towards the goal, and turns green once it's reached
             if (campaign.goal > 0) {
                 let goalMet = campaign.raised >= campaign.goal;
+                let percentage = Math.floor((campaign.raised / campaign.goal) * 100);
                 items.find('.tv-campaign-goal')
                     .toggleClass('goal-met', goalMet)
-                    .html((goalMet ? '<i class="check circle icon"></i>' : '') + Math.floor((campaign.raised / campaign.goal) * 100) + '% of goal');
+                    .css('--goal-progress', Math.min(percentage, 100) + '%')
+                    .html(`${goalMet ? '<i class="check circle icon"></i>' : ''}<span>${percentage}% of ${formatCurrency(toCurrency(campaign.goal), 0, false)}</span>`);
             }
         });
     }
@@ -368,7 +375,7 @@
               </div>
               <div class="tv-campaign-content">
                 <div class="tv-campaign-name">${escapeHtml(campaign.name)}</div>
-                <div class="tv-campaign-owner">${owner}</div>
+                <div class="tv-campaign-owner"><span class="tv-campaign-owner-name">${owner}</span><span class="tv-campaign-live"></span></div>
                 <div class="tv-campaign-meta">
                   <span class="tv-campaign-total"></span>
                   <span class="tv-campaign-badges"></span>
@@ -382,7 +389,10 @@
     function setCauseDetails() {
         let cause = JingleJam.model.cause;
 
-        document.title = cause.name + ' - Jingle Jam Tracker';
+        //The event-level page (every cause) uses the same layout, with a few cause-specific parts swapped out
+        let isEvent = JingleJam.model.scope === 'event';
+        $('#embedContainer').toggleClass('event-scope', isEvent);
+        document.title = isEvent ? 'Jingle Jam Tracker' : cause.name + ' - Jingle Jam Tracker';
 
         //The page can be embedded on other sites, so load the logo from the tracker's domain
         $('#jjLogo').attr('src', JingleJam.domain + '/assets/jingle-jam-logo.png');
@@ -695,7 +705,8 @@
         //Get the current data
         let conversion = JingleJam.model.dollarConversionRate;
         let cause = JingleJam.model.cause;
-        let liveCount = JingleJam.model.campaigns.live || 0;
+        //Live campaigns for the cause (or whole event), falling back to the campaign totals for older cached data
+        let liveCount = cause.live ?? JingleJam.model.campaigns.live ?? 0;
 
         //Update the components instantly
         if (instant) {

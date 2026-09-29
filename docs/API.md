@@ -66,6 +66,7 @@ GET /api/tiltify
   causes: Cause[];                 // List of causes with raised amounts
   campaigns: {
     count: number;                 // Total number of campaigns
+    live: number;                  // Number of campaigns currently live (across every campaign, not just the top 100)
     list: Campaign[];              // Top 100 campaigns (sorted by raised amount)
   };
 }
@@ -104,6 +105,7 @@ GET /api/tiltify
   donateUrl: string;              // URL to a list of campaigns supporting that cause
   raised: number;                 // Amount raised for this cause in pounds
   campaigns: number;              // Number of campaigns for this cause
+  live: number;                   // Number of campaigns for this cause currently live
 }
 ```
 
@@ -191,11 +193,13 @@ curl https://dashboard.jinglejam.co.uk/api/tiltify
       "url": "https://example.com/cause",
       "donateUrl": "https://example.com/donate",
       "raised": 100000,
-      "campaigns": 10
+      "campaigns": 10,
+      "live": 2
     }
   ],
   "campaigns": {
     "count": 150,
+    "live": 12,
     "list": [
       {
         "causeId": "cause-1",
@@ -357,6 +361,7 @@ GET /api/causes/{cause}?limit=10
 #### Path Parameters
 
 - **cause** (required): The cause's `slug` (e.g. `gosh-charity`) or `id`, as returned in the `causes` list of `/api/tiltify`
+  - Use `jingle-jam` (the `CAUSE_SLUG` worker variable) for the same summary across the whole event, covering every cause and campaign
   - **Validation:** Returns `404 Not Found` if no cause matches
 
 #### Query Parameters
@@ -385,7 +390,8 @@ GET /api/causes/{cause}?limit=10
   };
   dollarConversionRate: number;    // Current GBP to USD conversion rate
   raised: number;                  // Total amount raised by the whole event in pounds
-  cause: Cause;                    // The cause, including the amount raised for it
+  scope: 'cause' | 'event';        // 'event' when requested with the event slug (jingle-jam)
+  cause: Cause;                    // The cause, including the amount raised for it (the whole event for the event slug)
   campaigns: {
     count: number;                 // Total number of campaigns for this cause
     live: number;                  // Number of campaigns for this cause currently live
@@ -443,7 +449,8 @@ curl https://dashboard.jinglejam.co.uk/api/causes/gosh-charity?limit=5
     "url": "https://example.com/cause",
     "donateUrl": "https://example.com/donate",
     "raised": 100000,
-    "campaigns": 10
+    "campaigns": 10,
+    "live": 2
   },
   "campaigns": {
     "count": 10,
@@ -480,6 +487,7 @@ curl https://dashboard.jinglejam.co.uk/api/causes/gosh-charity?limit=5
 
 - The slug is generated from the cause name (lowercase, spaces replaced with hyphens), so new causes get an endpoint and tracker page automatically
 - `cause.raised` includes the cause's share of campaigns supporting all causes, but `campaigns` only lists campaigns dedicated to this cause
+- For the event slug, `cause` describes the whole Jingle Jam and `campaigns` covers every campaign
 - Data is refreshed every **10 seconds**, the same as `/api/tiltify`
 
 ---

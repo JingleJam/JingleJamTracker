@@ -10,4 +10,5 @@ export interface Cause {
     override?: number;
     raised: number;
     campaigns: number;
+    live: number;
 }
