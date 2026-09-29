@@ -18,9 +18,9 @@ const MAIN_CAMPAIGN_LIMIT = 100; // Number of campaigns included in the main cac
   Tiltify Data Durable Object
 
   The live data is held in memory and refreshed by an alarm, so API requests never touch storage.
-  Snapshots are persisted at most every SNAPSHOT_INTERVAL_MS, and only when the data has changed:
-    - The main response (top campaigns) goes to Durable Object storage
-    - The full campaign list goes to a single KV value
+  Snapshots are persisted at most every SNAPSHOT_INTERVAL_MS:
+    - The main response (top campaigns) goes to Durable Object storage, so its fetch date stays current after a cold start
+    - The full campaign list goes to a single KV value, only when it has changed
   Snapshots are only read after a cold start, until the first refresh completes.
 */
 export class TiltifyData {
@@ -34,7 +34,6 @@ export class TiltifyData {
     private refreshing: Promise<void> | null = null;        // In-flight refresh, shared by concurrent callers
     private alarmChecked = false;
     private lastSnapshot = 0;
-    private summaryHash: string | null = null;
     private campaignsHash: string | null = null;
 
     constructor(state: DurableObjectState, env: Env) {
@@ -45,9 +44,6 @@ export class TiltifyData {
 
         state.blockConcurrencyWhile(async () => {
             this.summary = await this.storage.get<ApiResponse>(getCacheKey(this.env.YEAR)) || null;
-            if (this.summary) {
-                this.summaryHash = await hashSummary(this.summary);
-            }
 
             try {
                 await CampaignStorageService.deleteLegacyChunks(this.storage);
@@ -148,7 +144,6 @@ export class TiltifyData {
 
                 const data: ApiResponse = await request.json();
                 this.summary = data;
-                this.summaryHash = await hashSummary(data);
                 await this.storage.put(getCacheKey(this.env.YEAR), data);
                 return new Response("Manual Update Success", { status: 200 });
             },
@@ -251,7 +246,7 @@ export class TiltifyData {
         }
     }
 
-    // Persist the in-memory data for cold starts, at most every SNAPSHOT_INTERVAL_MS and only if it changed
+    // Persist the in-memory data for cold starts, at most every SNAPSHOT_INTERVAL_MS
     private async persistSnapshots(): Promise<void> {
         const now = Date.now();
         if (now - this.lastSnapshot < SNAPSHOT_INTERVAL_MS) {
@@ -260,11 +255,7 @@ export class TiltifyData {
         this.lastSnapshot = now;
 
         if (this.summary) {
-            const summaryHash = await hashSummary(this.summary);
-            if (summaryHash !== this.summaryHash) {
-                await this.storage.put(getCacheKey(this.env.YEAR), this.summary);
-                this.summaryHash = summaryHash;
-            }
+            await this.storage.put(getCacheKey(this.env.YEAR), this.summary);
         }
 
         if (this.campaigns && this.campaigns.length > 0) {
@@ -275,11 +266,6 @@ export class TiltifyData {
             }
         }
     }
-}
-
-// Hash of the main response, ignoring the fetch date which changes on every refresh
-function hashSummary(summary: ApiResponse): Promise<string> {
-    return hash({ ...summary, date: null });
 }
 
 async function hash(value: unknown): Promise<string> {
