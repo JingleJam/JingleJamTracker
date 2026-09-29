@@ -8,10 +8,14 @@ export interface TiltifyTemplateFact {
     __typename: "Fact";
     fitnessDailyActivities: FitnessDailyActivity[];
     contactEmail: string;
-    region: string | null;
+    region: Region | null;
+    logo: Image | null;
+    hasMembership: boolean;
+    amountRaised: Currency;
+    team: FactTeam | null;
     impactPoints: unknown[];
     scheduleCount: number;
-    fitnessActivities: NewFitnessActivityConnection;
+    fitnessActivities: FitnessActivityConnection;
     totalAmountRaised: Currency;
     teamMemberCount: number;
     avatar: Image;
@@ -44,16 +48,14 @@ export interface TiltifyTemplateFact {
     trackers: string[];
     fitnessMeasurementUnit: string;
     goal: Currency;
-    challenges: unknown[];
     showPolyline: boolean | null;
-    bonfire: unknown | null;
     supportedFacts: SupportedFact[];
     restricted: boolean;
     mediaTypes: MediaType[];
     polls: unknown[];
     ownership: FactOwner;
     usageType: string;
-    paginatedSchedules: NewScheduleConnection;
+    paginatedSchedules: ScheduleConnection;
     supportable: boolean;
     donationMatches: unknown[];
     social: Social;
@@ -66,8 +68,8 @@ export interface FitnessDailyActivity {
     totalDistanceMiles: string;
 }
 
-export interface NewFitnessActivityConnection {
-    __typename: "NewFitnessActivityConnection";
+export interface FitnessActivityConnection {
+    __typename: "FitnessActivityConnection";
     edges: unknown[];
 }
 
@@ -88,6 +90,7 @@ export interface Image {
 export interface FactFeatureSettings {
     __typename: "FactFeatureSettings";
     monthlyGivingEnabled: boolean;
+    originalGoalEnabled: boolean;
 }
 
 export interface MonthlyGivingStats {
@@ -152,6 +155,9 @@ export interface FactTemplatePanelConfig {
     startFundraisingButton: boolean | null;
     fundraiserRewardsHeading: string | null;
     teamDistance: boolean | null;
+    teamAmountRaised: boolean | null;
+    teamFundraisingGoal: boolean | null;
+    teamCard: boolean | null;
     stepProgress: boolean | null;
 }
 
@@ -179,6 +185,7 @@ export interface SupportedFact {
     link: string;
     name: string;
     ownership: FactOwner | null;
+    team: FactTeam | null;
     usageType: string;
 }
 
@@ -199,10 +206,26 @@ export interface FactOwner {
     slug: string;
 }
 
-export interface NewScheduleConnection {
-    __typename: "NewScheduleConnection";
+export interface ScheduleConnection {
+    __typename: "ScheduleConnection";
     edges: unknown[];
     pageInfo: PageInfo;
+}
+
+export interface Region {
+    __typename: "Region";
+    id: string;
+    name: string;
+    image: Image | null;
+}
+
+export interface FactTeam {
+    __typename: "Team";
+    id: string;
+    name: string;
+    slug: string;
+    usageType?: string;
+    avatar: Image;
 }
 
 export interface PageInfo {

@@ -16,12 +16,11 @@ The API and Web UI powering the official [Jingle Jam Tracker](https://www.jingle
 - [Architecture](#architecture)
 - [Development](#development)
 - [Admin Management](#admin-management)
-- [Scripts](#scripts)
 - [Project Structure](#project-structure)
 
 ## API Documentation
 
-📖 **[API Documentation](./API.md)** - Detailed API specification with request/response formats, examples, and type definitions.
+📖 **[API Documentation](./docs/API.md)** - Detailed API specification with request/response formats, examples, and type definitions.
 
 ## Usage Guidelines
 
@@ -33,100 +32,55 @@ Our API is free to use, but we kindly ask that you adhere to the following usage
 
 ## Architecture
 
-The Jingle Jam Tracker consists of two main services:
-
-### Caching Service (`workers/tiltify-cache`)
-The Caching Service aggregates Jingle Jam data available from multiple services into a single data object, allowing for quick fetching. 
-
-**Technology Stack:**
-- Powered by Cloudflare Workers
-- Uses Cloudflare Durable Objects for real-time data caching
-- Uses Cloudflare KV for static data storage
-
-**How it works:**
-- Aggregates multiple Tiltify endpoints into a single data object
-- Stores aggregated data in a Cloudflare Durable Object
-- A Durable Object alarm is triggered every 10 seconds to refresh the data
-- Static data (cause information, historical records, etc.) are stored and fetched from Cloudflare Worker KV
-
-This service acts as a background job to update the state of the Durable Object. Fetching the current objects stored in the cache requires the API, which hooks in directly to the Caching Service's Durable Object.
-
-### API & Web UI (Root Project)
-The Jingle Jam Tracker API & Web UI provides API access to the caching service and hosts the web content for the Jingle Jam Tracker.
-
-**Technology Stack:**
-- Cloudflare Pages for the Web UI
-- Cloudflare Functions for the API
-- Frontend: jQuery with [Fomantic UI](https://fomantic-ui.com/) for UI components
-- Charts: [Chart.js](https://www.chartjs.org/) for graph visualization
-
-**Integration:**
-- The API integrates directly into the caching service to serve real-time content
-- Cloudflare KV is used for serving static content (specifically, the `/api/graph/previous` endpoint)
+🏗️ **[Architecture](./docs/ARCHITECTURE.md)** - How data flows from Tiltify to the website, where it is stored, and how fresh it is.
 
 ## Development
 
 ### Prerequisites
 
-1. **Node.js** and **npm** installed
-2. **Wrangler CLI** installed and configured
-   ```bash
-   npm install -g wrangler
-   wrangler login
-   ```
-3. **Visual Studio Code** (optional, but recommended)
-   - Install the [F5 Anything](https://marketplace.visualstudio.com/items?itemName=discretegames.f5anything) extension to use the launch configurations
+1. **Node.js** 22+ and **npm** (required by Wrangler 4; CI uses Node 24, pinned in `.nvmrc`)
+2. **Visual Studio Code** (optional) for the bundled tasks and debug configurations
 
-### Setup
+Wrangler is installed as a project dependency, so no global install is needed. Local development runs entirely against local storage and does not need `wrangler login`; that is only required for deploying or writing to remote KV.
 
-1. **Install dependencies**
-   ```bash
-   # Install root project dependencies
-   npm install
-   
-   # Install caching service dependencies
-   cd workers/tiltify-cache
-   npm install
-   cd ../..
-   ```
+### Quick Start
 
-2. **Setup Local KV Storage**
-   
-   Populate the local Cloudflare KV with static data (causes, historical data, etc.):
-   
-   **Using VS Code:**
-   - Run the `Add Local KV's` launch configuration from the Debug panel
-   
-   **Manual setup:**
-   ```bash
-   # From root directory
-   npm run kv-trends-previous:local
-   
-   # From workers/tiltify-cache directory
-   cd workers/tiltify-cache
-   npm run kv-causes:local
-   npm run kv-summary:local
-   ```
+```bash
+npm install                                                      # installs the root project and workers/tiltify-cache (npm workspaces)
+cp workers/tiltify-cache/.dev.vars.example workers/tiltify-cache/.dev.vars   # then set ADMIN_TOKEN
+npm run dev                                                      # seeds local KV, then starts both services
+```
 
-3. **Run the Development Environment**
-   
-   **Using VS Code:**
-   - Run the `Debug System` compound configuration to start both services with debugging enabled
-   
-   **Manual setup:**
-   ```bash
-   # Terminal 1: Start the caching service
-   cd workers/tiltify-cache
-   npm run dev
-   
-   # Terminal 2: Start the API & Web UI
-   cd ../..
-   npm run dev
-   ```
+- **Web UI**: http://127.0.0.1:8788/tracker
+- **API**: http://127.0.0.1:8788/api/tiltify
 
-4. **Access the Application**
-   - **Web UI**: http://127.0.0.1:8788/tracker
-   - **API**: http://127.0.0.1:8788/api/tiltify
+`npm run dev` starts the caching service (`[worker]`, port 8787) and the API & Web UI (`[web]`, port 8788) in one terminal. The API reaches the caching service's Durable Objects through Wrangler's local dev registry. Ctrl+C stops both.
+
+### Local Data
+
+Both services share one local state directory, `.wrangler/state` in the repository root, so KV and Durable Object data is visible to both.
+
+- **Static KV data** (`kv/causes.json`, `kv/summary.json`, `kv/trends-previous.json`) is written to local KV by `npm run seed`. This runs automatically before every `npm run dev`, so edits to those files are picked up on the next start.
+- **Live Tiltify & graph data** is fetched from Tiltify on the first request to `/api/tiltify` when the cache is empty. Timed refreshes are off locally (`ENABLE_REFRESH` / `ENABLE_GRAPH_REFRESH` in `wrangler.toml`); enable them in `.dev.vars` if you need them.
+- **Reset**: `npm run reset` deletes all local state and re-seeds KV.
+
+### npm Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Clear stale dev registry entries, seed local KV, then run the caching service and API & Web UI together |
+| `npm run dev:web` | Run only the API & Web UI (port 8788, inspector 9230) |
+| `npm run dev:worker` | Run only the caching service (port 8787, inspector 9229) |
+| `npm run seed` | Write `kv/*.json` to local KV |
+| `npm run reset` | Delete all local state and re-seed KV |
+| `npm run typecheck` | Type check both projects (same check as CI) |
+
+### VS Code
+
+- **Run and Debug > Debug System** starts `npm run dev` as the **Dev** task and attaches the debugger to both the cache service (port 9229) and the API & Web UI (port 9230). The debugger reattaches when Wrangler reloads after a file change. Stopping the debugger leaves the servers running; stop them from the **Dev** terminal.
+- **Run and Debug > Debug System (Clean)** does the same, but deletes the `.wrangler` folders first so everything starts from freshly seeded data.
+- **Ctrl+Shift+B** runs the **Dev** task on its own.
+- **Terminal > Run Task** also has **Reset Local Data**, **Clear Local Data** (deletes both `.wrangler` folders) and **Type Check** (errors appear in the Problems panel).
 
 ## Admin Management
 
@@ -136,11 +90,10 @@ The Jingle Jam Tracker provides admin endpoints for manually managing cached dat
 
 **Local Development:**
 
-Create a `.dev.vars` file in the `workers/tiltify-cache` directory with your admin token:
+Copy `workers/tiltify-cache/.dev.vars.example` to `workers/tiltify-cache/.dev.vars` and set `ADMIN_TOKEN`:
 
 ```bash
-cd workers/tiltify-cache
-echo 'ADMIN_TOKEN="your-secret-token-here"' > .dev.vars
+cp workers/tiltify-cache/.dev.vars.example workers/tiltify-cache/.dev.vars
 ```
 
 **Production/Development Environments:**
@@ -149,7 +102,7 @@ Set the secret using Wrangler:
 
 ```bash
 cd workers/tiltify-cache
-wrangler secret put ADMIN_TOKEN
+npx wrangler secret put ADMIN_TOKEN
 # Enter your token when prompted
 ```
 
@@ -208,36 +161,12 @@ curl -X POST http://127.0.0.1:8788/api/graph/current \
 
 **Note:** The graph data format should match the structure returned by `GET /api/graph/current` (array of objects with `date`, `p`, `d` fields).
 
-## Scripts
-
-### **migrate-trend-data.py**
-
-A utility script located in `scripts/migrate-trend-data.py` that migrates the current year's graph data into the historical trends data format.
-
-**What it does:**
-- Fetches data from the `/api/graph/current` endpoint
-- Converts the data format from the API response (with `date`, `p`, `d` fields) to the historical format (with `timestamp`, `year`, `amountPounds`, `amountDollars` fields)
-- Appends the converted data to `kv/trends-previous.json`, preserving any existing historical data
-
-**Usage:**
-Run this script at the end of each Jingle Jam year to archive the current year's trend data into the historical dataset.
-
-```bash
-cd scripts
-python migrate-trend-data.py
-```
-
-**Requirements:**
-- Python 3
-- `requests` package (`pip install requests`)
-
-**Note:** Make sure to update the `YEAR` variable in the script before running it.
-
 ## Project Structure
 
 ```
 JingleJamTracker/
-├── functions/              # Cloudflare Functions (API endpoints)
+├── docs/                  # Documentation (API, architecture)
+├── functions/             # Cloudflare Functions (API endpoints)
 │   ├── api/
 │   │   ├── graph/         # Graph data endpoints
 │   │   ├── handler.ts     # Main API handler
@@ -247,8 +176,7 @@ JingleJamTracker/
 │   ├── causes.json
 │   ├── summary.json
 │   └── trends-previous.json
-├── scripts/               # Utility scripts
-│   └── migrate-trend-data.py
+├── scripts/               # Local dev scripts (seed, sample data)
 ├── website/              # Frontend files
 │   ├── index.html
 │   ├── script.js
@@ -261,7 +189,8 @@ JingleJamTracker/
 │       │   ├── do/        # Durable Object implementations
 │       │   ├── dependencies/
 │       │   └── ...
+│       ├── .dev.vars.example # Local secrets and variable overrides
 │       └── package.json
-├── package.json          # Root project configuration
+├── package.json          # Root project configuration (npm workspaces, dev scripts)
 └── wrangler.toml        # Cloudflare Pages configuration
 ```

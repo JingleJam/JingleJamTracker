@@ -7,7 +7,6 @@ export interface Env {
     CAUSE_SLUG: string;
     FUNDRAISER_PUBLIC_ID: string;
     YOGSCAST_USERNAME: string;
-    DURABLE_OBJECT_CACHE_KEY: string;
     LIVE_REFRESH_TIME: number;
     ENABLE_REFRESH: boolean;
     GRAPH_REFRESH_TIME: number;
