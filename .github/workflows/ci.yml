@@ -40,6 +40,9 @@ jobs:
       - name: Type check
         run: npm run typecheck
 
+      - name: Unit tests
+        run: npm test
+
       - name: Build Pages Functions
         run: npx wrangler pages functions build --outdir "$RUNNER_TEMP/pages-functions"
 

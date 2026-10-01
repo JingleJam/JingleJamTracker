@@ -19,6 +19,8 @@
         "reset": "node -e \"require('fs').rmSync('.wrangler/state',{recursive:true,force:true})\" && npm run seed",
         "clean": "node -e \"for (const d of ['.wrangler','workers/tiltify-cache/.wrangler']) require('fs').rmSync(d,{recursive:true,force:true})\"",
         "typecheck": "tsc -p . && tsc -p workers/tiltify-cache",
+        "test": "vitest run --project unit",
+        "test:live": "vitest run --project live",
         "kv-trends-previous:production": "wrangler kv key put trends-previous --path=kv/trends-previous.json --namespace-id=9d285e05684c4887acb7731de7a41a4e --remote",
         "kv-trends-previous:development": "wrangler kv key put trends-previous --path=kv/trends-previous.json --namespace-id=c9634f49deeb4618b3c3f1980f777f7a --remote"
     },
@@ -26,6 +28,7 @@
         "@cloudflare/workers-types": "^5.20260928.1",
         "concurrently": "^10.0.5",
         "typescript": "^7.0.2",
+        "vitest": "^5.0.2",
         "wrangler": "^4.143.0"
     }
 }

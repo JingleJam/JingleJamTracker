@@ -43,15 +43,21 @@ export async function getEvent(id: string): Promise<TiltifyTemplateFact | null> 
     Used for:
         - Listing Out Campaigns
         - Calculating Raised for each Cause
+
+    The search returns at most 1000 results per filter, so callers split the campaigns into groups
+    with extraFilter (e.g. by region) to keep each group under that limit.
 */
-export async function getCampaigns(fundraiserPublicId: string, offset: number): Promise<TiltifyMultiSearchResult> {
+export async function getCampaigns(fundraiserPublicId: string, extraFilter: string, offset: number): Promise<TiltifyMultiSearchResult> {
     const request: RequestInit = {
         body: JSON.stringify({
             "queries": [
                 {
                     "indexUid": "facts",
+                    // Filter on status rather than public: team events stop being public once they are
+                    // retired, while retired campaigns stay public. This keeps both, and drops deleted
+                    // and unpublished fundraisers.
                     "filter": [
-                        "public = true AND fundraising_event_public_id = " + fundraiserPublicId
+                        "fundraising_event_public_id = " + fundraiserPublicId + " AND status IN [published, retired]" + (extraFilter ? " AND " + extraFilter : "")
                     ],
                     "attributesToHighlight": [
                         "*"

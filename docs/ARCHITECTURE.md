@@ -92,7 +92,7 @@ After a restart the backups are served until the next refresh (at most 10 second
 | Figure | Calculation |
 |---|---|
 | **Total raised** | Tiltify's total for the fundraiser |
-| **Cause total** | The sum of campaigns for that cause, **plus** an equal share of campaigns that support all causes, **plus** an equal share of any money not assigned to a campaign (the fundraiser total minus the sum of all campaigns). Team-event member campaigns are skipped so they aren't counted twice. An optional `override` in `kv/causes.json` moves a fixed amount to one cause from the others. |
+| **Cause total** | The sum of campaigns for that cause (for a team event, only the money donated directly to it, since its supporting campaigns are counted separately), **plus** an equal share of campaigns that support all causes (no region, the "All The Charities" region, or a region that isn't one of this year's causes), **plus** an equal share of any money not assigned to a campaign (the fundraiser total minus the sum of all campaigns, mostly donations made directly to the event). See [Tiltify Data Model](TILTIFY.md) for how these objects relate. An optional `override` in `kv/causes.json` moves a fixed amount to one cause from the others. |
 | **Donations** | The Yogscast API's donation count. If that gives an average donation of £10 or less (a sign the count is wrong), the collections count is used instead. |
 | **Collections** | Tiltify reward quantity minus remaining |
 | **Dollar conversion rate** | The `@yogscast` user's dollar total this year (lifetime total minus `DOLLAR_OFFSET`) divided by their pound total. Falls back to `CONVERSION_RATE`. |
@@ -152,7 +152,7 @@ GitHub Actions deploys on every push to either branch:
 3. **Deploy the Worker** (`deploy:production` / `deploy:development`)
 4. **Upload the KV data** from [kv/](../kv/): `causes`, `summary` and `trends-previous`
 
-[CI](../.github/workflows/ci.yml) also runs on pull requests to `develop` and `master`. It type checks and does a dry-run build of the Functions and both Worker environments.
+[CI](../.github/workflows/ci.yml) also runs on pull requests to `develop` and `master`. It type checks, runs the unit tests (`npm test`) and does a dry-run build of the Functions and both Worker environments.
 
 | Workflow | Trigger |
 |---|---|
@@ -169,7 +169,8 @@ Worker variables are set in [workers/tiltify-cache/wrangler.toml](../workers/til
 | Variable | Purpose |
 |---|---|
 | `YEAR` | Event year. Sets the event dates (1 Dec 17:00 to 15 Dec 08:00 UTC) and the storage keys. |
-| `FUNDRAISER_PUBLIC_ID` | Tiltify fundraiser (team event) ID for this year |
+| `FUNDRAISER_PUBLIC_ID` | Tiltify fundraising event ID for this year |
+| `ALL_CHARITIES_REGION_ID` | Tiltify region ID of this year's "All The Charities" option. Campaigns with this region are split evenly across all causes. |
 | `YOGSCAST_USERNAME` | Tiltify user used for the dollar conversion rate |
 | `DOLLAR_OFFSET` | The Yogscast user's lifetime dollar total before this year, subtracted to get this year's total |
 | `CONVERSION_RATE` | Fallback GBP → USD rate |
@@ -185,7 +186,7 @@ Worker variables are set in [workers/tiltify-cache/wrangler.toml](../workers/til
 
 ### Preparing for a new year
 
-1. Update `YEAR`, `FUNDRAISER_PUBLIC_ID` and `DOLLAR_OFFSET` for both environments in the Worker's `wrangler.toml`.
+1. Update `YEAR`, `FUNDRAISER_PUBLIC_ID`, `ALL_CHARITIES_REGION_ID` and `DOLLAR_OFFSET` for both environments in the Worker's `wrangler.toml`. The "All The Charities" region is new every year, like the charity regions.
 2. Update [kv/causes.json](../kv/causes.json) with the new causes (Tiltify region IDs, logos, colours, descriptions).
 3. Add last year's final totals to [kv/summary.json](../kv/summary.json), and last year's graph to [kv/trends-previous.json](../kv/trends-previous.json).
 4. Turn on `ENABLE_REFRESH` and `ENABLE_GRAPH_REFRESH` before the event starts.

@@ -14,7 +14,6 @@ import { TiltifyUser } from "./types/tiltify/TiltifyUser";
 const maxSim = 6; // Maximum number of simultaneous fetches
 const maxDescriptionLength = 1024;
 const maxCampaigns = (20 * 900) - 2; // Maximum number of campaigns that can be fetched
-const allCharitiesRegionId = "18749320-68eb-4c62-b800-90593bf4a16a";
 
 // Old Team Data
 // End of 2020 yogscast dollar amount = 2827226.00
@@ -93,41 +92,32 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
 
     // Get the list of campaigns
     let campaigns: TiltifyMultiSearchCampaign[] = [];
-    let offset = 0;
-    let end = false;
+    const causeIds = apiResponse.causes.map(cause => cause.id);
 
     // Get all campaigns from the fundraiser
     if (env.FUNDRAISER_PUBLIC_ID) {
-      // Fetch all campaigns in parallel (chunks of 6 requests with 100 campaigns each)
-      while (offset <= maxCampaigns && !end) {
-        const requests = Array.from({ length: maxSim }, (_, i) => getCampaigns(env.FUNDRAISER_PUBLIC_ID, offset + i));
-        const regionResponses: TiltifyMultiSearchResult[] = await Promise.all(requests);
-        offset += maxSim;
+      // The search returns at most 1000 results per filter, so fetch the campaigns in 3 groups:
+      // the first half of the causes, the second half, and everything else (all charities, no region or an unknown region)
+      const half = Math.ceil(causeIds.length / 2);
+      const regionFilters = [causeIds.slice(0, half), causeIds.slice(half)]
+        .filter(ids => ids.length > 0)
+        .map(ids => `region_public_id IN [${ids.join(', ')}]`);
+      regionFilters.push(causeIds.length > 0 ? `NOT region_public_id IN [${causeIds.join(', ')}]` : '');
 
-        for (const response of regionResponses) {
-          campaigns = campaigns.concat(response.hits);
-
-          // Check if we've reached the last page
-          if (response.page >= response.totalPages) {
-            end = true;
-            break;
-          }
-        }
-      }
+      const groups = await Promise.all(regionFilters.map(filter => getCampaignGroup(env, filter)));
+      campaigns = groups.flat();
 
       // Cycle through all campaigns and calculate the amount raised for each cause
       let campaignAmountPounds = 0;
       for (const campaign of campaigns) {
-        // Skip campaigns that are part of a team events since they are included in the team event object
-        if(campaign.team_event_public_id !== null){
-          continue;
-        }
-
+        // Split the campaign across all causes if it has no region, the "All The Charities" region,
+        // or a region that isn't one of this year's causes (e.g. a stale region from a copied campaign)
         const campaignRegionId = campaign.region_public_id || null;
-        const isAllCauseCampaign = !campaignRegionId || campaignRegionId === allCharitiesRegionId;
+        const isAllCauseCampaign = !campaignRegionId || campaignRegionId === env.ALL_CHARITIES_REGION_ID || !causeIds.includes(campaignRegionId);
 
-        // Determine the cause amount
-        let raisedAmount = campaign.total_amount_raised || 0;
+        // Determine the cause amount. A team event's total includes its supporting campaigns, which are
+        // counted separately towards their own region, so only count the team event's direct donations.
+        let raisedAmount = (campaign.type === 'team_event' ? campaign.amount_raised : campaign.total_amount_raised) || 0;
         campaignAmountPounds += raisedAmount;
 
         // If the campaign donates to all charities, divide the amount by the number of causes
@@ -147,7 +137,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
       }
 
       // Clean up the raised amounts if the total raised amount is different from the sum of all campaign amounts
-      // This is mainly team donations that are not assigned to a specific campaign
+      // This is mainly donations made directly to the fundraising event
       const amountDifference = apiResponse.raised - campaignAmountPounds;
       if (amountDifference > 0) {
         // Fix the cause data
@@ -259,6 +249,38 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
   }
 
   return apiResponse;
+}
+
+// Get every campaign matching one group filter, fetching pages in parallel (chunks of 6 requests with 100 campaigns each)
+async function getCampaignGroup(env: Env, filter: string): Promise<TiltifyMultiSearchCampaign[]> {
+  let campaigns: TiltifyMultiSearchCampaign[] = [];
+  let offset = 0;
+  let end = false;
+  let totalHits = 0;
+
+  while (offset <= maxCampaigns && !end) {
+    const requests = Array.from({ length: maxSim }, (_, i) => getCampaigns(env.FUNDRAISER_PUBLIC_ID, filter, offset + i));
+    const responses: TiltifyMultiSearchResult[] = await Promise.all(requests);
+    offset += maxSim;
+
+    for (const response of responses) {
+      campaigns = campaigns.concat(response.hits);
+      totalHits = Math.max(totalHits, response.totalHits);
+
+      // Check if we've reached the last page
+      if (response.page >= response.totalPages) {
+        end = true;
+        break;
+      }
+    }
+  }
+
+  // The search stops at 1000 results, so any campaigns past that in this group are missing
+  if (totalHits >= 1000) {
+    console.warn(`Campaign search hit the 1000 result limit for filter "${filter}", some campaigns may be missing`);
+  }
+
+  return campaigns;
 }
 
 // Get the default response data before any Tiltify or Yogscast API calls

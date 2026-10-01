@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="website/assets/jingle-jam-2026-logo.webp" alt="Jingle Jam" width="280">
+<img src="website/assets/jingle-jam-logo.png" alt="Jingle Jam" width="280">
 
 # Jingle Jam Tracker
 
@@ -20,7 +20,7 @@
 
 ## What is this?
 
-The Jingle Jam is the Yogscast's annual charity fundraiser, run on [Tiltify](https://tiltify.com) through the first two weeks of December. This repository has two parts:
+The Jingle Jam is an annual charity fundraiser, run on [Tiltify](https://tiltify.com) through the first two weeks of December. This repository has two parts:
 
 - **A public JSON API** with the event total, per-cause totals, every fundraising campaign, and a graph of the total over time. Anyone can use it, free, with no API key.
 - **The tracker web pages** built on that API: the main tracker embedded on jinglejam.co.uk, a tracker for each cause, and a full-screen TV mode for streams and venues.
@@ -70,18 +70,6 @@ See [Usage guide](docs/API.md#usage-guide) for polling code examples.
 | Main tracker | [`/tracker`](https://dashboard.jinglejam.co.uk/tracker) |
 | Cause tracker | [`/tracker/{cause}`](https://dashboard.jinglejam.co.uk/tracker/calm), e.g. `/tracker/calm` |
 | Whole-event tracker | [`/tracker/jingle-jam`](https://dashboard.jinglejam.co.uk/tracker/jingle-jam) |
-| TV mode | Add `?tv` to any cause tracker URL |
-
-<table>
-  <tr>
-    <td width="50%"><img src="docs/images/cause-tracker.png" alt="Cause tracker"></td>
-    <td width="50%"><img src="docs/images/tv-mode.png" alt="TV mode"></td>
-  </tr>
-  <tr>
-    <td align="center"><sub>Cause tracker</sub></td>
-    <td align="center"><sub>TV mode</sub></td>
-  </tr>
-</table>
 
 🖥️ See **[Web Pages](docs/WEB-PAGES.md)** for a tour of each page and its options.
 
@@ -93,6 +81,7 @@ See [Usage guide](docs/API.md#usage-guide) for polling code examples.
 | 🖥️ [Web Pages](docs/WEB-PAGES.md) | Everyone: what each page shows, URL options, TV mode |
 | 🏗️ [Architecture](docs/ARCHITECTURE.md) | Contributors: how data gets from Tiltify to the page, storage, freshness, deployment |
 | 🛠️ [Local Development](docs/LOCAL-DEVELOPMENT.md) | Contributors: setup, scripts, local data, debugging, admin endpoints |
+| 🧩 [Tiltify Data Model](docs/TILTIFY.md) | Contributors: how Tiltify stores the event, charities and campaigns |
 
 ## Contributing
 

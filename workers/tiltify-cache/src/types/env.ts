@@ -6,6 +6,7 @@ export interface Env {
     CONVERSION_RATE: number;
     CAUSE_SLUG: string;
     FUNDRAISER_PUBLIC_ID: string;
+    ALL_CHARITIES_REGION_ID: string;
     YOGSCAST_USERNAME: string;
     LIVE_REFRESH_TIME: number;
     ENABLE_REFRESH: boolean;

@@ -50,6 +50,8 @@ The Pages Functions reach the Worker's Durable Objects through Wrangler's local 
 | `npm run reset` | Deletes all local state and re-seeds KV |
 | `npm run clean` | Deletes both `.wrangler` folders (local state and build cache) |
 | `npm run typecheck` | Type checks both projects, the same check CI runs |
+| `npm test` | Runs the unit tests in [workers/tiltify-cache/test/](../workers/tiltify-cache/test/) against a fake Tiltify, no network needed |
+| `npm run test:live` | Runs the live tests against the real Tiltify API using the finished 2025 event. Needs network access, not run in CI |
 
 ## Local data
 
@@ -167,6 +169,6 @@ The `Authorization` header must be the token value exactly, with no `Bearer ` pr
 
 ## Before opening a pull request
 
-- Run `npm run typecheck`. CI runs the same check, plus dry-run builds of the Functions and both Worker environments.
+- Run `npm run typecheck` and `npm test`. CI runs the same checks, plus dry-run builds of the Functions and both Worker environments.
 - Open pull requests against `develop`. Merging to `develop` deploys to the development environment, and `master` is production.
 - If you change an endpoint or a response field, update [API.md](API.md).
