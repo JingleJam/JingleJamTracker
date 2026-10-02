@@ -1,0 +1,162 @@
+<div id="embedContainer" class="cause-tracker campaign-tracker" data-status="live">
+  <div class="ui segment" id="loader">
+    <div class="ui active inverted dimmer" style="background-color: #1b1c1d00">
+      <div class="ui massive text loader">Loading</div>
+    </div>
+    <p></p>
+  </div>
+  <div class="ui segment" id="error" style="display: none;">
+    <div class="ui active inverted dimmer" style="background-color: #1b1c1d00">
+      <div><i class="times icon huge"></i></div>
+      <span class="ui big text" id="errorMessage">Error Loading Tracker</span>
+    </div>
+  </div>
+  <div id="trackerContent" style="display: none;">
+    <div class="guttered">
+      <div class="guttered-section">
+        <div class="cause-header">
+          <a class="jj-logo" id="jjLogoLink" href="/home"><img id="jjLogo" alt="Jingle Jam"></a>
+          <div class="cause-toolbar">
+            <a class="toolbar-button" id="homeButton" href="/home" title="Home" aria-label="Home"><i class="home icon"></i></a>
+            <button class="toolbar-button" id="searchButton" type="button" title="Search" aria-label="Search" style="display: none;"><i class="search icon"></i></button>
+            <a class="toolbar-button tv-mode-button" id="tvModeButton" title="Open the TV view" aria-label="Open the TV view"><i class="tv icon"></i></a>
+            <div class="ui compact huge segment" id="currencySelectorObj" style="background-color: white;">
+              <label style="margin-right: 11px;">$</label>
+              <div class="ui slider checkbox">
+                <input type="checkbox" id="currencyCheckbox">
+                <label>£</label>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="ui segment cause-info page-details">
+          <div class="campaign-avatar campaign-info-avatar" id="fundraiserAvatar"></div>
+          <div class="cause-info-content">
+            <div class="campaign-name-row">
+              <div class="cause-info-name" id="fundraiserName"></div>
+              <div class="campaign-badges" id="fundraiserBadges"></div>
+            </div>
+            <div class="cause-info-description campaign-info-description" id="fundraiserDescription"></div>
+            <div class="campaign-info-cause" id="fundraiserCause"></div>
+            <div class="campaign-social" id="fundraiserSocial"></div>
+          </div>
+          <div class="cause-info-links page-actions">
+            <a class="donate-button" id="fundraiserDonateLink" target="_blank" rel="noopener"><i class="heart icon"></i>Donate</a>
+            <a class="cause-link" id="fundraiserProfileLink" target="_blank" rel="noopener" style="display: none;"><i class="user icon"></i><span id="fundraiserProfileName"></span></a>
+          </div>
+        </div>
+        <div class="top-stats-container">
+          <div class="ui segment main-stat-card">
+            <div class="main-stat-header" id="mainCounterHeader"></div>
+            <div id="liveUpdatingRow" class="hide-live-update">
+              <label class="subtext-label right" id="updatingRealTime">
+                <div class="ui active slow loader mini"></div>
+                <div class="loading-circle">
+                  <i class="live-icon icon circle"></i>
+                </div> Live
+              </label>
+            </div>
+            <div class="main-stat-body">
+              <div class="main-stat-value" id="mainCounter"> </div>
+              <div class="main-stat-goal" id="mainGoal" style="display: none;">
+                <div class="main-stat-goal-track"><div class="main-stat-goal-fill" id="mainGoalFill"></div></div>
+                <div class="main-stat-goal-text" id="mainGoalText"></div>
+              </div>
+            </div>
+            <div class="change-counter-div">
+              <div class="change-counter hide">
+                <div class="change-counter-text" id="mainCounterChange"></div>
+              </div>
+            </div>
+          </div>
+          <div class="top-stat-cards">
+            <div class="ui segment stat-card campaign-scope-only tv-hidden">
+              <div class="stat-header"><i class="handshake icon"></i>Donation Match</div>
+              <div class="stat-body">
+                <div class="stat-value" id="matchValue"> </div>
+                <div class="stat-subtext" id="matchActivity" style="display: none;"></div>
+              </div>
+            </div>
+            <div class="ui segment stat-card campaign-scope-only tv-only">
+              <div class="stat-header"><i class="heart icon"></i>Latest Donation</div>
+              <div class="stat-body">
+                <div class="stat-value" id="latestDonationValue"> </div>
+                <div class="stat-subtext" id="latestDonationName"></div>
+              </div>
+            </div>
+            <div class="ui segment stat-card campaign-scope-only">
+              <div class="stat-header"><i class="live-icon circle icon live-now-icon"></i>Status</div>
+              <div class="stat-body">
+                <div class="stat-value" id="statusValue"> </div>
+              </div>
+            </div>
+            <div class="ui segment stat-card team-event-scope-only">
+              <div class="stat-header"><i class="flag icon"></i>Campaigns</div>
+              <div class="stat-body">
+                <div class="stat-value" id="campaignCount"> 0 </div>
+                <div class="stat-subtext" id="campaignActivity" style="display: none;"></div>
+              </div>
+            </div>
+            <div class="ui segment stat-card team-event-scope-only">
+              <div class="stat-header"><i class="live-icon circle icon live-now-icon"></i>Live Now</div>
+              <div class="stat-body">
+                <div class="stat-value" id="liveCampaignCount"> 0 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="lastUpdatedRow" class="hide-live-update">
+          <label class="subtext-label right" id="labelDate"> Last Updated: N/A </label>
+        </div>
+        <div class="ui segment campaign-goal-card" id="goalCard" style="display: none;">
+          <div class="stat-header"><i class="bullseye icon"></i>Goal</div>
+          <div class="goal-card-row">
+            <div class="goal-card-percent" id="goalPercent"></div>
+            <div class="goal-card-detail">
+              <div class="goal-card-track"><div class="goal-card-fill" id="goalFill"></div></div>
+              <div class="goal-card-text"><span id="goalRaised"></span><span class="goal-card-remaining" id="goalRemaining"></span></div>
+            </div>
+          </div>
+        </div>
+        <div class="campaign-team-cards" id="teamCards" style="display: none;"></div>
+        <div class="ui segment campaigns-card" id="matchesCard" style="display: none;">
+          <div class="charities-header-text"><i class="handshake icon"></i>Donation Matches</div>
+          <div class="charities-description">Donations are being matched pound for pound, until each sponsor's pledge runs out.</div>
+          <div class="campaign-list" id="matchList"></div>
+        </div>
+        <div class="ui segment campaigns-card team-event-scope-only">
+          <div class="charities-header-text"><i class="flag icon"></i>Campaigns</div>
+          <div class="charities-description">The campaigns supporting this team event in the <span class="jj-year"></span> Jingle Jam. Each one can support a different cause.</div>
+          <div class="campaign-list" id="campaignList"></div>
+          <div class="campaigns-empty" id="campaignsEmpty" style="display: none;">No campaigns are supporting this team event yet.</div>
+        </div>
+        <div class="ui segment campaigns-card" id="rewardsCard" style="display: none;">
+          <div class="charities-header-text"><i class="gift icon"></i>Rewards</div>
+          <div class="charities-description">Rewards from this <span class="jj-fundraiser-kind"></span> for donating at least the amount shown.</div>
+          <div class="campaign-list" id="rewardList"></div>
+        </div>
+        <div class="donor-columns">
+          <div class="ui segment campaigns-card">
+            <div class="charities-header-text"><i class="trophy icon"></i>Top Donors</div>
+            <div class="charities-description">The biggest supporters, with each donor's donations added together.</div>
+            <div class="campaign-list" id="donorList"></div>
+            <div class="campaigns-empty" id="donorsEmpty" style="display: none;"></div>
+          </div>
+          <div class="ui segment campaigns-card">
+            <div class="charities-header-text"><i class="clock icon"></i>Latest Donations</div>
+            <div class="charities-description">The most recent donations to this <span class="jj-fundraiser-kind"></span>, newest first.</div>
+            <div class="campaign-list" id="latestDonationList"></div>
+            <div class="campaigns-empty" id="latestDonationsEmpty" style="display: none;">No donations yet.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="tv-ticker" id="tvTicker">
+      <div class="tv-ticker-label"><i class="trophy icon" id="tvTickerIcon"></i><span id="tvTickerLabel">Top<br>Donors</span></div>
+      <div class="tv-ticker-window">
+        <div class="tv-ticker-track" id="tvTickerTrack"></div>
+        <div class="tv-ticker-empty" id="tvTickerEmpty"></div>
+      </div>
+    </div>
+  </div>
+</div>

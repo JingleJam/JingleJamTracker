@@ -24,10 +24,13 @@ npm run dev                                                                  # S
 
 | Open | URL |
 |---|---|
+| Home | http://127.0.0.1:8788/home |
 | Main tracker | http://127.0.0.1:8788/tracker |
-| Cause tracker | http://127.0.0.1:8788/tracker/war-child (one per cause in [kv/causes.json](../kv/causes.json)) |
-| Whole-event tracker | http://127.0.0.1:8788/tracker/jingle-jam |
-| TV mode | http://127.0.0.1:8788/tracker/war-child?tv |
+| Whole-event tracker | http://127.0.0.1:8788/jingle-jam |
+| Cause tracker | http://127.0.0.1:8788/causes/war-child (one per cause in [kv/causes.json](../kv/causes.json)) |
+| Campaign tracker | http://127.0.0.1:8788/campaigns/{id} (any `id` from `/api/campaigns`) |
+| Team event tracker | http://127.0.0.1:8788/team_events/{id} (any `id` from `/api/campaigns?type=team_event`) |
+| TV view | http://127.0.0.1:8788/tv?type=cause&id=war-child |
 | API | http://127.0.0.1:8788/api/summary |
 
 `npm run dev` runs two processes in one terminal, and **Ctrl+C** stops both:

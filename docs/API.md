@@ -22,7 +22,7 @@ curl https://dashboard.jinglejam.co.uk/api/summary
   - [`GET /api/causes/{cause}`](#get-apicausescause): a single cause
   - [`GET /api/graph/current`](#get-apigraphcurrent): this year's total over time
   - [`GET /api/graph/previous`](#get-apigraphprevious): previous years' totals over time
-- [Types](#types): `Cause`, `Campaign`, `DonationHistory`, `Social`, `DonationMatch`, `Reward`, `TopDonor`
+- [Types](#types): `Cause`, `Campaign`, `DonationHistory`, `Social`, `DonationMatch`, `Reward`, `TopDonor`, `LatestDonation`
 - [Errors](#errors)
 - [CORS](#cors)
 - [Admin endpoints](#admin-endpoints) (maintainers only)
@@ -312,7 +312,7 @@ curl https://dashboard.jinglejam.co.uk/api/summary
         "donationMatchMultiplier": 2,
         "type": "campaign",
         "team": null,
-        "teamEventId": null,
+        "teamEvent": null,
         "user": {
           "name": "ExampleStreamer",
           "slug": "examplestreamer",
@@ -408,7 +408,7 @@ curl "https://dashboard.jinglejam.co.uk/api/campaigns?type=team_event"
       "donationMatchMultiplier": 1,
       "type": "campaign",
       "team": null,
-      "teamEventId": null,
+      "teamEvent": null,
       "user": {
         "name": "yogscast",
         "slug": "yogscast",
@@ -427,7 +427,7 @@ curl "https://dashboard.jinglejam.co.uk/api/campaigns?type=team_event"
 
 ### `GET /api/campaigns/{id}`
 
-One campaign or team campaign, with live data fetched from Tiltify: its social links, active donation matches, its own rewards and its top donors.
+One campaign or team campaign, with live data fetched from Tiltify: its social links, active donation matches, its own rewards, its top donors and its latest donations.
 
 ```http
 GET /api/campaigns/{id}
@@ -451,7 +451,8 @@ The [common fields](#common-fields), plus:
 | `social` | [`Social`](#social) | The campaign's social media links |
 | `donationMatches` | [`DonationMatch[]`](#donationmatch) | Donation matches active right now |
 | `rewards` | [`Reward[]`](#reward) | Active rewards set up by the campaign or its team event. The Jingle Jam Games Collection, which every campaign has, is left out. |
-| `topDonors` | [`TopDonor[]`](#topdonor) | The top 25 donors, by the total each donor has given to this campaign, highest first |
+| `topDonors` | [`TopDonor[]`](#topdonor) | `null` | The top 25 donors, by the total each donor has given to this campaign, highest first. `null` if the campaign has its donor leaderboard turned off on Tiltify. |
+| `latestDonations` | [`LatestDonation[]`](#latestdonation) | The 25 most recent donations to this campaign, newest first |
 
 If Tiltify can't be reached, the last live data fetched is returned. If none has been fetched yet, `social` has every link `null` and the lists are empty.
 
@@ -491,7 +492,7 @@ curl https://dashboard.jinglejam.co.uk/api/campaigns/7a1c4f0e-0000-4000-8000-000
     "donationMatchMultiplier": 2,
     "type": "campaign",
     "team": null,
-    "teamEventId": null,
+    "teamEvent": null,
     "user": {
       "name": "ExampleStreamer",
       "slug": "examplestreamer",
@@ -537,6 +538,10 @@ curl https://dashboard.jinglejam.co.uk/api/campaigns/7a1c4f0e-0000-4000-8000-000
   "topDonors": [
     { "name": "Darineth", "amount": 500 },
     { "name": "Anonymous", "amount": 250 }
+  ],
+  "latestDonations": [
+    { "name": "Anonymous", "amount": 35, "comment": "Good luck with the stream!" },
+    { "name": "Darineth", "amount": 100, "comment": null }
   ]
 }
 ```
@@ -570,7 +575,8 @@ The [common fields](#common-fields), plus:
 | `social` | [`Social`](#social) | The team event's social media links |
 | `donationMatches` | [`DonationMatch[]`](#donationmatch) | Donation matches active right now |
 | `rewards` | [`Reward[]`](#reward) | Active rewards set up by the team event (the Games Collection is left out) |
-| `topDonors` | [`TopDonor[]`](#topdonor) | The top 25 donors to the team event, highest first |
+| `topDonors` | [`TopDonor[]`](#topdonor) | `null` | The top 25 donors to the team event, highest first. `null` if the team event has its donor leaderboard turned off on Tiltify. |
+| `latestDonations` | [`LatestDonation[]`](#latestdonation) | The 25 most recent donations to the team event, newest first |
 | `campaigns.count` | `number` | Number of campaigns supporting the team event |
 | `campaigns.live` | `number` | Of those, the number streaming right now |
 | `campaigns.list` | [`Campaign[]`](#campaign) | Every supporting campaign, highest raised first |
@@ -608,11 +614,12 @@ curl https://dashboard.jinglejam.co.uk/api/team_events/05b4e0a7-ef8c-43b4-9f12-c
     { "id": "…", "name": "Exclusive Make-A-Wish Hat", "description": "…", "image": "…", "amount": 5, "quantity": null, "remaining": null, "startsAt": null, "endsAt": null }
   ],
   "topDonors": [{ "name": "Example Donor", "amount": 1000 }],
+  "latestDonations": [{ "name": "Anonymous", "amount": 20, "comment": null }],
   "campaigns": {
     "count": 13,
     "live": 2,
     "list": [
-      { "name": "Laimu's Core Keeper Survive-A-Thon", "type": "campaign", "teamEventId": "05b4e0a7-ef8c-43b4-9f12-cf7f2ea89907", "...": "the other Campaign fields" }
+      { "name": "Laimu's Core Keeper Survive-A-Thon", "type": "campaign", "teamEvent": { "id": "05b4e0a7-ef8c-43b4-9f12-cf7f2ea89907", "name": "CoreKeeper Survive-A-Thon", "slug": "corekeeper-x-make-a-wish-for-jinglejam", "avatar": "https://assets.tiltify.com/uploads/team_event/avatar/…", "url": "https://tiltify.com/+corekeeper-x-make-a-wish-for-jinglejam/corekeeper-x-make-a-wish-for-jinglejam" }, "...": "the other Campaign fields" }
     ]
   }
 }
@@ -773,7 +780,7 @@ curl "https://dashboard.jinglejam.co.uk/api/causes/war-child?limit=5"
         "donationMatchMultiplier": 2,
         "type": "campaign",
         "team": null,
-        "teamEventId": null,
+        "teamEvent": null,
         "user": {
           "name": "ExampleStreamer",
           "slug": "examplestreamer",
@@ -874,7 +881,7 @@ A charity supported by the Jingle Jam.
 | Field | Type | Description |
 |---|---|---|
 | `id` | `string` | Tiltify UUID of the cause |
-| `slug` | `string` | URL-friendly name, e.g. `war-child`. Used by [`/api/causes/{cause}`](#get-apicausescause) and the `/tracker/{cause}` pages |
+| `slug` | `string` | URL-friendly name, e.g. `war-child`. Used by [`/api/causes/{cause}`](#get-apicausescause) and the `/causes/{cause}` tracker pages |
 | `name` | `string` | Display name |
 | `logo` | `string` | Logo image URL: the bare logo on a transparent background, trimmed to its edges (fixed height, width varies with the logo) |
 | `borderedLogo` | `string` | Square logo image URL with a border and background, used for thumbnails |
@@ -909,7 +916,12 @@ A fundraiser on Tiltify, usually a streamer's or a team's.
 | `team.slug` | `string` | Team slug |
 | `team.avatar` | `string` | Team avatar URL |
 | `team.url` | `string` | Team page on Tiltify |
-| `teamEventId` | `string | null` | `id` of the team event this campaign supports, or `null`. See [`/api/team_events/{id}`](#get-apiteam_eventsid) |
+| `teamEvent` | `object | null` | The team event this campaign supports, or `null`. See [`/api/team_events/{id}`](#get-apiteam_eventsid) |
+| `teamEvent.id` | `string` | Tiltify UUID of the team event, for [`/api/team_events/{id}`](#get-apiteam_eventsid) |
+| `teamEvent.name` | `string` | Team event name |
+| `teamEvent.slug` | `string` | Team event slug |
+| `teamEvent.avatar` | `string` | Team event avatar URL (may be empty) |
+| `teamEvent.url` | `string` | Team event page on Tiltify |
 | `user.name` | `string` | Owner's display name |
 | `user.slug` | `string` | Owner's slug |
 | `user.avatar` | `string` | Owner's avatar URL (may be empty) |
@@ -967,6 +979,16 @@ Something a donor gets for donating at least `amount`.
 | `startsAt` | `string | null` | When the reward becomes available (ISO 8601) |
 | `endsAt` | `string | null` | When the reward stops being available (ISO 8601) |
 
+### `LatestDonation`
+
+One donation, from the most recent donations to a campaign or team event.
+
+| Field | Type | Description |
+|---|---|---|
+| `name` | `string` | Donor's name as shown on Tiltify (often `Anonymous`) |
+| `amount` | `number` | The donation, in pounds |
+| `comment` | `string | null` | The donor's comment, or `null` |
+
 ### `TopDonor`
 
 One entry of a donor leaderboard. A donor's donations are added together.
@@ -1010,7 +1032,8 @@ interface CampaignDetails extends Envelope {    // GET /api/campaigns/{id}
   social: Social;
   donationMatches: DonationMatch[];
   rewards: Reward[];
-  topDonors: TopDonor[];
+  topDonors: TopDonor[] | null;
+  latestDonations: LatestDonation[];
 }
 
 interface TeamEventDetails extends Envelope {   // GET /api/team_events/{id}
@@ -1019,7 +1042,8 @@ interface TeamEventDetails extends Envelope {   // GET /api/team_events/{id}
   social: Social;
   donationMatches: DonationMatch[];
   rewards: Reward[];
-  topDonors: TopDonor[];
+  topDonors: TopDonor[] | null;
+  latestDonations: LatestDonation[];
   campaigns: { count: number; live: number; list: Campaign[] };
 }
 
@@ -1076,7 +1100,7 @@ interface Campaign {
   donationMatchMultiplier: number;
   type: string;
   team: { name: string; slug: string; avatar: string; url: string } | null;
-  teamEventId: string | null;
+  teamEvent: { id: string; name: string; slug: string; avatar: string; url: string } | null;
   user: { name: string; slug: string; avatar: string; url: string };
 }
 
@@ -1112,6 +1136,12 @@ interface Reward {
   remaining: number | null;
   startsAt: string | null;
   endsAt: string | null;
+}
+
+interface LatestDonation {
+  name: string;
+  amount: number;
+  comment: string | null;
 }
 
 interface TopDonor {

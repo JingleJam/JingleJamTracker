@@ -73,6 +73,31 @@
             window.location.hostname.includes('yogscast.com'))
             JingleJam.domain = 'https://dashboard.jinglejam.co.uk';
 
+        //Home and search buttons, except when embedded on the official Jingle Jam sites
+        let host = window.location.hostname;
+        let isEmbedded = host !== 'dashboard.jinglejam.co.uk' &&
+            (host.includes('jinglejam.co.uk') || host.includes('squarespace.com') || host.includes('yogscast.com'));
+        if (!isEmbedded) {
+            let toolbar = $('<div class="tracker-toolbar"><a class="toolbar-button" id="homeButton" href="/home" title="Home" aria-label="Home"><i class="home icon"></i></a></div>');
+
+            //Search opens over the page, when the search box script is loaded
+            if (window.JingleJamSearch) {
+                let search = null;
+                $('<button class="toolbar-button" id="searchButton" type="button" title="Search" aria-label="Search"><i class="search icon"></i></button>')
+                    .on('click', () => {
+                        search = search || JingleJamSearch.createOverlay({
+                            domain: '',
+                            getUrl: result => JingleJamSearch.getPageUrl(result),
+                            hint: 'Pick a cause, campaign or team event. Press Esc to close.',
+                        });
+                        search.open();
+                    })
+                    .appendTo(toolbar);
+            }
+
+            $('#trackerContent').prepend(toolbar);
+        }
+
         //Enable the updating live spinner
         setUpdatingLiveSpinner(true);
     }

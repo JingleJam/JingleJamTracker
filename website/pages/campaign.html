@@ -16,12 +16,13 @@
 
         <script>
             (function(){
-                const domain = './';
+                // Served at /campaigns/<id> and /team_events/<id>, so every path must be absolute
+                const domain = '/';
 
                 let element = document.querySelector('#myContainer');
 
                 async function loadTracker(){
-                    let html = await fetch(domain + "indexTotal")
+                    let html = await fetch(domain + 'fragments/campaign')
                     element.innerHTML = await html.text();
                 }
                 
@@ -41,12 +42,15 @@
 
                 async function create(){
                     createScript('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js');
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.js');
                     
-                    createStyle(domain + 'style.css');
+                    createStyle('https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.css');
+                    createStyle(domain + 'css/style.css');
 
                     await loadTracker();
 
-                    createScript(domain + 'scriptTotal.js');
+                    createScript(domain + 'js/search-box.js');
+                    createScript(domain + 'js/campaign.js');
                 }
 
                 create();

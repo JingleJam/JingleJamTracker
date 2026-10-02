@@ -6,14 +6,29 @@ The tracker pages are static HTML and jQuery in [website/](../website/). They ca
 
 | Page | URL | Data from |
 |---|---|---|
+| [Home](#home) | [`/home`](https://dashboard.jinglejam.co.uk/home) | `/api/causes`, `/api/campaigns?search=` |
 | [Main tracker](#main-tracker) | [`/tracker`](https://dashboard.jinglejam.co.uk/tracker) | `/api/summary`, `/api/graph/current`, `/api/graph/previous` |
-| [Cause tracker](#cause-tracker) | [`/tracker/{cause}`](https://dashboard.jinglejam.co.uk/tracker/calm) | `/api/causes/{cause}` |
-| [Whole-event tracker](#whole-event-tracker) | [`/tracker/jingle-jam`](https://dashboard.jinglejam.co.uk/tracker/jingle-jam) | `/api/causes/jingle-jam` |
-| [TV mode](#tv-mode) | `/tracker/{cause}?tv` | `/api/causes/{cause}` |
+| [Whole-event tracker](#whole-event-tracker) | [`/jingle-jam`](https://dashboard.jinglejam.co.uk/jingle-jam) | `/api/causes/jingle-jam` |
+| [Cause tracker](#cause-tracker) | [`/causes/{cause}`](https://dashboard.jinglejam.co.uk/causes/calm) | `/api/causes/{cause}` |
+| [Campaign tracker](#campaign-and-team-event-trackers) | `/campaigns/{id}` | `/api/campaigns/{id}`, `/api/causes` |
+| [Team event tracker](#campaign-and-team-event-trackers) | `/team_events/{id}` | `/api/team_events/{id}`, `/api/causes` |
+| [TV view](#tv-view) | [`/tv?type={type}&id={id}`](https://dashboard.jinglejam.co.uk/tv) | The same as the page it shows |
 | [Totals only](#totals-only) | [`/total`](https://dashboard.jinglejam.co.uk/total) | `/api/summary` |
 
 > [!NOTE]
 > The screenshots below were taken locally with sample data from a previous event.
+
+---
+
+## Home
+
+**[`/home`](https://dashboard.jinglejam.co.uk/home)**. The starting point for every page. Every other page links back to it with a **home icon** (🏠): next to the TV icon and currency switch on the cause, campaign and team event trackers, at the top left of the [main tracker](#main-tracker) (but not when it's embedded on jinglejam.co.uk), and beside the search button in the [TV view](#tv-view). Next to the home icon, a **search icon** (🔍) opens the same search over any page (home, then search, then TV on the cause, campaign and team event trackers; home then search on the main tracker). Picking a result opens its page, or in the TV view, shows it on the TV.
+
+| Section | Shows |
+|---|---|
+| **Search** | Search causes, campaigns and team events by name. Campaigns are matched on the campaign, user and team names, and small typos are fine. Pick a result (or press **Enter** for the first one) to open its page. |
+| **Tracker**, **Whole Event** and **TV View** | Links to the [main tracker](#main-tracker), the [whole-event tracker](#whole-event-tracker) and the [TV view](#tv-view) |
+| **Causes** | Each cause's logo, linking to its [cause tracker](#cause-tracker) (hover a logo for the cause's name) |
 
 ---
 
@@ -34,9 +49,17 @@ The tracker pages are static HTML and jQuery in [website/](../website/). They ca
 
 ---
 
+## Whole-event tracker
+
+**[`/jingle-jam`](https://dashboard.jinglejam.co.uk/jingle-jam)**. This is the [cause tracker](#cause-tracker) layout applied to the whole event: the event total, every campaign, and a description listing all the causes.
+
+![Whole-event tracker](images/event-tracker.png)
+
+---
+
 ## Cause tracker
 
-**`/tracker/{cause}`**, e.g. [`/tracker/calm`](https://dashboard.jinglejam.co.uk/tracker/calm). Each cause has its own tracker, styled in the cause's colour.
+**`/causes/{cause}`**, e.g. [`/causes/calm`](https://dashboard.jinglejam.co.uk/causes/calm). Each cause has its own tracker, styled in the cause's colour.
 
 ![Cause tracker](images/cause-tracker.png)
 
@@ -52,16 +75,16 @@ The `{cause}` part of the URL is the cause's slug or Tiltify ID, the same values
 
 | Cause | Tracker |
 |---|---|
-| Autistica | [`/tracker/autistica`](https://dashboard.jinglejam.co.uk/tracker/autistica) |
-| Become | [`/tracker/become`](https://dashboard.jinglejam.co.uk/tracker/become) |
-| CALM | [`/tracker/calm`](https://dashboard.jinglejam.co.uk/tracker/calm) |
-| The Grand Appeal | [`/tracker/the-grand-appeal`](https://dashboard.jinglejam.co.uk/tracker/the-grand-appeal) |
-| Make-A-Wish | [`/tracker/make-a-wish`](https://dashboard.jinglejam.co.uk/tracker/make-a-wish) |
-| The Trevor Project | [`/tracker/the-trevor-project`](https://dashboard.jinglejam.co.uk/tracker/the-trevor-project) |
-| War Child | [`/tracker/war-child`](https://dashboard.jinglejam.co.uk/tracker/war-child) |
-| WWF | [`/tracker/wwf`](https://dashboard.jinglejam.co.uk/tracker/wwf) |
+| Autistica | [`/causes/autistica`](https://dashboard.jinglejam.co.uk/causes/autistica) |
+| Become | [`/causes/become`](https://dashboard.jinglejam.co.uk/causes/become) |
+| CALM | [`/causes/calm`](https://dashboard.jinglejam.co.uk/causes/calm) |
+| The Grand Appeal | [`/causes/the-grand-appeal`](https://dashboard.jinglejam.co.uk/causes/the-grand-appeal) |
+| Make-A-Wish | [`/causes/make-a-wish`](https://dashboard.jinglejam.co.uk/causes/make-a-wish) |
+| The Trevor Project | [`/causes/the-trevor-project`](https://dashboard.jinglejam.co.uk/causes/the-trevor-project) |
+| War Child | [`/causes/war-child`](https://dashboard.jinglejam.co.uk/causes/war-child) |
+| WWF | [`/causes/wwf`](https://dashboard.jinglejam.co.uk/causes/wwf) |
 
-<sub>Causes change each year; this list is for the 2025 event. The current list is in `causes` from [`/api/summary`](API.md#get-apisummary).</sub>
+<sub>Causes change each year; this list is for the 2025 event. The current list is in `causes` from [`/api/causes`](API.md#get-apicauses), and on the [home page](#home).</sub>
 
 ### On mobile
 
@@ -71,35 +94,50 @@ The cards stack into a single column, and each campaign's total and goal move be
 
 ---
 
-## Whole-event tracker
+## Campaign and team event trackers
 
-**[`/tracker/jingle-jam`](https://dashboard.jinglejam.co.uk/tracker/jingle-jam)**. This is the cause tracker layout applied to the whole event: the event total, every campaign, and a description listing all the causes. It's useful for [TV mode](#tv-mode) across the whole Jingle Jam.
+**`/campaigns/{id}`** for a campaign or team campaign, and **`/team_events/{id}`** for a team event. `{id}` is the Tiltify ID from [`/api/campaigns`](API.md#get-apicampaigns), and the [home page](#home)'s search links to them. The pages use the cause tracker's layout, styled in the colour of the cause the fundraiser supports (Jingle Jam pink if it supports every cause).
 
-![Whole-event tracker](images/event-tracker.png)
+| Section | Shows |
+|---|---|
+| **Raised by {owner}** | The fundraiser's total (with progress towards its goal in TV mode) |
+| **Donation Match** and **Status** (campaigns) | The current match multiplier (e.g. 2×) with how much has been matched, and whether the campaign is live. In the [TV view](#tv-view), **Latest Donation** (the newest donation's amount and donor) takes Donation Match's place. |
+| **Campaigns** and **Live Now** (team events) | Number of campaigns supporting the team event and the team's member count, and how many of those campaigns are live |
+| **Goal** | The percentage of the goal raised, a progress bar, the amount raised against the goal, and how much is left (or **Goal reached**). Hidden when there's no goal. |
+| **Details** | Avatar, name, the description on one line (hover it for the full text), then **{owner} | {cause logo}**: the user (or a team event's team) and the logo of the cause it supports, or the Jingle Jam logo if it supports every cause (hover the logo for the cause's name), and social media links (hover an icon to see the username or address; one that isn't a web address, usually a username, is copied when clicked). A **Donate** button opens the fundraiser on Tiltify, and a campaign links to its owner's Tiltify page. |
+| **Team** / **Team event** | The team the fundraiser belongs to (opens the team on Tiltify), and the team event a campaign supports (opens the [team event's tracker](#campaign-and-team-event-trackers)). Hidden when there are none. |
+| **Donation Matches** | Each active match: who is matching, how much of their pledge has been used, and when it ends. Hidden when there are none. |
+| **Campaigns** (team events) | Every campaign supporting the team event, in the same style as the cause tracker's top campaigns |
+| **Top Donors** and **Latest Donations** | Side by side at the bottom of the page: the top 25 donors (each donor's donations added together; some fundraisers turn their donor leaderboard off on Tiltify, and the page says so), and the 25 most recent donations with each donor's comment |
+| **Rewards** | The fundraiser's own rewards (not the Games Collection). Hidden when there are none. |
+
+Opening a team event's ID at `/campaigns/{id}` (or a campaign's at `/team_events/{id}`) switches to the right page. An unknown ID shows **Campaign Not Found** or **Team Event Not Found**.
+
+The live details (matches, rewards, donors, social links) come from Tiltify and can be up to 30 seconds old. See [`/api/campaigns/{id}`](API.md#get-apicampaignsid).
 
 ---
 
-## TV mode
+## TV view
 
-Click the **TV icon** (🖥) next to the currency switch on any cause tracker, or add **`?tv`** to the URL:
+**`/tv?type={type}&id={id}`** shows a cause, campaign or team event full screen, for a TV, a big screen at an event, or a browser source in OBS.
 
-```
-https://dashboard.jinglejam.co.uk/tracker/calm?tv
-https://dashboard.jinglejam.co.uk/tracker/jingle-jam?tv
-```
+| `type` | `id` | Example |
+|---|---|---|
+| `cause` | A cause's slug or ID, or `jingle-jam` for the whole event | [`/tv?type=cause&id=calm`](https://dashboard.jinglejam.co.uk/tv?type=cause&id=calm), [`/tv?type=cause&id=jingle-jam`](https://dashboard.jinglejam.co.uk/tv?type=cause&id=jingle-jam) |
+| `campaign` | A campaign's or team campaign's ID | `/tv?type=campaign&id={id}` |
+| `team_event` | A team event's ID | `/tv?type=team_event&id={id}` |
 
-![TV mode](images/tv-mode.png)
+The TV icon (🖥) next to the currency switch on any cause, campaign or team event tracker opens that page's TV view. [`/tv`](https://dashboard.jinglejam.co.uk/tv) on its own opens the search, to pick what to show.
 
-TV mode fills the browser window with no scrolling, for a TV, a big screen at an event, or a browser source in OBS:
+![TV view](images/tv-mode.png)
 
-- The total is shown large, with campaign and live counts beside it.
-- The top campaigns scroll past in a ticker along the bottom.
-- The exit button and mouse cursor hide after 3 seconds without mouse movement.
-- **Esc** or the **×** button leaves TV mode.
-- TV mode is remembered, so the page reopens in TV mode until you exit it.
+- The total is shown large, with the page's stat cards beside it.
+- A ticker scrolls along the bottom: the top campaigns for a cause, and the top donors for a campaign or team event. If a team event has its donor leaderboard turned off, its campaigns scroll instead.
+- Moving the mouse shows **home** and **search** buttons (top right). Search picks a different cause, campaign or team event to show, and **Esc** closes it. Home goes to the [home page](#home).
+- The mouse cursor and the buttons hide after 3 seconds without mouse movement.
 
 > [!TIP]
-> TV mode fills the browser window but doesn't make the browser full screen. Press **F11** (or your browser's full screen shortcut) as well. For an OBS browser source, use `?tv` in the URL with a 1920×1080 source size.
+> The TV view fills the browser window but doesn't make the browser full screen. Press **F11** (or your browser's full screen shortcut) as well. For an OBS browser source, use the `/tv` URL with a 1920×1080 source size.
 
 ---
 
@@ -115,25 +153,33 @@ These apply to every tracker page.
 
 | Option | How |
 |---|---|
-| **Pounds or dollars** | The `$ / £` switch in the top right. Dollar amounts use the API's live `dollarConversionRate`. The choice is saved in the browser and applies to every tracker page. |
-| **TV mode** | `?tv` or the TV icon (cause trackers only). Saved until you exit it. |
+| **Pounds or dollars** | The `$ / £` switch in the top right. Dollar amounts use the API's live `dollarConversionRate`. The choice is saved in the browser and applies to every tracker page, the home page and the TV view. |
 
 **Updating.** While the event is live, each page fetches new data about 15 seconds after the server's last refresh (never more often than every 5 seconds). The *Live* indicator spins while it fetches. Polling pauses while the tab is hidden and catches up when you come back. Before the event the pages show a countdown, and after it they show the final totals and stop polling.
 
-**Embedding.** The trackers are built from HTML fragments (`index.html`, `indexCause.html`, `indexTotal.html`) that a small loader page ([`tracker.html`](../website/tracker.html), [`causeTracker.html`](../website/causeTracker.html), [`total.html`](../website/total.html)) fetches along with the scripts and styles. That is how the official Jingle Jam website embeds the tracker. When loaded on `jinglejam.co.uk`, `yogscast.com` or `squarespace.com`, the scripts call the API at `https://dashboard.jinglejam.co.uk`. A cause tracker picks its cause from a `data-cause` attribute on `#embedContainer` if one is set, and otherwise from the `/tracker/{cause}` URL.
+**Embedding.** Each page is a small loader in [`pages/`](../website/pages/) that fetches an HTML fragment, its script and the stylesheet. That is how the official Jingle Jam website embeds the main tracker: it loads `/` (the main tracker fragment, [`index.html`](../website/index.html)), `/script.js` and `/style.css` directly, so those three URLs must keep working. When loaded on `jinglejam.co.uk`, `yogscast.com` or `squarespace.com`, the scripts call the API at `https://dashboard.jinglejam.co.uk`. A cause tracker picks its cause from a `data-cause` attribute on `#embedContainer` if one is set, and otherwise from the `/causes/{cause}` URL. A campaign tracker likewise uses `data-campaign` or `data-team-event`, and otherwise the URL. The TV view sets these attributes, plus `data-tv`.
 
 > [!NOTE]
 > Embedding the fragments is only supported on those official domains. To show Jingle Jam figures on your own site, build on the [API](API.md) or link to the tracker pages.
 
 ### Files
 
+Each page is a loader in `pages/` → an HTML fragment → a script in `js/`.
+
+| Page | Loader | Fragment | Script |
+|---|---|---|---|
+| `/tracker` | [`pages/tracker.html`](../website/pages/tracker.html) | [`index.html`](../website/index.html) (served at `/`) | [`js/tracker.js`](../website/js/tracker.js) (also served at `/script.js`) |
+| `/home` | [`pages/home.html`](../website/pages/home.html) | [`fragments/home.html`](../website/fragments/home.html) | [`js/home.js`](../website/js/home.js) + [`js/search-box.js`](../website/js/search-box.js) |
+| `/jingle-jam`, `/causes/{cause}` | [`pages/cause.html`](../website/pages/cause.html) | [`fragments/cause.html`](../website/fragments/cause.html) | [`js/cause.js`](../website/js/cause.js) |
+| `/campaigns/{id}`, `/team_events/{id}` | [`pages/campaign.html`](../website/pages/campaign.html) | [`fragments/campaign.html`](../website/fragments/campaign.html) | [`js/campaign.js`](../website/js/campaign.js) |
+| `/tv` | [`pages/tv.html`](../website/pages/tv.html) | The cause or campaign fragment | The cause or campaign script, + [`js/search-box.js`](../website/js/search-box.js) |
+| `/total` | [`pages/total.html`](../website/pages/total.html) | [`fragments/total.html`](../website/fragments/total.html) | [`js/total.js`](../website/js/total.js) |
+
 | File | Role |
 |---|---|
-| [`tracker.html`](../website/tracker.html) → [`index.html`](../website/index.html) + [`script.js`](../website/script.js) | Main tracker |
-| [`causeTracker.html`](../website/causeTracker.html) → [`indexCause.html`](../website/indexCause.html) + [`scriptCause.js`](../website/scriptCause.js) | Cause, whole-event and TV mode tracker |
-| [`total.html`](../website/total.html) → [`indexTotal.html`](../website/indexTotal.html) + [`scriptTotal.js`](../website/scriptTotal.js) | Totals only |
-| [`style.css`](../website/style.css) | Styles for every page |
-| [`_redirects`](../website/_redirects) | Serves every `/tracker/*` URL from `causeTracker.html` |
+| [`css/style.css`](../website/css/style.css) | Styles for every page (also served at `/style.css`) |
+| [`js/search-box.js`](../website/js/search-box.js) | The search box used by the home page and the TV view |
+| [`_redirects`](../website/_redirects) | Serves each page URL from its loader, and `/script.js` and `/style.css` from their new locations |
 | [`assets/`](../website/assets/) | Logo, favicon and the self-hosted Montserrat font |
 
 Third-party libraries are loaded from cdnjs: jQuery, Fomantic UI, and (main tracker only) Chart.js with Moment.js.

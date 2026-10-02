@@ -1,8 +1,9 @@
-import { FACT_DETAILS_TTL_MS, TOP_DONOR_LIMIT } from "tiltify-cache/constants";
-import { getFact, getLeaderboards } from "tiltify-cache/dependencies/tiltify";
+import { FACT_DETAILS_TTL_MS, LATEST_DONATION_LIMIT, TOP_DONOR_LIMIT } from "tiltify-cache/constants";
+import { getDonations, getFact, getLeaderboards } from "tiltify-cache/dependencies/tiltify";
 import { FactDetails, Social } from "tiltify-cache/types/FactDetails";
 import { TiltifyTemplateFact } from "tiltify-cache/types/tiltify/TiltifyTemplateFact";
 import { TiltifyLeaderboards } from "tiltify-cache/types/tiltify/TiltifyLeaderboards";
+import { TiltifyDonations } from "tiltify-cache/types/tiltify/TiltifyDonations";
 import { roundAmount } from "tiltify-cache/utils";
 
 // Rewards owned by the fundraising event (the Jingle Jam Games Collection) are on every fundraiser, so they are left out
@@ -20,7 +21,7 @@ interface CacheEntry {
  * Fact Details Service
  *
  * Fetches the live Tiltify data for a single campaign or team event (social links, donation matches, rewards,
- * top donors and team member count) and keeps it in memory for FACT_DETAILS_TTL_MS, so repeated requests for
+ * top donors, latest donations and team member count) and keeps it in memory for FACT_DETAILS_TTL_MS, so repeated requests for
  * the same fundraiser share one set of Tiltify calls.
  *
  * Callers only pass ids from this year's campaign list, so the cache holds at most one entry per fundraiser.
@@ -48,21 +49,24 @@ export class FactDetailsService {
 
     // Fetch the latest data, keeping the previous data for any part that fails to load
     private async refresh(id: string, entry: CacheEntry): Promise<void> {
-        const [factResult, leaderboardsResult] = await Promise.allSettled([
+        const [factResult, leaderboardsResult, donationsResult] = await Promise.allSettled([
             getFact(id),
-            getLeaderboards(id, TOP_DONOR_LIMIT)
+            getLeaderboards(id, TOP_DONOR_LIMIT),
+            getDonations(id, LATEST_DONATION_LIMIT)
         ]);
 
         const fact = factResult.status === 'fulfilled' ? factResult.value : null;
         const leaderboards = leaderboardsResult.status === 'fulfilled' ? leaderboardsResult.value : null;
-        if (!fact || !leaderboards) {
-            console.error(`Failed to fetch live Tiltify data for ${id}`, factResult, leaderboardsResult);
+        const donations = donationsResult.status === 'fulfilled' ? donationsResult.value : null;
+        if (!fact || !leaderboards || !donations) {
+            console.error(`Failed to fetch live Tiltify data for ${id}`, factResult, leaderboardsResult, donationsResult);
         }
 
         const previous = entry.details || getEmptyDetails();
         entry.details = {
             ...(fact ? getFactData(fact) : previous),
             topDonors: leaderboards ? getTopDonors(leaderboards) : previous.topDonors,
+            latestDonations: donations ? getLatestDonations(donations) : previous.latestDonations,
         };
 
         // Failed fetches also wait for the TTL, so a Tiltify outage isn't retried on every request
@@ -70,7 +74,7 @@ export class FactDetailsService {
     }
 }
 
-function getFactData(fact: TiltifyTemplateFact): Omit<FactDetails, 'topDonors'> {
+function getFactData(fact: TiltifyTemplateFact): Omit<FactDetails, 'topDonors' | 'latestDonations'> {
     return {
         social: Object.fromEntries(SOCIAL_KEYS.map(key => [key, fact.social?.[key] || null])) as unknown as Social,
         donationMatches: (fact.donationMatches || [])
@@ -100,10 +104,23 @@ function getFactData(fact: TiltifyTemplateFact): Omit<FactDetails, 'topDonors'> 
     };
 }
 
+// Tiltify returns no donor leaderboard (null) when the fundraiser has it turned off in its page settings
 function getTopDonors(leaderboards: TiltifyLeaderboards): FactDetails['topDonors'] {
-    return (leaderboards.donorLeaderboard?.entries?.edges || []).map(edge => ({
+    if (!leaderboards.donorLeaderboard) {
+        return null;
+    }
+    return (leaderboards.donorLeaderboard.entries?.edges || []).map(edge => ({
         name: edge.node.name,
         amount: toAmount(edge.node.amount?.value),
+    }));
+}
+
+// Newest first, as Tiltify returns them
+function getLatestDonations(donations: TiltifyDonations): FactDetails['latestDonations'] {
+    return (donations.donations?.edges || []).map(edge => ({
+        name: edge.node.donorName,
+        amount: toAmount(edge.node.amount?.value),
+        comment: edge.node.donorComment || null,
     }));
 }
 
@@ -113,6 +130,7 @@ function getEmptyDetails(): FactDetails {
         donationMatches: [],
         rewards: [],
         topDonors: [],
+        latestDonations: [],
         teamMemberCount: null,
     };
 }

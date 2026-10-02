@@ -1,0 +1,121 @@
+<html>
+    <head>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter&family=Montserrat:wght@500;700&display=swap" rel="stylesheet">
+
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="viewport" content="initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+
+        <title>Jingle Jam TV</title>
+    </head>
+    <body class="jj-tv-page">
+        <div id='myContainer'></div>
+
+        <div class="jj-tv-controls">
+            <a class="jj-tv-control" href="/home" title="Home" aria-label="Home"><i class="home icon"></i></a>
+            <button class="jj-tv-control" id="tvSearchButton" type="button" title="Show something else" aria-label="Show something else"><i class="search icon"></i></button>
+        </div>
+
+        <script>
+            (function(){
+                // Served at /tv?type=<cause|campaign|team_event>&id=<id>, showing that page in TV mode
+                const domain = '/';
+
+                // The page for each type, and the attribute its script reads the id from
+                const PAGES = {
+                    cause: { fragment: 'fragments/cause', script: 'js/cause.js', attribute: 'data-cause' },
+                    campaign: { fragment: 'fragments/campaign', script: 'js/campaign.js', attribute: 'data-campaign' },
+                    team_event: { fragment: 'fragments/campaign', script: 'js/campaign.js', attribute: 'data-team-event' },
+                };
+
+                const params = new URLSearchParams(window.location.search);
+                const id = params.get('id');
+                const page = id ? PAGES[(params.get('type') || '').toLowerCase()] : null;
+
+                let element = document.querySelector('#myContainer');
+                let controlsTimeout = null;
+
+                async function loadPage(){
+                    let html = await fetch(domain + page.fragment)
+                    element.innerHTML = await html.text();
+
+                    // Tells the page's script which cause, campaign or team event to show, and to show it in TV mode
+                    let container = element.querySelector('#embedContainer');
+                    container.setAttribute(page.attribute, id);
+                    container.setAttribute('data-tv', '');
+                }
+
+                function createScript(url, onload = null){
+                    let scr = document.createElement('script');
+                    scr.src = url;
+                    scr.type = 'text/javascript';
+                    scr.async = false;
+                    if (onload)
+                        scr.onload = onload;
+                    element.appendChild(scr);
+                }
+
+                function createStyle(url){
+                    let scr = document.createElement('div');
+                    scr.innerHTML = `<link rel="stylesheet" type="text/css" href="${url}"/>`;
+                    document.getElementsByTagName("head")[0].appendChild(scr);
+                }
+
+                function getTvUrl(result){
+                    return domain + 'tv?type=' + result.type + '&id=' + encodeURIComponent(result.id);
+                }
+
+                // The search button only shows while the mouse is moving, like the cursor
+                function showControls(){
+                    document.body.classList.add('jj-tv-controls-visible');
+                    clearTimeout(controlsTimeout);
+                    controlsTimeout = setTimeout(() => document.body.classList.remove('jj-tv-controls-visible'), 3000);
+                }
+
+                function setupSearch(){
+                    // Without a page to show there is nothing to go back to, so the search fills the page and stays open
+                    let search = JingleJamSearch.createOverlay({
+                        domain: '',
+                        getUrl: getTvUrl,
+                        hint: page ? 'Pick a cause, campaign or team event. Press Esc to go back.' : 'Pick a cause, campaign or team event to show.',
+                        closable: !!page,
+                        full: !page,
+                        showHome: true,
+                    });
+
+                    document.querySelector('#tvSearchButton').addEventListener('click', search.open);
+                    document.addEventListener('mousemove', showControls);
+                    document.addEventListener('touchstart', showControls);
+
+                    if (!page){
+                        search.open();
+                    }
+                }
+
+                async function create(){
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.1/jquery.min.js');
+                    createScript('https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.js');
+
+                    createStyle('https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.css');
+                    createStyle(domain + 'css/style.css');
+
+                    if (page){
+                        await loadPage();
+                    }
+
+                    createScript(domain + 'js/search-box.js', setupSearch);
+
+                    if (page){
+                        createScript(domain + page.script);
+                    }
+                }
+
+                create();
+            })();
+        </script>
+
+    </body>
+</html>

@@ -23,7 +23,7 @@
 The Jingle Jam is an annual charity fundraiser, run on [Tiltify](https://tiltify.com) through the first two weeks of December. This repository has two parts:
 
 - **A public JSON API** with the event total, per-cause totals, every fundraising campaign, and a graph of the total over time. Anyone can use it, free, with no API key.
-- **The tracker web pages** built on that API: the main tracker embedded on jinglejam.co.uk, a tracker for each cause, and a full-screen TV mode for streams and venues.
+- **The tracker web pages** built on that API: the main tracker embedded on jinglejam.co.uk, a tracker for each cause, campaign and team event, a home page with search, and a full-screen TV view for streams and venues.
 
 ## Using the API
 
@@ -70,9 +70,13 @@ See [Usage guide](docs/API.md#usage-guide) for polling code examples.
 
 | Page | URL |
 |---|---|
+| Home | [`/home`](https://dashboard.jinglejam.co.uk/home): search for causes, campaigns and team events, and links to every page and cause |
 | Main tracker | [`/tracker`](https://dashboard.jinglejam.co.uk/tracker) |
-| Cause tracker | [`/tracker/{cause}`](https://dashboard.jinglejam.co.uk/tracker/calm), e.g. `/tracker/calm` |
-| Whole-event tracker | [`/tracker/jingle-jam`](https://dashboard.jinglejam.co.uk/tracker/jingle-jam) |
+| Whole-event tracker | [`/jingle-jam`](https://dashboard.jinglejam.co.uk/jingle-jam) |
+| Cause tracker | [`/causes/{cause}`](https://dashboard.jinglejam.co.uk/causes/calm), e.g. `/causes/calm` |
+| Campaign tracker | `/campaigns/{id}` |
+| Team event tracker | `/team_events/{id}` |
+| TV view | [`/tv?type={cause, campaign or team_event}&id={id}`](https://dashboard.jinglejam.co.uk/tv), e.g. `/tv?type=cause&id=calm` |
 
 🖥️ See **[Web Pages](docs/WEB-PAGES.md)** for a tour of each page and its options.
 

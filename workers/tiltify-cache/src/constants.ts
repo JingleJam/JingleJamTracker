@@ -17,6 +17,7 @@ const IDLE_REFRESH_TIME = 5 * 60; // Refresh interval (seconds) outside the even
 const EVENT_WINDOW_PADDING_MS = 24 * 60 * 60 * 1000; // Live refreshing starts/stops this long before/after the event
 const FACT_DETAILS_TTL_MS = 30 * 1000; // How long the live Tiltify data for a single campaign or team event is reused
 const TOP_DONOR_LIMIT = 25; // Number of top donors included for a single campaign or team event
+const LATEST_DONATION_LIMIT = 25; // Number of latest donations included for a single campaign or team event
 
 export {
     SUMMARY_API_PATH,
@@ -34,5 +35,6 @@ export {
     IDLE_REFRESH_TIME,
     EVENT_WINDOW_PADDING_MS,
     FACT_DETAILS_TTL_MS,
-    TOP_DONOR_LIMIT
+    TOP_DONOR_LIMIT,
+    LATEST_DONATION_LIMIT
  };

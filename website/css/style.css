@@ -4,7 +4,7 @@
     font-style: normal;
     font-weight: 100 900;
     font-display: swap;
-    src: url("assets/montserrat-latin.woff2") format("woff2");
+    src: url("/assets/montserrat-latin.woff2") format("woff2");
     unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 
@@ -1808,7 +1808,7 @@
 /*
 
     CAUSE TRACKER - TOOLBAR & TV MODE
-    TV mode fills the browser window with a non-scrolling layout for showing the tracker on a TV:
+    TV mode (the /tv page) fills the browser window with a non-scrolling layout for showing the tracker on a TV:
         [cause header                        ]
         [raised (huge)          ] [stat cards]
         [top campaigns ticker (scrolling)    ]
@@ -1844,7 +1844,7 @@
     position: static;
 }
 
-#embedContainer .tv-mode-button {
+#embedContainer .toolbar-button {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1860,12 +1860,16 @@
     transition: background-color 0.1s ease, color 0.1s ease;
 }
 
-#embedContainer .tv-mode-button:hover {
+#embedContainer a.toolbar-button {
+    text-decoration: none;
+}
+
+#embedContainer .toolbar-button:hover {
     background: rgba(var(--cause-rgb), 0.15);
     color: var(--cause-accent);
 }
 
-#embedContainer .tv-mode-button i.icon {
+#embedContainer .toolbar-button i.icon {
     margin: 0;
     height: auto;
 }
@@ -1901,7 +1905,6 @@
     min-width: 280px;
 }
 
-#embedContainer .tv-exit-button,
 #embedContainer .tv-ticker,
 #embedContainer .tv-ticker-empty {
     display: none;
@@ -1965,39 +1968,6 @@ html.jj-tv-mode body {
 #embedContainer.tv-mode .campaigns-card,
 #embedContainer.tv-mode .cause-info-links {
     display: none !important;
-}
-
-/* Exit button, only shown while the mouse is moving */
-#embedContainer.tv-mode .tv-exit-button {
-    position: fixed;
-    top: calc(var(--tv) * 1.5);
-    right: calc(var(--tv) * 2.13);
-    z-index: 1001;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 44px;
-    height: 44px;
-    padding: 0;
-    border: none;
-    border-radius: 50%;
-    background: rgba(0, 0, 0, 0.6);
-    color: white;
-    font-size: 18px;
-    cursor: pointer;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-#embedContainer.tv-mode.tv-controls-visible .tv-exit-button {
-    opacity: 1;
-    pointer-events: auto;
-}
-
-#embedContainer.tv-mode .tv-exit-button i.icon {
-    margin: 0;
-    height: auto;
 }
 
 /* Header: cause details on the left, Jingle Jam logo above the stat cards */
@@ -2535,3 +2505,1092 @@ html.jj-tv-mode body {
     }
 }
 
+
+/*
+
+    CAMPAIGN TRACKER (/tracker/campaigns/<id> and /tracker/team_events/<id>)
+    Built on the cause tracker's layout and TV mode, coloured with the campaign's cause by scriptCampaign.js
+
+*/
+
+/* Campaigns and team events show different stat cards and sections */
+#embedContainer.campaign-tracker:not(.team-event-scope) .team-event-scope-only,
+#embedContainer.campaign-tracker.team-event-scope .campaign-scope-only {
+    display: none;
+}
+
+#embedContainer .stat-value.stat-value-muted {
+    color: #999;
+}
+
+#embedContainer .stat-value.stat-value-live {
+    color: #e21212;
+}
+
+/* Progress towards the goal, under the amount raised */
+#embedContainer .main-stat-goal {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    margin-top: 18px;
+}
+
+#embedContainer .main-stat-goal-track {
+    flex: 1;
+    max-width: 360px;
+    height: 10px;
+    overflow: hidden;
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+#embedContainer .main-stat-goal-fill {
+    height: 100%;
+    width: 0;
+    border-radius: 5px;
+    background: var(--cause-text);
+    transition: width 0.3s ease;
+}
+
+#embedContainer .main-stat-goal.goal-met .main-stat-goal-fill {
+    background: #2ecc71;
+}
+
+#embedContainer .main-stat-goal-text {
+    color: var(--cause-text);
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    font-feature-settings: 'tnum';
+}
+
+#embedContainer .main-stat-goal-text i.icon {
+    margin: 0 4px 0 0;
+    height: auto;
+}
+
+/* Fundraiser details card: round avatar, name with live/match badges, owner, description and social links */
+#embedContainer .campaign-avatar.campaign-info-avatar {
+    align-self: flex-start;
+}
+
+#embedContainer .campaign-avatar i.icon {
+    margin: 0;
+    height: auto;
+    font-size: 28px;
+    color: var(--cause-accent);
+}
+
+#embedContainer.campaign-tracker .cause-info-content .campaign-name-row {
+    margin-bottom: 4px;
+}
+
+#embedContainer.campaign-tracker .cause-info-content .cause-info-name {
+    min-width: 0;
+    margin-bottom: 0;
+}
+
+/* One line of description (cut off with an ellipsis), then the cause's logo and name */
+#embedContainer.campaign-tracker .cause-info-content .campaign-info-description {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#embedContainer .campaign-info-cause {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    color: #3f3f3f;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1;   /* A tight line box, so the name, bar and logo centre on each other */
+}
+
+/* The cause's bare logo (or the Jingle Jam logo): a fixed height, with the width following the logo's shape */
+#embedContainer .campaign-info-cause img {
+    width: auto;
+    height: 22px;
+    max-width: 110px;
+    flex: none;
+    object-fit: contain;
+}
+
+/* The Jingle Jam logo is wide, so it keeps its shape */
+#embedContainer .campaign-info-owner-name {
+    min-width: 0;
+    line-height: 1.3;   /* Taller than the row's line box, so letters like g and y aren't cut off by the overflow */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* A short rounded bar between the name and the logo */
+#embedContainer .campaign-info-separator {
+    flex: none;
+    width: 2px;
+    height: 1.1em;
+    border-radius: 1px;
+    background: rgba(0, 0, 0, 0.18);
+}
+
+#embedContainer .campaign-social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 12px;
+}
+
+/* Links, and usernames that copy on click, look the same */
+#embedContainer .campaign-social a,
+#embedContainer .campaign-social .campaign-social-copy {
+    padding: 0;
+    border: none;
+    background: none;
+    color: #3f3f3f;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+}
+
+#embedContainer .campaign-social a:hover,
+#embedContainer .campaign-social .campaign-social-copy:hover {
+    color: var(--cause-accent);
+}
+
+/* The tooltips use the page font, at a readable size for the small icons */
+#embedContainer .campaign-social [data-tooltip]::after {
+    font-size: 13px;
+    font-weight: 600;
+}
+
+#embedContainer .campaign-social i.icon {
+    margin: 0;
+    height: auto;
+}
+
+/* Donors, donation matches and rewards use the campaign list's cards, but aren't links */
+#embedContainer .campaign-item.static-item:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+    border-left-width: 4px;
+}
+
+#embedContainer .campaign-badge.reward-remaining {
+    background: #eef2ff;
+    color: #3730a3;
+}
+
+@media screen and (min-width: 769px) {
+    #embedContainer .campaign-item.no-rank {
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        grid-template-areas:
+            "avatar content  total"
+            "avatar progress total";
+    }
+
+    /* Without a progress row, the name sits centred beside the avatar */
+    #embedContainer .campaign-item.no-progress .campaign-content {
+        grid-row: 1 / 3;
+    }
+}
+
+/* TV mode: the avatar takes the cause logo's place */
+#embedContainer.tv-mode .campaign-avatar.campaign-info-avatar {
+    align-self: center;
+    width: calc(var(--tv) * 10);
+    height: calc(var(--tv) * 10);
+    min-width: calc(var(--tv) * 10);
+}
+
+#embedContainer.tv-mode .campaign-info-avatar .campaign-avatar-initial {
+    font-size: calc(var(--tv) * 4);
+}
+
+/* TV mode drops the description and social links, and shows the owner and cause logo larger instead */
+#embedContainer.tv-mode .campaign-social,
+#embedContainer.tv-mode.campaign-tracker .cause-info-content .campaign-info-description {
+    display: none;
+}
+
+#embedContainer.tv-mode .campaign-info-cause {
+    gap: calc(var(--tv) * 1.6);
+    margin-top: calc(var(--tv) * 0.8);
+    font-size: calc(var(--tv) * 2.9);
+}
+
+#embedContainer.tv-mode .campaign-info-separator {
+    width: calc(var(--tv) * 0.35);
+    border-radius: calc(var(--tv) * 0.15);
+}
+
+#embedContainer.tv-mode .campaign-info-cause img {
+    height: calc(var(--tv) * 2.9);
+    max-width: calc(var(--tv) * 20);
+}
+
+#embedContainer.tv-mode.campaign-tracker .cause-info-content .campaign-name-row {
+    gap: calc(var(--tv) * 1.4);
+    margin-bottom: 0;
+}
+
+#embedContainer.tv-mode #fundraiserBadges .campaign-badge {
+    padding: calc(var(--tv) * 0.4) calc(var(--tv) * 1.2);
+    font-size: calc(var(--tv) * 1.6);
+}
+
+#embedContainer.tv-mode .main-stat-goal {
+    gap: calc(var(--tv) * 1.6);
+    margin-top: calc(var(--tv) * 2);
+}
+
+#embedContainer.tv-mode .main-stat-goal-track {
+    max-width: none;
+    height: calc(var(--tv) * 1.2);
+    border-radius: calc(var(--tv) * 0.6);
+}
+
+#embedContainer.tv-mode .main-stat-goal-fill {
+    border-radius: calc(var(--tv) * 0.6);
+}
+
+#embedContainer.tv-mode .main-stat-goal-text {
+    font-size: calc(var(--tv) * 2.4);
+}
+
+/* Donors only have a name and an amount, so their ticker items are narrower than campaigns */
+#embedContainer .tv-campaign.tv-donor {
+    width: calc(var(--tvt) * 60);
+}
+
+@media (max-aspect-ratio: 5/4) {
+    #embedContainer.tv-mode .tv-campaign.tv-donor {
+        width: calc(var(--tvt) * 70);
+    }
+}
+
+/*
+
+    HOME (/home page) AND SEARCH (used by /home and the /tv page)
+    The search box is also used outside #embedContainer on the /tv page, so its styles aren't scoped to it
+
+*/
+
+.jj-search {
+    position: relative;
+    width: 100%;
+}
+
+.jj-search *:not(i) {
+    font-family: "JJ Montserrat", "Montserrat", sans-serif;
+}
+
+.jj-search-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.jj-search-input-wrap > i.icon {
+    position: absolute;
+    left: 20px;
+    margin: 0;
+    height: auto;
+    color: #999;
+    font-size: 20px;
+    pointer-events: none;
+}
+
+.jj-search .jj-search-input {
+    width: 100%;
+    height: 60px;
+    padding: 0 56px;
+    border: 2px solid transparent;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+    color: #000;
+    font-size: 18px;
+    font-weight: 500;
+    outline: none;
+    box-sizing: border-box;
+    -webkit-appearance: none;
+    appearance: none;
+    transition: border-color 0.1s ease, box-shadow 0.1s ease;
+}
+
+.jj-search .jj-search-input:focus {
+    border-color: #e21251;
+    box-shadow: 0 4px 16px rgba(226, 18, 81, 0.18);
+}
+
+.jj-search-spinner {
+    position: absolute;
+    right: 20px;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #eee;
+    border-top-color: #e21251;
+    border-radius: 50%;
+    box-sizing: border-box;
+    animation: jj-search-spin 0.7s linear infinite;
+}
+
+.jj-search-spinner[hidden],
+.jj-search-results[hidden] {
+    display: none;
+}
+
+@keyframes jj-search-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.jj-search-results {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 20;
+    max-height: min(480px, 60vh);
+    overflow-y: auto;
+    padding: 8px;
+    border-radius: 14px;
+    background: white;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+    box-sizing: border-box;
+    text-align: left;
+}
+
+.jj-search-section {
+    padding: 10px 12px 6px 12px;
+    color: #999;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.jj-search-empty {
+    padding: 18px 12px;
+    color: #666;
+    font-size: 15px;
+    text-align: center;
+}
+
+.jj-search .jj-search-result {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    color: #000;
+    text-decoration: none;
+}
+
+.jj-search .jj-search-result:hover,
+.jj-search .jj-search-result.active {
+    background: #f3f3f5;
+    color: #000;
+}
+
+.jj-search-avatar {
+    position: relative;
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    overflow: hidden;
+    border-radius: 50%;
+    background: rgba(226, 18, 81, 0.12);
+    color: #e21251;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* Cause logos are square with their own border, so they aren't cropped to a circle */
+.jj-search-avatar.jj-search-avatar-cause {
+    border-radius: 8px;
+    background: white;
+    color: var(--result-color);
+}
+
+.jj-search-avatar img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.jj-search-avatar-cause img {
+    object-fit: contain;
+}
+
+.jj-search-text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.jj-search-name {
+    overflow: hidden;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.jj-search-subtitle {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    overflow: hidden;
+    color: #666;
+    font-size: 13px;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+
+.jj-search-tag {
+    flex: none;
+    padding: 1px 8px;
+    border-radius: 999px;
+    background: #f0f0f0;
+    color: #555;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.jj-search-tag.jj-search-live {
+    background: #e21212;
+    color: white;
+}
+
+.jj-search-raised {
+    flex: none;
+    color: #e21251;
+    font-size: 16px;
+    font-weight: 700;
+    font-feature-settings: 'tnum';
+}
+
+/* /home page: logo, search, the main pages, then the causes */
+#embedContainer.home-page .search-hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    margin: 10px 0 28px 0;
+    text-align: center;
+}
+
+#embedContainer.home-page .search-hero .jj-logo img {
+    height: 96px;
+}
+
+#embedContainer.home-page .search-hero-text {
+    max-width: 560px;
+    color: #3f3f3f;
+    font-size: 18px;
+    line-height: 1.5;
+}
+
+#embedContainer.home-page #searchBox {
+    max-width: 760px;
+    margin: 0 auto 32px auto;
+}
+
+#embedContainer.home-page .search-links {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+#embedContainer.home-page .search-link {
+    min-width: 0;
+    justify-content: flex-start;
+    color: #000;
+    text-decoration: none;
+    border-top: 4px solid #e21251 !important;
+    transition: box-shadow 0.1s ease;
+}
+
+#embedContainer.home-page .search-link:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.20);
+}
+
+#embedContainer.home-page .search-link .stat-header {
+    margin-bottom: 12px;
+    color: #000;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+#embedContainer.home-page .search-link .stat-header i.icon {
+    color: #e21251;
+    opacity: 1;
+}
+
+#embedContainer.home-page .search-link-description {
+    color: #555;
+    font-size: 15px;
+    line-height: 1.5;
+}
+
+@media screen and (max-width: 768px) {
+    #embedContainer.home-page .search-hero .jj-logo img {
+        height: 72px;
+    }
+
+    #embedContainer.home-page .search-hero-text {
+        font-size: 16px;
+    }
+
+    #embedContainer.home-page .search-links {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 14px;
+    }
+
+    .jj-search .jj-search-input {
+        height: 54px;
+        font-size: 16px;
+    }
+
+    .jj-search-raised {
+        display: none;
+    }
+}
+
+/* /tv page: home and search buttons that show while the mouse moves */
+.jj-tv-controls {
+    position: fixed;
+    top: min(1.5vh, 0.84vw);
+    right: min(2.13vh, 1.2vw);
+    z-index: 1001;
+    display: flex;
+    gap: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+body.jj-tv-controls-visible:not(.jj-search-open) .jj-tv-controls {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.jj-tv-control {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    font-size: 20px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.jj-tv-control:hover {
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+}
+
+.jj-tv-control i.icon {
+    margin: 0;
+    height: auto;
+}
+
+/* Search over the page (toolbar search buttons and the /tv page) */
+body.jj-search-open {
+    overflow: hidden;
+}
+
+.jj-search-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 1002;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 12vh 24px 24px 24px;
+    background: rgba(20, 20, 24, 0.55);
+    box-sizing: border-box;
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
+}
+
+.jj-search-overlay[hidden] {
+    display: none;
+}
+
+/* With nothing chosen yet on the /tv page, the search is the whole page */
+.jj-search-overlay.jj-search-overlay-full {
+    background: #f3f3f5;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+}
+
+.jj-search-overlay-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    width: 100%;
+    max-width: 760px;
+    padding: 36px 40px 30px 40px;
+    border-radius: 20px;
+    background: white;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.22);
+    box-sizing: border-box;
+    font-family: "JJ Montserrat", "Montserrat", sans-serif;
+}
+
+.jj-search-overlay-panel .jj-search-input {
+    background: #f3f3f5;
+    box-shadow: none;
+}
+
+.jj-search-overlay-logo {
+    height: 88px;
+}
+
+.jj-search-overlay-hint {
+    color: #666;
+    font-family: "JJ Montserrat", "Montserrat", sans-serif;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Escape already clears the search, so hide the browser's own clear button */
+.jj-search .jj-search-input::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+}
+
+/* Home and search buttons on the main tracker, top left opposite the currency switch (added by the script, not when embedded) */
+#embedContainer .tracker-toolbar {
+    position: absolute;
+    left: 20px;
+    display: flex;
+    gap: 4px;
+}
+
+#embedContainer .tracker-toolbar .toolbar-button:hover {
+    background: rgba(226, 18, 81, 0.15);
+    color: #e21251;
+}
+
+.jj-search-overlay-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #e21251;
+    font-family: "JJ Montserrat", "Montserrat", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.jj-search-overlay-home:hover {
+    color: #e21251;
+    text-decoration: underline;
+}
+
+.jj-search-overlay-home i.icon {
+    margin: 0;
+    height: auto;
+}
+
+/* Home page: each cause's bordered logo, linking to its page */
+#embedContainer.home-page .home-causes {
+    margin-top: 64px;
+}
+
+/* The heading sits between two lines that fill the rest of the width */
+#embedContainer.home-page .home-causes .charities-header-text {
+    justify-content: center;
+    gap: 14px !important;
+}
+
+#embedContainer.home-page .home-causes .charities-header-text::before,
+#embedContainer.home-page .home-causes .charities-header-text::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    border-radius: 1px;
+    background: #dcdce0;
+}
+
+#embedContainer.home-page .home-causes .charities-header-text::before {
+    margin-right: 6px;
+}
+
+#embedContainer.home-page .home-causes .charities-header-text::after {
+    margin-left: 6px;
+}
+
+#embedContainer .home-cause-logos {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin: 20px 0;
+}
+
+#embedContainer .home-cause {
+    display: block;
+    width: 110px;
+    height: 110px;
+    overflow: hidden;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+#embedContainer .home-cause:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.22);
+    transform: translateY(-2px);
+}
+
+#embedContainer .home-cause img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+@media screen and (max-width: 768px) {
+    #embedContainer .home-cause-logos {
+        gap: 14px;
+    }
+
+    #embedContainer .home-cause {
+        width: 76px;
+        height: 76px;
+    }
+}
+
+/* Campaign tracker: the goal has its own card, and TV mode (which has no room for it) shows it under the amount raised */
+#embedContainer.campaign-tracker:not(.tv-mode) .main-stat-goal,
+#embedContainer.campaign-tracker.tv-mode .campaign-goal-card,
+#embedContainer.campaign-tracker.tv-mode .campaign-team-cards {
+    display: none !important;
+}
+
+#embedContainer .ui.segment.campaign-goal-card {
+    margin: 0 0 30px 0 !important;
+    padding: 28px 32px;
+    border: none !important;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+}
+
+#embedContainer .campaign-goal-card .stat-header {
+    margin-bottom: 0;
+}
+
+#embedContainer .goal-card-row {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    margin-top: 18px;
+}
+
+#embedContainer .goal-card-percent {
+    min-width: 110px;
+    color: var(--cause-accent);
+    font-size: 42px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -1px;
+    font-feature-settings: 'tnum';
+}
+
+#embedContainer .goal-card-detail {
+    flex: 1;
+    min-width: 0;
+}
+
+#embedContainer .goal-card-track {
+    height: 14px;
+    overflow: hidden;
+    border-radius: 7px;
+    background: #f0f0f0;
+}
+
+#embedContainer .goal-card-fill {
+    width: 0;
+    height: 100%;
+    border-radius: 7px;
+    background: var(--cause-color);
+    transition: width 0.3s ease;
+}
+
+#embedContainer .goal-card-text {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 6px 16px;
+    margin-top: 10px;
+    color: #555;
+    font-size: 15px;
+    font-weight: 600;
+    font-feature-settings: 'tnum';
+}
+
+#embedContainer .goal-card-remaining i.icon {
+    margin: 0 4px 0 0;
+    height: auto;
+}
+
+#embedContainer .campaign-goal-card.goal-met .goal-card-fill {
+    background: linear-gradient(90deg, #21ba45 0%, #2ecc71 100%);
+}
+
+#embedContainer .campaign-goal-card.goal-met .goal-card-percent,
+#embedContainer .campaign-goal-card.goal-met .goal-card-remaining {
+    color: #1e9e3c;
+}
+
+/* Donate is the main action, so it's a filled button in the cause's colour */
+#embedContainer .cause-info-links.page-actions {
+    align-items: center;
+    gap: 14px;
+}
+
+#embedContainer .donate-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 28px;
+    border-radius: 999px;
+    background: var(--cause-color);
+    box-shadow: 0 4px 14px rgba(var(--cause-rgb), 0.35);
+    color: var(--cause-text);
+    font-size: 17px;
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+    transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+#embedContainer .donate-button:hover {
+    color: var(--cause-text);
+    box-shadow: 0 6px 18px rgba(var(--cause-rgb), 0.45);
+    transform: translateY(-1px);
+}
+
+#embedContainer .donate-button i.icon {
+    margin: 0;
+    height: auto;
+}
+
+/* Team and team event cards, side by side when there are both */
+#embedContainer .campaign-team-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin: 0 0 30px 0;
+}
+
+#embedContainer .ui.segment.cause-info.campaign-team-card {
+    margin: 0 !important;
+    color: #000;
+    text-decoration: none;
+    transition: box-shadow 0.1s ease, border-left-width 0.1s ease;
+}
+
+#embedContainer .ui.segment.cause-info.campaign-team-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.20);
+    border-left-width: 6px !important;
+}
+
+#embedContainer .campaign-team-card .campaign-avatar {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+}
+
+#embedContainer .campaign-team-card .campaign-avatar-initial {
+    font-size: 22px;
+}
+
+#embedContainer .campaign-team-label {
+    margin-bottom: 4px;
+    color: #999;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+#embedContainer .campaign-team-card .cause-info-name {
+    margin-bottom: 0;
+}
+
+#embedContainer .campaign-team-card .cause-link {
+    margin-right: 4px;
+}
+
+@media screen and (max-width: 768px) {
+    #embedContainer .ui.segment.campaign-goal-card {
+        padding: 22px;
+    }
+
+    #embedContainer .goal-card-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+
+    #embedContainer .goal-card-percent {
+        font-size: 34px;
+    }
+
+    #embedContainer .ui.segment.cause-info.campaign-team-card {
+        flex-wrap: nowrap;
+    }
+
+    #embedContainer .campaign-team-card .cause-link {
+        display: none;
+    }
+}
+
+/* User or team icon before the owner's name, in TV mode only */
+#embedContainer .campaign-info-cause i.icon.campaign-info-owner-icon {
+    display: none;
+}
+
+#embedContainer.tv-mode .campaign-info-cause i.icon.campaign-info-owner-icon {
+    display: inline-block;
+    flex: none;
+    width: auto;
+    height: auto;
+    margin: 0 calc(var(--tv) * -0.6) 0 0;   /* Sits a little closer to the name than the row's gap */
+    color: #6b6b73;
+    font-size: 0.85em;
+    line-height: 1;
+}
+
+/* Campaign tracker: cards shown only in TV mode (the latest donation), or only outside it (the donation match) */
+#embedContainer.campaign-tracker:not(.tv-mode) .tv-only,
+#embedContainer.campaign-tracker.tv-mode .tv-hidden,
+#embedContainer.campaign-tracker.tv-mode .donor-columns {
+    display: none !important;
+}
+
+#embedContainer #latestDonationName {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Top donors and latest donations side by side at the bottom of the page */
+#embedContainer .donor-columns {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+    align-items: start;
+}
+
+#embedContainer .donor-columns .charities-header-text {
+    white-space: normal !important;
+}
+
+@media screen and (max-width: 768px) {
+    #embedContainer .donor-columns {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 0;
+    }
+}
+
+/* The latest donation stays on one line, sized so up to 5 digits ("£ 99,999") fit the card's width */
+#embedContainer.tv-mode #latestDonationValue {
+    white-space: nowrap;
+    font-size: min(calc(var(--tv) * 8), 19cqi) !important;
+}
+
+/* The cause's or fundraiser's details sit open on the page under the header, not in a card */
+#embedContainer.cause-tracker:not(.tv-mode) .ui.segment.cause-info.page-details {
+    padding: 4px 0;
+    border: none !important;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+}
+
+/* Latest donation comments wrap to up to 3 lines */
+#embedContainer .latest-donation .campaign-owner {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    overflow: hidden;
+    white-space: normal;
+    line-height: 1.4;
+}
+
+/* Larger title, description and logo for the details section at the top of the cause and campaign pages */
+#embedContainer.cause-tracker:not(.tv-mode) .page-details {
+    gap: 24px;
+}
+
+#embedContainer.cause-tracker:not(.tv-mode) .page-details .cause-info-name {
+    font-size: 26px;
+    line-height: 1.25;
+}
+
+#embedContainer.cause-tracker:not(.tv-mode) .page-details .cause-info-description {
+    font-size: 17px;
+}
+
+#embedContainer.cause-tracker:not(.tv-mode) .page-details .cause-info-logo,
+#embedContainer.cause-tracker:not(.tv-mode) .page-details .campaign-info-avatar {
+    width: 88px;
+    height: 88px;
+    min-width: 88px;
+}
+
+#embedContainer.cause-tracker:not(.tv-mode) .page-details .campaign-info-avatar .campaign-avatar-initial {
+    font-size: 34px;
+}
+
+@media screen and (max-width: 768px) {
+    #embedContainer.cause-tracker:not(.tv-mode) .page-details {
+        gap: 16px;
+    }
+
+    #embedContainer.cause-tracker:not(.tv-mode) .page-details .cause-info-name {
+        font-size: 21px;
+    }
+
+    #embedContainer.cause-tracker:not(.tv-mode) .page-details .cause-info-description {
+        font-size: 15px;
+    }
+
+    #embedContainer.cause-tracker:not(.tv-mode) .page-details .cause-info-logo,
+    #embedContainer.cause-tracker:not(.tv-mode) .page-details .campaign-info-avatar {
+        width: 64px;
+        height: 64px;
+        min-width: 64px;
+    }
+}

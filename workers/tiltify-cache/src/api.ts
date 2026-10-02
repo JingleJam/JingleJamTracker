@@ -177,6 +177,9 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
     }
 
 
+    // Team events by id, so a supporting campaign can include its team event's details
+    const teamEvents = new Map(campaigns.filter(campaign => campaign.type === 'team_event').map(campaign => [campaign.id, campaign]));
+
     // Create and format the campaign list from the Tiltify API data
     for (const campaign of campaigns) {
       const description = campaign.description?.length > maxDescriptionLength
@@ -230,7 +233,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
           avatar: campaign.team_avatar?.src || '',
           url: `https://tiltify.com/+${teamSlug}`,
         } : null,
-        teamEventId: campaign.team_event_public_id || null,
+        teamEvent: getTeamEvent(teamEvents.get(campaign.team_event_public_id || '')),
         user: {
           name: campaign.username,
           slug: userSlug,
@@ -250,6 +253,21 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
   }
 
   return apiResponse;
+}
+
+// The details of the team event a campaign supports, or null if it doesn't support one (or the team event isn't in this year's list)
+function getTeamEvent(teamEvent: TiltifyMultiSearchCampaign | undefined): Campaign['teamEvent'] {
+  if (!teamEvent) {
+    return null;
+  }
+
+  return {
+    id: teamEvent.id,
+    name: teamEvent.name,
+    slug: teamEvent.url?.split('/').pop() || generateSlug(teamEvent.name) || '',
+    avatar: teamEvent.fact_avatar?.src || teamEvent.team_avatar?.src || '',
+    url: teamEvent.url || '',
+  };
 }
 
 // Get every campaign matching one group filter, fetching pages in parallel (chunks of 6 requests with 100 campaigns each)

@@ -17,7 +17,13 @@ export interface Campaign {
         avatar: string;
         url: string;
     } | null;
-    teamEventId: string | null;
+    teamEvent: {
+        id: string;
+        name: string;
+        slug: string;
+        avatar: string;
+        url: string;
+    } | null;
     user: {
         name: string;
         slug: string;

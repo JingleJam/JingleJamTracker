@@ -21,7 +21,7 @@ function campaign(name: string, userName: string, teamName: string | null = null
         donationMatchMultiplier: 1,
         type: "campaign",
         team: teamName ? { name: teamName, slug: "", avatar: "", url: "" } : null,
-        teamEventId: null,
+        teamEvent: null,
         user: { name: userName, slug: "", avatar: "", url: "" },
     };
 }

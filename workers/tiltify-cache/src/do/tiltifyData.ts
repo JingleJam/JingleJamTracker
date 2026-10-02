@@ -150,7 +150,8 @@ export class TiltifyData {
                 social: details.social,
                 donationMatches: details.donationMatches,
                 rewards: details.rewards,
-                topDonors: details.topDonors
+                topDonors: details.topDonors,
+                latestDonations: details.latestDonations
             });
         });
 
@@ -171,7 +172,7 @@ export class TiltifyData {
                 this.factDetails.get(teamEvent.id),
                 this.getCampaignList()
             ]);
-            const supportingCampaigns = allCampaigns.filter(campaign => campaign.teamEventId === teamEvent.id);
+            const supportingCampaigns = allCampaigns.filter(campaign => campaign.teamEvent?.id === teamEvent.id);
 
             return jsonResponse({
                 ...getEnvelope(summary),
@@ -181,6 +182,7 @@ export class TiltifyData {
                 donationMatches: details.donationMatches,
                 rewards: details.rewards,
                 topDonors: details.topDonors,
+                latestDonations: details.latestDonations,
                 campaigns: {
                     count: supportingCampaigns.length,
                     live: supportingCampaigns.filter(campaign => campaign.live).length,

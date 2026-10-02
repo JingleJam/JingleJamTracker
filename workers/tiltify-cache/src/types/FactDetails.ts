@@ -3,7 +3,8 @@ export interface FactDetails {
     social: Social;
     donationMatches: DonationMatch[];
     rewards: Reward[];
-    topDonors: TopDonor[];
+    topDonors: TopDonor[] | null;   // null when the fundraiser has turned off its donor leaderboard on Tiltify
+    latestDonations: LatestDonation[];
     teamMemberCount: number | null;
 }
 
@@ -39,6 +40,12 @@ export interface Reward {
     remaining: number | null;
     startsAt: string | null;
     endsAt: string | null;
+}
+
+export interface LatestDonation {
+    name: string;
+    amount: number;
+    comment: string | null;
 }
 
 export interface TopDonor {

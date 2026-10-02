@@ -17,6 +17,7 @@ const CAUSE_ID = "cause-1";
 let nextId = 0;
 let tiltifyCalls: string[] = [];
 let failTiltify = false;
+let donorLeaderboardOff = false;
 
 function campaign(overrides: Partial<Campaign> = {}): Campaign {
     const id = `campaign-${nextId++}`;
@@ -34,7 +35,7 @@ function campaign(overrides: Partial<Campaign> = {}): Campaign {
         donationMatchMultiplier: 1,
         type: "campaign",
         team: null,
-        teamEventId: null,
+        teamEvent: null,
         user: { name: `user-${id}`, slug: `user-${id}`, avatar: "", url: "" },
         ...overrides,
     };
@@ -84,11 +85,25 @@ async function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
         if (body.operationName === "get_default_template_fact") {
             return Response.json({ data: { fact: fact(body.variables.id) } });
         }
+        if (body.operationName === "get_fact_donations_by_id_asc") {
+            return Response.json({
+                data: {
+                    fact: {
+                        donations: {
+                            edges: [
+                                { node: { donorName: "Newest Donor", donorComment: "Good luck!", amount: { value: "20.00" } } },
+                                { node: { donorName: "Anonymous", donorComment: null, amount: { value: "5.5" } } },
+                            ],
+                        },
+                    },
+                },
+            });
+        }
         if (body.operationName === "get_default_template_fact_leaderboards") {
             return Response.json({
                 data: {
                     fact: {
-                        donorLeaderboard: {
+                        donorLeaderboard: donorLeaderboardOff ? null : {
                             entries: { edges: [{ node: { name: "Big Donor", amount: { value: "250.00" } } }, { node: { name: "Anonymous", amount: { value: "35.5" } } }] },
                         },
                     },
@@ -144,11 +159,12 @@ describe("TiltifyData", () => {
         nextId = 0;
         tiltifyCalls = [];
         failTiltify = false;
+        donorLeaderboardOff = false;
         vi.stubGlobal("fetch", vi.fn(fakeFetch));
         vi.spyOn(console, "log").mockImplementation(() => {});
 
         teamEvent = campaign({ name: "Team Event", type: "team_event", raised: 900, team: { name: "The Team", slug: "the-team", avatar: "", url: "" } });
-        supporting = campaign({ name: "Supporting Stream", raised: 600, live: true, teamEventId: teamEvent.id });
+        supporting = campaign({ name: "Supporting Stream", raised: 600, live: true, teamEvent: { id: teamEvent.id, name: teamEvent.name, slug: teamEvent.slug, avatar: "", url: teamEvent.url } });
         teamCampaign = campaign({ name: "Team Campaign", raised: 400, causeId: CAUSE_ID, team: { name: "Another Team", slug: "another-team", avatar: "", url: "" } });
         plain = campaign({ name: "Christmas Stream", raised: 200 });
         campaigns = [teamEvent, supporting, teamCampaign, plain];
@@ -238,7 +254,19 @@ describe("TiltifyData", () => {
                 { id: "reward-own", name: "Shout-out", description: "Read out on stream", image: "https://example.com/reward.png", amount: 10, quantity: null, remaining: null, startsAt: null, endsAt: null },
             ]);
             expect(body.topDonors).toEqual([{ name: "Big Donor", amount: 250 }, { name: "Anonymous", amount: 35.5 }]);
+            expect(body.latestDonations).toEqual([
+                { name: "Newest Donor", amount: 20, comment: "Good luck!" },
+                { name: "Anonymous", amount: 5.5, comment: null },
+            ]);
             expect(body).not.toHaveProperty("teamMemberCount");
+        });
+
+        it("returns null top donors when the donor leaderboard is turned off", async () => {
+            donorLeaderboardOff = true;
+
+            const { body } = await get(tiltifyData, `/api/campaigns/${plain.id}`);
+
+            expect(body.topDonors).toBeNull();
         });
 
         it("looks up the id without case sensitivity", async () => {
@@ -266,17 +294,17 @@ describe("TiltifyData", () => {
 
             await get(tiltifyData, `/api/campaigns/${plain.id}`);
             await get(tiltifyData, `/api/campaigns/${plain.id}`);
-            expect(tiltifyCalls).toHaveLength(2);
+            expect(tiltifyCalls).toHaveLength(3);
 
             vi.setSystemTime(new Date("2026-12-05T12:00:30Z"));
             await get(tiltifyData, `/api/campaigns/${plain.id}`);
-            expect(tiltifyCalls).toHaveLength(4);
+            expect(tiltifyCalls).toHaveLength(6);
         });
 
         it("shares one Tiltify fetch between concurrent requests", async () => {
             await Promise.all([1, 2, 3].map(() => get(tiltifyData, `/api/campaigns/${plain.id}`)));
 
-            expect(tiltifyCalls).toHaveLength(2);
+            expect(tiltifyCalls).toHaveLength(3);
         });
 
         it("keeps the last live data when Tiltify fails", async () => {
@@ -291,6 +319,7 @@ describe("TiltifyData", () => {
             const after = (await get(tiltifyData, `/api/campaigns/${plain.id}`)).body;
 
             expect(after.topDonors).toEqual(before.topDonors);
+            expect(after.latestDonations).toEqual(before.latestDonations);
             expect(after.rewards).toEqual(before.rewards);
         });
 
@@ -306,6 +335,7 @@ describe("TiltifyData", () => {
             expect(body.donationMatches).toEqual([]);
             expect(body.rewards).toEqual([]);
             expect(body.topDonors).toEqual([]);
+            expect(body.latestDonations).toEqual([]);
         });
     });
 
@@ -317,6 +347,7 @@ describe("TiltifyData", () => {
             expect(body.teamEvent).toEqual(teamEvent);
             expect(body.teamMemberCount).toBe(4);
             expect(body.topDonors).toHaveLength(2);
+            expect(body.latestDonations).toHaveLength(2);
             expect(body.rewards.map((reward: any) => reward.id)).toEqual(["reward-own"]);
             expect(body.campaigns).toEqual({ count: 1, live: 1, list: [supporting] });
         });

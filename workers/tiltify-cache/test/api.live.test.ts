@@ -1,6 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { getLatestData } from "tiltify-cache/api";
-import { getFact, getLeaderboards } from "tiltify-cache/dependencies/tiltify";
+import { getDonations, getFact, getLeaderboards } from "tiltify-cache/dependencies/tiltify";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
 import { Env } from "tiltify-cache/types/env";
 import { TiltifyMultiSearchCampaign } from "tiltify-cache/types/tiltify/TiltifyMultiSearchCampaign";
@@ -195,6 +195,15 @@ describe("single fundraiser queries against Tiltify (Jingle Jam 2025)", () => {
 
         expect(fact?.usageType).toBe("team_event");
         expect(fact?.teamMemberCount).toBeGreaterThan(0);
+    });
+
+    it("reads the latest donations", async () => {
+        const donations = await getDonations(YOGSCAST_CAMPAIGN_2025, 25);
+        const edges = donations?.donations?.edges || [];
+
+        expect(edges).toHaveLength(25);
+        expect(edges[0].node.donorName).toBeTruthy();
+        expect(parseFloat(edges[0].node.amount.value)).toBeGreaterThan(0);
     });
 
     it("reads the top donors, highest first", async () => {

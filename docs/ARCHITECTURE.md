@@ -41,7 +41,7 @@ flowchart LR
 
 | Component | Code | Role |
 |---|---|---|
-| **Website** | [website/](../website/) | Static pages that call `/api/*` and animate the totals. See [Web Pages](WEB-PAGES.md). |
+| **Website** | [website/](../website/) | Static pages that call `/api/*` and animate the totals: loaders in `pages/`, HTML fragments in `fragments/`, scripts in `js/` and the stylesheet in `css/`. [`_redirects`](../website/_redirects) maps each page URL to its loader. See [Web Pages](WEB-PAGES.md). |
 | **Pages Functions** | [functions/api/](../functions/api/) | One file per endpoint. Each forwards the request to a Durable Object (or reads KV) and adds CORS headers ([handler.ts](../functions/api/handler.ts)). The old `/api/tiltify` path answers with a `308` redirect to `/api/summary`. [`_routes.json`](../_routes.json) sends only `/api/*` to Functions. |
 | **`TiltifyData`** Durable Object | [tiltifyData.ts](../workers/tiltify-cache/src/do/tiltifyData.ts) | Fetches from Tiltify and Yogscast, holds the live data in memory, and serves every `/api/*` endpoint except the graphs. Single campaigns and team events add live data fetched from Tiltify on request ([factDetails.ts](../workers/tiltify-cache/src/services/factDetails.ts)). |
 | **`GraphData`** Durable Object | [graphData.ts](../workers/tiltify-cache/src/do/graphData.ts) | Reads the total from `TiltifyData` every minute, records a point every 10 minutes, and serves `/api/graph/current`. |
@@ -198,6 +198,12 @@ Worker variables are set in [workers/tiltify-cache/wrangler.toml](../workers/til
 ```
 JingleJamTracker/
 ├── website/                 Static pages (see Web Pages)
+│   ├── index.html               Main tracker fragment, served at / (the jinglejam.co.uk embed loads it)
+│   ├── pages/                   Loader for each page (/tracker, /home, /tv, /causes/..., ...)
+│   ├── fragments/               HTML fragments the loaders fetch
+│   ├── js/                      Page scripts and the shared search box
+│   ├── css/style.css            Styles for every page
+│   └── _redirects               Page URLs → loaders, and /script.js and /style.css for the embed
 ├── functions/api/           Pages Functions, one per endpoint
 │   ├── summary.ts               → TiltifyData
 │   ├── tiltify.ts               Redirects to /api/summary

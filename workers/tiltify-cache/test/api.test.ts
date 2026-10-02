@@ -277,6 +277,30 @@ describe("getLatestData", () => {
             expect(raised["cause-3"]).toBe(0);
         });
 
+        it("includes the team event's details on its supporting campaigns", async () => {
+            const teamEvent = fundraiser({
+                type: "team_event",
+                name: "The Big Relay",
+                url: "https://tiltify.com/+the-team/the-big-relay",
+                fact_avatar: { src: "https://example.com/relay.png" } as TiltifyMultiSearchCampaign["fact_avatar"],
+            });
+            const supporting = fundraiser({ team_event_public_id: teamEvent.id });
+            const other = fundraiser({ team_event_public_id: "team-event-not-in-this-event" });
+            fundraisers.push(teamEvent, supporting, other);
+
+            const list = (await getLatestData(createEnv())).campaigns.list;
+
+            expect(list.find(campaign => campaign.id === supporting.id)?.teamEvent).toEqual({
+                id: teamEvent.id,
+                name: "The Big Relay",
+                slug: "the-big-relay",
+                avatar: "https://example.com/relay.png",
+                url: "https://tiltify.com/+the-team/the-big-relay",
+            });
+            expect(list.find(campaign => campaign.id === other.id)?.teamEvent).toBeNull();
+            expect(list.find(campaign => campaign.id === teamEvent.id)?.teamEvent).toBeNull();
+        });
+
         it.each([
             ["the All The Charities region", ALL_CHARITIES_REGION_ID],
             ["no region", null],

@@ -9,9 +9,10 @@
         waitTime: 5000,             //How long to wait for the data on the backend to be updated
         minRefreshTime: 5000,       //Minimum refresh time for the API
         pageIsVisible: true,
+        tvPage: false,              //Whether this is the /tv page, which is always in TV mode
         tvControlsTimeout: null,
         tvTickerSpeed: 16,          //Seconds for the TV ticker to scroll one screen width
-        domain: '',                 //Root-relative, since the page is served at /tracker/<cause>
+        domain: '',                 //Root-relative, since the page is served at /causes/<cause>
         settings: {
             isPounds: true,
         },
@@ -68,8 +69,11 @@
             window.location.hostname.includes('yogscast.com'))
             JingleJam.domain = 'https://dashboard.jinglejam.co.uk';
 
-        //Cause lookup, from the embed container or the /tracker/<cause> URL
+        //Cause lookup, from the embed container or the /causes/<cause> (or /jingle-jam) URL
         JingleJam.causeSlug = getCauseSlug();
+
+        //The /tv page loads this page with a data-tv attribute
+        JingleJam.tvPage = $('#embedContainer').is('[data-tv]');
 
         //Enable the updating live spinner
         setUpdatingLiveSpinner(true);
@@ -88,9 +92,12 @@
         //Set the data on load
         updateCounts();
 
-        //Open straight into TV mode with ?tv, or if TV mode was on when the page was last open
-        if (new URLSearchParams(window.location.search).has('tv') || localStorage.getItem('tvMode') === 'true') {
+        //The /tv page is always in TV mode, other pages link to it
+        if (JingleJam.tvPage) {
             enterTvMode();
+        }
+        else {
+            $('#tvModeButton').attr('href', getTvUrl());
         }
 
         //Position the change counter after counts are updated
@@ -103,7 +110,11 @@
         if (attr)
             return attr;
 
-        let match = window.location.pathname.match(/\/tracker\/([^/]+)\/?$/i);
+        //The whole event is at /jingle-jam, each cause at /causes/<cause>
+        if (/^\/jingle-jam\/?$/i.test(window.location.pathname))
+            return 'jingle-jam';
+
+        let match = window.location.pathname.match(/^\/causes\/([^/]+)\/?$/i);
         if (!match)
             return null;
 
@@ -112,6 +123,11 @@
         } catch {
             return null;
         }
+    }
+
+    //The /tv page for this cause (or the whole event)
+    function getTvUrl() {
+        return JingleJam.domain + '/tv?type=cause&id=' + encodeURIComponent(JingleJam.model.cause.slug || JingleJam.causeSlug);
     }
 
     //Loop to update data on the page as needed
@@ -253,17 +269,9 @@
         }
     }
 
-    //Setup the TV mode button and exit controls (TV mode fills the window, it does not make the browser fullscreen)
+    //Setup TV mode for the /tv page (TV mode fills the window, it does not make the browser fullscreen)
     function setupTvMode() {
-        $('#tvModeButton').on('click', enterTvMode);
-        $('#tvExitButton').on('click', exitTvMode);
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && isTvMode())
-                exitTvMode();
-        });
-
-        //Only show the exit button and cursor while the mouse is moving
+        //Only show the cursor while the mouse is moving
         $(document).on('mousemove touchstart', () => {
             if (isTvMode())
                 showTvControls();
@@ -288,18 +296,9 @@
     function enterTvMode() {
         $('#embedContainer').addClass('tv-mode');
         document.documentElement.classList.add('jj-tv-mode');
-        localStorage.setItem('tvMode', true);
 
         showTvControls();
         updateTicker(true);
-        setTimeout(positionChangeCounter, 100);
-    }
-
-    function exitTvMode() {
-        $('#embedContainer').removeClass('tv-mode tv-controls-visible');
-        document.documentElement.classList.remove('jj-tv-mode');
-        localStorage.setItem('tvMode', false);
-
         setTimeout(positionChangeCounter, 100);
     }
 
@@ -396,7 +395,9 @@
 
         //The page can be embedded on other sites, so load the logo from the tracker's domain
         $('#jjLogo').attr('src', JingleJam.domain + '/assets/jingle-jam-2026-logo.webp');
-        $('#jjLogoLink').attr('href', JingleJam.domain + '/tracker');
+        $('#jjLogoLink').attr('href', JingleJam.domain + '/home');
+        $('#homeButton').attr('href', JingleJam.domain + '/home');
+        setupSearchButton();
 
         $('.jj-year').text(JingleJam.model.event.year);
         $('.jj-cause-name').text(cause.name);
@@ -410,6 +411,22 @@
         $('#causeWebsiteLink').attr('href', safeUrl(cause.url));
 
         setCauseColors(cause.color);
+    }
+
+    //The toolbar's search opens over the page. The search box script isn't loaded when the page is embedded on other sites, so there's no search there.
+    function setupSearchButton() {
+        if (!window.JingleJamSearch || JingleJam.tvPage)
+            return;
+
+        let search = null;
+        $('#searchButton').show().on('click', () => {
+            search = search || JingleJamSearch.createOverlay({
+                domain: JingleJam.domain,
+                getUrl: result => JingleJamSearch.getPageUrl(result, JingleJam.domain),
+                hint: 'Pick a cause, campaign or team event. Press Esc to close.',
+            });
+            search.open();
+        });
     }
 
     //Themes the page with the cause colour, picking a readable text colour for it

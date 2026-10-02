@@ -2,6 +2,7 @@ import { TiltifyMultiSearchResponse, TiltifyMultiSearchResult } from "tiltify-ca
 import { TiltifyTemplateFact, TiltifyTemplateFactResponse } from "tiltify-cache/types/tiltify/TiltifyTemplateFact";
 import { TiltifyUser, TiltifyUserResponse } from "tiltify-cache/types/tiltify/TiltifyUser";
 import { TiltifyLeaderboards, TiltifyLeaderboardsResponse } from "tiltify-cache/types/tiltify/TiltifyLeaderboards";
+import { TiltifyDonations, TiltifyDonationsResponse } from "tiltify-cache/types/tiltify/TiltifyDonations";
 
 /*
     Tiltify's GraphQL API only accepts the queries its own website sends ("Client query not allowed" otherwise),
@@ -147,5 +148,31 @@ export async function getLeaderboards(id: string, limit: number): Promise<Tiltif
 
     const response = await fetch(TILTIFY_API_ENDPOINT, request);
     const data = (await response.json()) as TiltifyLeaderboardsResponse;
+    return data?.data?.fact || null;
+}
+
+/*
+    Gets the most recent donations to a fact by ID, newest first
+
+    Used for:
+        - Latest donations of a single campaign or team event
+*/
+export async function getDonations(id: string, limit: number): Promise<TiltifyDonations | null> {
+    const query = `query get_fact_donations_by_id_asc($id: ID!, $limit: Int!, $cursor: String) {\n  fact(id: $id) {\n    id\n    donations(first: $limit, after: $cursor) {\n      pageInfo {\n        startCursor\n        endCursor\n        hasNextPage\n        hasPreviousPage\n        __typename\n      }\n      edges {\n        cursor\n        node {\n          id\n          ...DefaultTemplateFactLiveDonationsDonation\n          __typename\n        }\n        __typename\n      }\n      __typename\n    }\n    __typename\n  }\n}\n\nfragment DefaultTemplateFactLiveDonationsDonation on Donation {\n  id\n  donorName\n  donorComment\n  dedication {\n    name\n    label\n    __typename\n  }\n  amount {\n    value\n    currency\n    __typename\n  }\n  matchCount\n  isMatch\n  incentives {\n    id\n    type\n    __typename\n  }\n  __typename\n}`;
+
+    const request: RequestInit = {
+        body: JSON.stringify({
+            "operationName": "get_fact_donations_by_id_asc",
+            "variables": {
+                "id": id,
+                "limit": limit
+            },
+            "query": query
+        }),
+        ...TILTIFY_API_OPTIONS
+    };
+
+    const response = await fetch(TILTIFY_API_ENDPOINT, request);
+    const data = (await response.json()) as TiltifyDonationsResponse;
     return data?.data?.fact || null;
 }

@@ -16,13 +16,13 @@
 
         <script>
             (function(){
-                // Served at /tracker/<cause>, so every path must be absolute
+                // Served at /home
                 const domain = '/';
 
                 let element = document.querySelector('#myContainer');
 
                 async function loadTracker(){
-                    let html = await fetch(domain + 'indexCause')
+                    let html = await fetch(domain + 'fragments/home')
                     element.innerHTML = await html.text();
                 }
                 
@@ -45,11 +45,12 @@
                     createScript('https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.js');
                     
                     createStyle('https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.css');
-                    createStyle(domain + 'style.css');
+                    createStyle(domain + 'css/style.css');
 
                     await loadTracker();
 
-                    createScript(domain + 'scriptCause.js');
+                    createScript(domain + 'js/search-box.js');
+                    createScript(domain + 'js/home.js');
                 }
 
                 create();

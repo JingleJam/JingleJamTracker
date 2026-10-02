@@ -12,13 +12,14 @@
     </div>
   </div>
   <div id="trackerContent" style="display: none;">
-    <button class="tv-exit-button" id="tvExitButton" type="button" title="Exit TV mode" aria-label="Exit TV mode"><i class="close icon"></i></button>
     <div class="guttered">
       <div class="guttered-section">
         <div class="cause-header">
-          <a class="jj-logo" id="jjLogoLink" href="/tracker"><img id="jjLogo" alt="Jingle Jam"></a>
+          <a class="jj-logo" id="jjLogoLink" href="/home"><img id="jjLogo" alt="Jingle Jam"></a>
           <div class="cause-toolbar">
-            <button class="tv-mode-button" id="tvModeButton" type="button" title="TV mode" aria-label="Open TV mode"><i class="tv icon"></i></button>
+            <a class="toolbar-button" id="homeButton" href="/home" title="Home" aria-label="Home"><i class="home icon"></i></a>
+            <button class="toolbar-button" id="searchButton" type="button" title="Search" aria-label="Search" style="display: none;"><i class="search icon"></i></button>
+            <a class="toolbar-button tv-mode-button" id="tvModeButton" title="Open the TV view" aria-label="Open the TV view"><i class="tv icon"></i></a>
             <div class="ui compact huge segment" id="currencySelectorObj" style="background-color: white;">
               <label style="margin-right: 11px;">$</label>
               <div class="ui slider checkbox">
@@ -26,6 +27,18 @@
                 <label>£</label>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="ui segment cause-info page-details">
+          <img class="cause-info-logo" id="causeLogo" alt="">
+          <img class="cause-info-logo cause-info-logo-tv" id="causeTvLogo" alt="">
+          <div class="cause-info-content">
+            <div class="cause-info-name" id="causeName"></div>
+            <div class="cause-info-description" id="causeDescription"></div>
+          </div>
+          <div class="cause-info-links page-actions">
+            <a class="donate-button" id="causeDonateLink" target="_blank" rel="noopener"><i class="heart icon"></i>Donate</a>
+            <a class="cause-link" id="causeWebsiteLink" target="_blank" rel="noopener"><i class="external alternate icon"></i>Website</a>
           </div>
         </div>
         <div class="top-stats-container">
@@ -66,18 +79,6 @@
         </div>
         <div id="lastUpdatedRow" class="hide-live-update">
           <label class="subtext-label right" id="labelDate"> Last Updated: N/A </label>
-        </div>
-        <div class="ui segment cause-info">
-          <img class="cause-info-logo" id="causeLogo" alt="">
-          <img class="cause-info-logo cause-info-logo-tv" id="causeTvLogo" alt="">
-          <div class="cause-info-content">
-            <div class="cause-info-name" id="causeName"></div>
-            <div class="cause-info-description" id="causeDescription"></div>
-          </div>
-          <div class="cause-info-links">
-            <a class="cause-link" id="causeDonateLink" target="_blank" rel="noopener"><i class="heart icon"></i>Donate</a>
-            <a class="cause-link" id="causeWebsiteLink" target="_blank" rel="noopener"><i class="external alternate icon"></i>Website</a>
-          </div>
         </div>
         <div class="ui segment campaigns-card">
           <div class="charities-header-text"><i class="trophy icon"></i>Top Campaigns</div>
