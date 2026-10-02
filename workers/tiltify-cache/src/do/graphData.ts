@@ -2,7 +2,7 @@ import { Env } from "tiltify-cache/types/env";
 import { getCacheKey, roundAmount, Router } from "tiltify-cache/utils";
 import { CurrentGraphPoint } from "tiltify-cache/types/CurrentGraphPoint";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
-import { GRAPH_API_PATH, TILTIFY_API_PATH } from "tiltify-cache/constants";
+import { GRAPH_API_PATH, SUMMARY_API_PATH } from "tiltify-cache/constants";
 
 /*
   Graph Data Durable Object
@@ -154,7 +154,7 @@ export class GraphData {
     async getLatestData(): Promise<ApiResponse> {
         const id = this.env.TILTIFY_DATA.idFromName(getCacheKey(this.env.YEAR));
         const obj = this.env.TILTIFY_DATA.get(id);
-        const resp = await obj.fetch("http://127.0.0.1" + TILTIFY_API_PATH);
+        const resp = await obj.fetch("http://127.0.0.1" + SUMMARY_API_PATH);
         return await resp.json();
     }
 }

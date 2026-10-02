@@ -30,11 +30,11 @@ The Jingle Jam is an annual charity fundraiser, run on [Tiltify](https://tiltify
 The API is open to everyone. It needs no key and no sign-up, and CORS is enabled, so it can be called directly from a browser.
 
 ```bash
-curl https://dashboard.jinglejam.co.uk/api/tiltify
+curl https://dashboard.jinglejam.co.uk/api/summary
 ```
 
 ```js
-const res = await fetch('https://dashboard.jinglejam.co.uk/api/tiltify');
+const res = await fetch('https://dashboard.jinglejam.co.uk/api/summary');
 const data = await res.json();
 
 console.log(`£${data.raised.toLocaleString()} raised from ${data.donations.toLocaleString()} donations`);
@@ -42,8 +42,11 @@ console.log(`£${data.raised.toLocaleString()} raised from ${data.donations.toLo
 
 | Endpoint | Returns |
 |---|---|
-| [`GET /api/tiltify`](docs/API.md#get-apitiltify) | Event totals, per-cause totals, yearly history and the top 100 campaigns |
-| [`GET /api/campaigns`](docs/API.md#get-apicampaigns) | Every campaign, paginated |
+| [`GET /api/summary`](docs/API.md#get-apisummary) | Event totals, per-cause totals, yearly history and the top 100 campaigns |
+| [`GET /api/campaigns`](docs/API.md#get-apicampaigns) | Every campaign, paginated, searchable and filterable by type |
+| [`GET /api/campaigns/{id}`](docs/API.md#get-apicampaignsid) | One campaign, with live social links, donation matches, rewards and top donors |
+| [`GET /api/team_events/{id}`](docs/API.md#get-apiteam_eventsid) | One team event and its campaigns, with the same live data |
+| [`GET /api/causes`](docs/API.md#get-apicauses) | Every cause and its total |
 | [`GET /api/causes/{cause}`](docs/API.md#get-apicausescause) | One cause's total and its top campaigns |
 | [`GET /api/graph/current`](docs/API.md#get-apigraphcurrent) | This year's total over time, one point every 10 minutes |
 | [`GET /api/graph/previous`](docs/API.md#get-apigraphprevious) | Previous years' totals over time (2016 onwards) |

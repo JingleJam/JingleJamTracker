@@ -654,7 +654,7 @@
 
     //Get the current model data
     async function getTiltify() {
-        const response = await fetchWithTimeout(JingleJam.domain + '/api/tiltify');
+        const response = await fetchWithTimeout(JingleJam.domain + '/api/summary');
 
         let data = await response.json();
 

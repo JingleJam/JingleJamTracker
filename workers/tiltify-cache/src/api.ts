@@ -1,5 +1,5 @@
 import { generateSlug, roundAmount, sortByKey } from "tiltify-cache/utils";
-import { getEvent, getCampaigns, getUserBySlug } from "tiltify-cache/dependencies/tiltify";
+import { getFact, getCampaigns, getUserBySlug } from "tiltify-cache/dependencies/tiltify";
 import { get as getYogscastAPI } from "tiltify-cache/dependencies/yogscast";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
 import { Env } from "tiltify-cache/types/env";
@@ -36,7 +36,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
   try {
     // Perform all Tiltify and Yogscast lookups in parallel
     const results = await Promise.all([
-      getEvent(env.FUNDRAISER_PUBLIC_ID),       // Gets Yearly Event Level Data
+      getFact(env.FUNDRAISER_PUBLIC_ID),        // Gets Yearly Event Level Data
       getYogscastAPI(),                         // Gets Yogscast API Data
       getUserBySlug(env.YOGSCAST_USERNAME)      // Gets Yogscast User Data
     ]);
@@ -230,6 +230,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
           avatar: campaign.team_avatar?.src || '',
           url: `https://tiltify.com/+${teamSlug}`,
         } : null,
+        teamEventId: campaign.team_event_public_id || null,
         user: {
           name: campaign.username,
           slug: userSlug,

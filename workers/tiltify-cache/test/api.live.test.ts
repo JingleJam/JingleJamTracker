@@ -1,5 +1,6 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { getLatestData } from "tiltify-cache/api";
+import { getFact, getLeaderboards } from "tiltify-cache/dependencies/tiltify";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
 import { Env } from "tiltify-cache/types/env";
 import { TiltifyMultiSearchCampaign } from "tiltify-cache/types/tiltify/TiltifyMultiSearchCampaign";
@@ -170,5 +171,37 @@ describe("getLatestData against Tiltify (Jingle Jam 2025)", () => {
                 "WWF": 392511.3,
             });
         });
+    });
+});
+
+describe("single fundraiser queries against Tiltify (Jingle Jam 2025)", () => {
+    // Tiltify only accepts the queries its own website sends, so these fail if Tiltify changes or stops allowing a query
+    const YOGSCAST_CAMPAIGN_2025 = "7f6e131d-e6cf-4659-9d48-7b4af11e498c";
+    const TEAM_EVENT_2025 = "05b4e0a7-ef8c-43b4-9f12-cf7f2ea89907"; // CoreKeeper Survive-A-Thon
+
+    it("reads a campaign's live data", async () => {
+        const fact = await getFact(YOGSCAST_CAMPAIGN_2025);
+
+        expect(fact?.name).toBe("Jingle Jam 2025");
+        expect(fact?.social).toBeDefined();
+        expect(fact?.donationMatches).toBeInstanceOf(Array);
+
+        // The Games Collection is the fundraising event's reward, which the tracker leaves out
+        expect(fact?.rewards.map(reward => reward.ownerUsageType)).toContain("fundraising_event_activation");
+    });
+
+    it("reads a team event's member count", async () => {
+        const fact = await getFact(TEAM_EVENT_2025);
+
+        expect(fact?.usageType).toBe("team_event");
+        expect(fact?.teamMemberCount).toBeGreaterThan(0);
+    });
+
+    it("reads the top donors, highest first", async () => {
+        const leaderboards = await getLeaderboards(YOGSCAST_CAMPAIGN_2025, 25);
+        const amounts = (leaderboards?.donorLeaderboard?.entries.edges || []).map(edge => parseFloat(edge.node.amount.value));
+
+        expect(amounts).toHaveLength(25);
+        expect(amounts).toEqual([...amounts].sort((a, b) => b - a));
     });
 });

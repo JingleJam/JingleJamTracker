@@ -94,3 +94,18 @@ Each pound is counted once, towards the charity that was picked for it:
 
 - **User**: a single Tiltify account belonging to one person. Users start campaigns and can join teams.
 - **Team**: a group of users under one shared name. A team owns its team events and can also own campaigns. Its members can support its team events with supporting campaigns.
+
+## Querying Tiltify
+
+The tracker reads Tiltify through two of the APIs its website uses:
+
+- **Search** (`api.tiltify.com/search/multi-search`, Meilisearch): the list of fundraisers for the event, filtered by event, status and region. It returns at most 1000 results per query, which is why the tracker splits the search into groups.
+- **GraphQL** (`api.tiltify.com`): a single fact's details (the event's totals and rewards, or one campaign's social links, donation matches and rewards) and its donor leaderboard.
+
+The GraphQL API only accepts the queries Tiltify's own website sends. Any other query, even a smaller version of an allowed one, fails with `Client query not allowed`. To read something new, find the request a Tiltify page makes in the browser's network tab and copy its query exactly (whitespace differences are fine). The queries in use are in [dependencies/tiltify.ts](../workers/tiltify-cache/src/dependencies/tiltify.ts), and `npm run test:live` checks they are still accepted.
+
+A few things worth knowing about the GraphQL data:
+
+- **Rewards** on a campaign include the event's own reward (the Games Collection), with `ownerUsageType` `fundraising_event_activation`. A campaign's own rewards have `campaign`, and rewards set up by a team event (`team_event`) also appear on its supporting campaigns.
+- **The donor leaderboard** adds up each donor's donations, so it ranks donors, not single donations. The `donations` query, by contrast, lists the most recent donations, not the largest.
+- **Supporting campaigns** have `team_event_public_id` set in search results and no `team_public_id`. Team campaigns (owned by a team, not part of a team event) have `team_public_id` set.

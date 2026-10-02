@@ -5,7 +5,7 @@
 The Jingle Jam Tracker API is a free, public, read-only JSON API with live and historical Jingle Jam fundraising data. It needs **no API key**, and **CORS is enabled**, so you can call it from a server, a script, a bot or straight from a web page.
 
 ```bash
-curl https://dashboard.jinglejam.co.uk/api/tiltify
+curl https://dashboard.jinglejam.co.uk/api/summary
 ```
 
 ## Contents
@@ -14,12 +14,15 @@ curl https://dashboard.jinglejam.co.uk/api/tiltify
 - [Usage guidelines](#usage-guidelines)
 - [Usage guide](#usage-guide): quick start, polling, recipes
 - [Endpoints](#endpoints)
-  - [`GET /api/tiltify`](#get-apitiltify): event summary
-  - [`GET /api/campaigns`](#get-apicampaigns): every campaign, paginated
+  - [`GET /api/summary`](#get-apisummary): event summary
+  - [`GET /api/campaigns`](#get-apicampaigns): every campaign, paginated and searchable
+  - [`GET /api/campaigns/{id}`](#get-apicampaignsid): a single campaign, with live data
+  - [`GET /api/team_events/{id}`](#get-apiteam_eventsid): a single team event, with live data
+  - [`GET /api/causes`](#get-apicauses): every cause
   - [`GET /api/causes/{cause}`](#get-apicausescause): a single cause
   - [`GET /api/graph/current`](#get-apigraphcurrent): this year's total over time
   - [`GET /api/graph/previous`](#get-apigraphprevious): previous years' totals over time
-- [Types](#types): `Cause`, `Campaign`, `DonationHistory`
+- [Types](#types): `Cause`, `Campaign`, `DonationHistory`, `Social`, `DonationMatch`, `Reward`, `TopDonor`
 - [Errors](#errors)
 - [CORS](#cors)
 - [Admin endpoints](#admin-endpoints) (maintainers only)
@@ -34,7 +37,7 @@ curl https://dashboard.jinglejam.co.uk/api/tiltify
 | Development | `https://develop.jingle-jam-tracker.pages.dev` | Trying out upcoming changes. It may include test data and can break without notice. |
 | Local | `http://127.0.0.1:8788` | Working on this repository ([Local Development](LOCAL-DEVELOPMENT.md)) |
 
-Every endpoint path below is relative to the base URL, e.g. `https://dashboard.jinglejam.co.uk/api/tiltify`.
+Every endpoint path below is relative to the base URL, e.g. `https://dashboard.jinglejam.co.uk/api/summary`.
 
 ## Usage guidelines
 
@@ -45,7 +48,8 @@ The API is free for anyone to use. To keep it fast and affordable for everyone, 
 
 - **Don't poll faster than every 10 seconds.** During the event the data refreshes every 10 seconds (less often outside it), so faster polling returns the same response. See [Polling for live updates](#polling-for-live-updates).
 - **Put a cache in front of the API if you have many users.** If your app, website, bot or overlay has lots of users, fetch from your own server and serve those users from your cache, instead of having every client call the API directly.
-- **Fetch only what you need.** `/api/tiltify` already includes the top 100 campaigns. Only page through `/api/campaigns` if you need campaigns beyond those.
+- **Fetch only what you need.** `/api/summary` already includes the top 100 campaigns. To find a particular campaign, use `search` on `/api/campaigns` instead of paging through every campaign.
+- **Poll single campaigns and team events at most every 30 seconds.** [`/api/campaigns/{id}`](#get-apicampaignsid) and [`/api/team_events/{id}`](#get-apiteam_eventsid) fetch live data from Tiltify, which is reused for 30 seconds.
 - **Link back to the Jingle Jam** ([jinglejam.co.uk](https://www.jinglejam.co.uk)) where it makes sense, so people can donate.
 
 ---
@@ -58,7 +62,7 @@ The API is free for anyone to use. To keep it fast and affordable for everyone, 
 <summary><b>JavaScript (browser or Node.js 18+)</b></summary>
 
 ```js
-const res = await fetch('https://dashboard.jinglejam.co.uk/api/tiltify');
+const res = await fetch('https://dashboard.jinglejam.co.uk/api/summary');
 const data = await res.json();
 
 console.log(`Jingle Jam ${data.event.year}`);
@@ -79,7 +83,7 @@ for (const cause of data.causes) {
 ```python
 import requests
 
-data = requests.get("https://dashboard.jinglejam.co.uk/api/tiltify", timeout=10).json()
+data = requests.get("https://dashboard.jinglejam.co.uk/api/summary", timeout=10).json()
 
 print(f"Jingle Jam {data['event']['year']}")
 print(f"£{data['raised']:,.2f} raised from {data['donations']:,} donations")
@@ -95,10 +99,10 @@ for cause in data["causes"]:
 
 ```bash
 # Total raised
-curl -s https://dashboard.jinglejam.co.uk/api/tiltify | jq '.raised'
+curl -s https://dashboard.jinglejam.co.uk/api/summary | jq '.raised'
 
 # Each cause and its total
-curl -s https://dashboard.jinglejam.co.uk/api/tiltify | jq -r '.causes[] | "\(.name): £\(.raised)"'
+curl -s https://dashboard.jinglejam.co.uk/api/summary | jq -r '.causes[] | "\(.name): £\(.raised)"'
 
 # The top 5 campaigns for War Child
 curl -s "https://dashboard.jinglejam.co.uk/api/causes/war-child?limit=5" | jq -r '.campaigns.list[] | "\(.name) (\(.user.name)): £\(.raised)"'
@@ -113,7 +117,7 @@ Every response has a `date` field: the time the server last fetched fresh data f
 The simplest correct approach is to poll every **15 seconds**. To stay closer to the live figures, schedule each request about 15 seconds after the previous response's `date`, which is what the official tracker does:
 
 ```js
-const API = 'https://dashboard.jinglejam.co.uk/api/tiltify';
+const API = 'https://dashboard.jinglejam.co.uk/api/summary';
 const REFRESH_MS = 10_000;   // How often the server refreshes
 const DELAY_MS = 5_000;      // Allowance for the refresh to complete
 const MIN_WAIT_MS = 5_000;   // Never poll more often than this
@@ -144,7 +148,7 @@ poll();
 **Show a countdown before the event starts.** `event.start` and `event.end` are ISO 8601 UTC timestamps. The event normally runs from 1 December 17:00 UTC to 15 December 08:00 UTC.
 
 ```js
-const { event } = await (await fetch('https://dashboard.jinglejam.co.uk/api/tiltify')).json();
+const { event } = await (await fetch('https://dashboard.jinglejam.co.uk/api/summary')).json();
 const now = new Date();
 const status = now < new Date(event.start) ? 'upcoming'
              : now > new Date(event.end)   ? 'ended'
@@ -157,28 +161,29 @@ const status = now < new Date(event.start) ? 'upcoming'
 const dollars = data.raised * data.dollarConversionRate;
 ```
 
-**Track a single cause.** Use `/api/causes/{cause}` with the cause's `slug` from `/api/tiltify`, e.g. `war-child`. Use `jingle-jam` to get the same shape of response for the whole event:
+**Track a single cause.** Use `/api/causes/{cause}` with the cause's `slug` from `/api/summary`, e.g. `war-child`. Use `jingle-jam` to get the same shape of response for the whole event:
 
 ```js
 const warChild = await (await fetch('https://dashboard.jinglejam.co.uk/api/causes/war-child?limit=10')).json();
 console.log(`${warChild.cause.name}: £${warChild.cause.raised}, ${warChild.campaigns.live} live now`);
 ```
 
-**Find a streamer's campaign.** Page through `/api/campaigns` and match on `user.slug` (or `team.slug`):
+**Find a streamer's campaign.** Search `/api/campaigns` by name. The search matches campaign, user and team names and tolerates small typos, best match first:
 
 ```js
-async function findCampaigns(userSlug) {
-  const results = [];
-  for (let offset = 0; ; offset += 100) {
-    const page = await (await fetch(`https://dashboard.jinglejam.co.uk/api/campaigns?limit=100&offset=${offset}`)).json();
-    results.push(...page.campaigns.filter(c => c.user.slug === userSlug));
-    if (offset + page.limit >= page.total) return results;
-  }
-}
+const { campaigns } = await (await fetch('https://dashboard.jinglejam.co.uk/api/campaigns?search=spiffing&limit=5')).json();
+const campaign = campaigns[0];
 ```
 
-> [!NOTE]
-> Paging through every campaign makes one request per 100 campaigns, which can be 10 or more requests. Space them out (see the [usage guidelines](#usage-guidelines)) and cache the result rather than repeating it every few seconds.
+**Show a campaign's donation matches and top donors.** Use the campaign's `id` with [`/api/campaigns/{id}`](#get-apicampaignsid) (or [`/api/team_events/{id}`](#get-apiteam_eventsid) when its `type` is `"team_event"`):
+
+```js
+const path = campaign.type === 'team_event' ? 'team_events' : 'campaigns';
+const details = await (await fetch(`https://dashboard.jinglejam.co.uk/api/${path}/${campaign.id}`)).json();
+for (const match of details.donationMatches) {
+  console.log(`${match.matchedBy} is matching donations, £${match.matched} of £${match.pledged} so far`);
+}
+```
 
 **Plot this year against previous years.** Combine [`/api/graph/current`](#get-apigraphcurrent) and [`/api/graph/previous`](#get-apigraphprevious). To line the years up, plot each point by time since its own event start, not by calendar date.
 
@@ -188,13 +193,41 @@ async function findCampaigns(userSlug) {
 
 All endpoints are `GET` requests that return JSON (`Content-Type: application/json;charset=UTF-8`). All amounts are in **pounds (GBP)** unless the field name says otherwise.
 
-### `GET /api/tiltify`
+### Common fields
+
+The summary, list and single-object endpoints (everything except the graphs) start with the same fields:
+
+| Field | Type | Description |
+|---|---|---|
+| `date` | `string` | When the data was last refreshed from Tiltify (ISO 8601) |
+| `event.year` | `number` | Event year, e.g. `2026` |
+| `event.start` | `string` | Event start (ISO 8601), normally 1 December 17:00 UTC |
+| `event.end` | `string` | Event end (ISO 8601), normally 15 December 08:00 UTC |
+| `dollarConversionRate` | `number` | GBP → USD rate. Multiply a pound amount by this to get dollars |
+
+```json
+{
+  "date": "2026-12-07T19:42:10.412Z",
+  "event": {
+    "year": 2026,
+    "start": "2026-12-01T17:00:00.000Z",
+    "end": "2026-12-15T08:00:00.000Z"
+  },
+  "dollarConversionRate": 1.32,
+  ...
+}
+```
+
+### `GET /api/summary`
 
 The main summary of the current event: the total raised, donation and collection counts, a total for each cause, yearly history and the top 100 campaigns.
 
 ```http
-GET /api/tiltify
+GET /api/summary
 ```
+
+> [!NOTE]
+> This endpoint used to be `/api/tiltify`. The old path still works: it returns a `308 Permanent Redirect` to `/api/summary`, which browsers and most HTTP clients follow automatically (with curl, add `-L`). Please switch to `/api/summary`.
 
 **Refreshed:** every 10 seconds during the event.
 
@@ -220,7 +253,7 @@ GET /api/tiltify
 #### Example
 
 ```bash
-curl https://dashboard.jinglejam.co.uk/api/tiltify
+curl https://dashboard.jinglejam.co.uk/api/summary
 ```
 
 ```json
@@ -279,6 +312,7 @@ curl https://dashboard.jinglejam.co.uk/api/tiltify
         "donationMatchMultiplier": 2,
         "type": "campaign",
         "team": null,
+        "teamEventId": null,
         "user": {
           "name": "ExampleStreamer",
           "slug": "examplestreamer",
@@ -295,10 +329,10 @@ curl https://dashboard.jinglejam.co.uk/api/tiltify
 
 ### `GET /api/campaigns`
 
-Every campaign for the current event, highest raised first, in pages. Use this when you need campaigns beyond the top 100 included in `/api/tiltify`.
+Every campaign, team campaign and team event for the current event, in pages. Highest raised first, or best match first when searching.
 
 ```http
-GET /api/campaigns?limit=100&offset=0
+GET /api/campaigns?limit=20&offset=0&search=spiffing&type=campaign,team_campaign
 ```
 
 **Refreshed:** every 10 seconds during the event.
@@ -307,15 +341,19 @@ GET /api/campaigns?limit=100&offset=0
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `limit` | integer, `1`–`100` | `100` | Number of campaigns to return |
+| `limit` | integer, `1`–`100` | `20` | Number of campaigns to return |
 | `offset` | integer, `0` or more | `0` | Number of campaigns to skip |
+| `search` | string, up to 100 characters | | Only campaigns whose name, owner's name or team name match. Not case-sensitive, ignores accents and punctuation, and tolerates small typos (`spifing` finds TheSpiffingBrit). Every word has to match. Results are sorted best match first, then by amount raised. |
+| `type` | `campaign`, `team_campaign` or `team_event`, comma-separated | every type | Only these kinds of fundraiser. A `team_campaign` is a campaign owned by a team. The campaigns supporting a team event are owned by users, so they count as `campaign`. |
 
 #### Response
+
+The [common fields](#common-fields), plus:
 
 | Field | Type | Description |
 |---|---|---|
 | `campaigns` | [`Campaign[]`](#campaign) | This page of campaigns |
-| `total` | `number` | Total number of campaigns across all pages |
+| `total` | `number` | Total number of campaigns across all pages, after `search` and `type` |
 | `limit` | `number` | The `limit` used |
 | `offset` | `number` | The `offset` used |
 
@@ -327,19 +365,34 @@ An `offset` past the end returns an empty `campaigns` array.
 |---|---|
 | `400` | `{"error": "Invalid limit parameter. Limit must be between 1 and 100."}` |
 | `400` | `{"error": "Invalid offset parameter. Offset must be a positive number (0 or greater)."}` |
+| `400` | `{"error": "Invalid type parameter. Type must be one or more of campaign, team_campaign, team_event, separated by commas."}` |
+| `400` | `{"error": "Invalid search parameter. Search must be at most 100 characters."}` |
 
 #### Example
 
 ```bash
-# First 50 campaigns
-curl "https://dashboard.jinglejam.co.uk/api/campaigns?limit=50"
+# First 20 campaigns
+curl "https://dashboard.jinglejam.co.uk/api/campaigns"
 
-# Next 50
-curl "https://dashboard.jinglejam.co.uk/api/campaigns?limit=50&offset=50"
+# The next 50
+curl "https://dashboard.jinglejam.co.uk/api/campaigns?limit=50&offset=20"
+
+# Search for a streamer
+curl "https://dashboard.jinglejam.co.uk/api/campaigns?search=yogscast&limit=5"
+
+# Only team events
+curl "https://dashboard.jinglejam.co.uk/api/campaigns?type=team_event"
 ```
 
 ```json
 {
+  "date": "2025-12-07T19:42:10.412Z",
+  "event": {
+    "year": 2025,
+    "start": "2025-12-01T17:00:00.000Z",
+    "end": "2025-12-15T08:00:00.000Z"
+  },
+  "dollarConversionRate": 1.32,
   "campaigns": [
     {
       "causeId": null,
@@ -355,6 +408,7 @@ curl "https://dashboard.jinglejam.co.uk/api/campaigns?limit=50&offset=50"
       "donationMatchMultiplier": 1,
       "type": "campaign",
       "team": null,
+      "teamEventId": null,
       "user": {
         "name": "yogscast",
         "slug": "yogscast",
@@ -364,8 +418,253 @@ curl "https://dashboard.jinglejam.co.uk/api/campaigns?limit=50&offset=50"
     }
   ],
   "total": 938,
-  "limit": 50,
+  "limit": 20,
   "offset": 0
+}
+```
+
+---
+
+### `GET /api/campaigns/{id}`
+
+One campaign or team campaign, with live data fetched from Tiltify: its social links, active donation matches, its own rewards and its top donors.
+
+```http
+GET /api/campaigns/{id}
+```
+
+**Refreshed:** the campaign every 10 seconds during the event, like [`/api/campaigns`](#get-apicampaigns). The live data is fetched from Tiltify when requested and reused for **30 seconds**.
+
+#### Path parameters
+
+| Parameter | Description |
+|---|---|
+| `id` | The campaign's `id` from [`/api/campaigns`](#get-apicampaigns) or [`/api/summary`](#get-apisummary). Not case-sensitive. Only campaigns in the current event are found. |
+
+#### Response
+
+The [common fields](#common-fields), plus:
+
+| Field | Type | Description |
+|---|---|---|
+| `campaign` | [`Campaign`](#campaign) | The campaign |
+| `social` | [`Social`](#social) | The campaign's social media links |
+| `donationMatches` | [`DonationMatch[]`](#donationmatch) | Donation matches active right now |
+| `rewards` | [`Reward[]`](#reward) | Active rewards set up by the campaign or its team event. The Jingle Jam Games Collection, which every campaign has, is left out. |
+| `topDonors` | [`TopDonor[]`](#topdonor) | The top 25 donors, by the total each donor has given to this campaign, highest first |
+
+If Tiltify can't be reached, the last live data fetched is returned. If none has been fetched yet, `social` has every link `null` and the lists are empty.
+
+#### Errors
+
+| Status | Body |
+|---|---|
+| `404` | `{"error": "Campaign not found."}` |
+| `404` | `{"error": "Campaign not found. This ID is a team event, use /api/team_events/{id}."}` |
+
+#### Example
+
+```bash
+curl https://dashboard.jinglejam.co.uk/api/campaigns/7a1c4f0e-0000-4000-8000-000000000001
+```
+
+```json
+{
+  "date": "2025-12-07T19:42:10.412Z",
+  "event": {
+    "year": 2025,
+    "start": "2025-12-01T17:00:00.000Z",
+    "end": "2025-12-15T08:00:00.000Z"
+  },
+  "dollarConversionRate": 1.32,
+  "campaign": {
+    "causeId": "18cb6ffd-3067-4ca8-8414-74eb733d79fd",
+    "name": "Example Stream for War Child",
+    "description": "Streaming all weekend for War Child!",
+    "id": "7a1c4f0e-0000-4000-8000-000000000001",
+    "slug": "example-stream-for-war-child",
+    "url": "https://tiltify.com/@examplestreamer/example-stream-for-war-child",
+    "startTime": "2025-11-20T12:00:00.000Z",
+    "raised": 12955.5,
+    "goal": 10000,
+    "live": true,
+    "donationMatchMultiplier": 2,
+    "type": "campaign",
+    "team": null,
+    "teamEventId": null,
+    "user": {
+      "name": "ExampleStreamer",
+      "slug": "examplestreamer",
+      "avatar": "https://assets.tiltify.com/uploads/user/thumbnail/0000/example.png",
+      "url": "https://tiltify.com/@examplestreamer"
+    }
+  },
+  "social": {
+    "discord": null,
+    "facebook": null,
+    "instagram": null,
+    "linkedin": null,
+    "snapchat": null,
+    "tiktok": null,
+    "twitch": "https://www.twitch.tv/examplestreamer",
+    "twitter": null,
+    "website": null,
+    "youtube": "https://www.youtube.com/@examplestreamer"
+  },
+  "donationMatches": [
+    {
+      "id": "a3f8a017-0000-4000-8000-000000000002",
+      "matchedBy": "An Example Sponsor",
+      "pledged": 1000,
+      "matched": 331,
+      "startsAt": "2025-12-07T18:00:00.000Z",
+      "endsAt": "2025-12-07T22:00:00.000Z"
+    }
+  ],
+  "rewards": [
+    {
+      "id": "6226d667-0000-4000-8000-000000000003",
+      "name": "Shout-out on stream",
+      "description": "Your name read out live.",
+      "image": null,
+      "amount": 10,
+      "quantity": null,
+      "remaining": null,
+      "startsAt": null,
+      "endsAt": null
+    }
+  ],
+  "topDonors": [
+    { "name": "Darineth", "amount": 500 },
+    { "name": "Anonymous", "amount": 250 }
+  ]
+}
+```
+
+---
+
+### `GET /api/team_events/{id}`
+
+One team event, the campaigns supporting it, and the same live Tiltify data as [`/api/campaigns/{id}`](#get-apicampaignsid), plus the team's member count.
+
+```http
+GET /api/team_events/{id}
+```
+
+**Refreshed:** like [`/api/campaigns/{id}`](#get-apicampaignsid). The live data is reused for **30 seconds**.
+
+#### Path parameters
+
+| Parameter | Description |
+|---|---|
+| `id` | The team event's `id` (a [`Campaign`](#campaign) with `type` `"team_event"`). Not case-sensitive. Only team events in the current event are found. |
+
+#### Response
+
+The [common fields](#common-fields), plus:
+
+| Field | Type | Description |
+|---|---|---|
+| `teamEvent` | [`Campaign`](#campaign) | The team event. Its `raised` includes its supporting campaigns. |
+| `teamMemberCount` | `number \| null` | Number of members of the team, or `null` if Tiltify couldn't be reached |
+| `social` | [`Social`](#social) | The team event's social media links |
+| `donationMatches` | [`DonationMatch[]`](#donationmatch) | Donation matches active right now |
+| `rewards` | [`Reward[]`](#reward) | Active rewards set up by the team event (the Games Collection is left out) |
+| `topDonors` | [`TopDonor[]`](#topdonor) | The top 25 donors to the team event, highest first |
+| `campaigns.count` | `number` | Number of campaigns supporting the team event |
+| `campaigns.live` | `number` | Of those, the number streaming right now |
+| `campaigns.list` | [`Campaign[]`](#campaign) | Every supporting campaign, highest raised first |
+
+#### Errors
+
+| Status | Body |
+|---|---|
+| `404` | `{"error": "Team event not found."}` |
+| `404` | `{"error": "Team event not found. This ID is a campaign, use /api/campaigns/{id}."}` |
+
+#### Example
+
+```bash
+curl https://dashboard.jinglejam.co.uk/api/team_events/05b4e0a7-ef8c-43b4-9f12-cf7f2ea89907
+```
+
+```json
+{
+  "date": "2025-12-07T19:42:10.412Z",
+  "event": { "year": 2025, "start": "2025-12-01T17:00:00.000Z", "end": "2025-12-15T08:00:00.000Z" },
+  "dollarConversionRate": 1.32,
+  "teamEvent": {
+    "causeId": "5350a34a-8b94-4513-bb1d-22becc2df6e4",
+    "name": "CoreKeeper Survive-A-Thon",
+    "id": "05b4e0a7-ef8c-43b4-9f12-cf7f2ea89907",
+    "type": "team_event",
+    "raised": 30277.68,
+    "...": "the other Campaign fields"
+  },
+  "teamMemberCount": 19,
+  "social": { "discord": null, "twitch": null, "...": "the other Social fields" },
+  "donationMatches": [],
+  "rewards": [
+    { "id": "…", "name": "Exclusive Make-A-Wish Hat", "description": "…", "image": "…", "amount": 5, "quantity": null, "remaining": null, "startsAt": null, "endsAt": null }
+  ],
+  "topDonors": [{ "name": "Example Donor", "amount": 1000 }],
+  "campaigns": {
+    "count": 13,
+    "live": 2,
+    "list": [
+      { "name": "Laimu's Core Keeper Survive-A-Thon", "type": "campaign", "teamEventId": "05b4e0a7-ef8c-43b4-9f12-cf7f2ea89907", "...": "the other Campaign fields" }
+    ]
+  }
+}
+```
+
+---
+
+### `GET /api/causes`
+
+Every cause in the current event, with the amount raised for each.
+
+```http
+GET /api/causes
+```
+
+**Refreshed:** every 10 seconds during the event.
+
+#### Response
+
+The [common fields](#common-fields), plus:
+
+| Field | Type | Description |
+|---|---|---|
+| `causes` | [`Cause[]`](#cause) | Every cause, the same as `causes` in [`/api/summary`](#get-apisummary) |
+
+#### Example
+
+```bash
+curl https://dashboard.jinglejam.co.uk/api/causes
+```
+
+```json
+{
+  "date": "2025-12-07T19:42:10.412Z",
+  "event": { "year": 2025, "start": "2025-12-01T17:00:00.000Z", "end": "2025-12-15T08:00:00.000Z" },
+  "dollarConversionRate": 1.32,
+  "causes": [
+    {
+      "id": "18cb6ffd-3067-4ca8-8414-74eb733d79fd",
+      "slug": "war-child",
+      "name": "War Child",
+      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/war-child.webp",
+      "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/war-child.webp",
+      "description": "Protecting, educating, and advocating for the rights of children impacted by the ongoing conflicts in Gaza, Ukraine and worldwide.",
+      "color": "#cc232a",
+      "url": "https://www.warchild.org.uk/",
+      "donateUrl": "https://jinglejam.tiltify.com/campaigns?regionId=18cb6ffd-3067-4ca8-8414-74eb733d79fd",
+      "raised": 168412.07,
+      "campaigns": 49,
+      "live": 3
+    }
+  ]
 }
 ```
 
@@ -385,7 +684,7 @@ GET /api/causes/{cause}?limit=10
 
 | Parameter | Description |
 |---|---|
-| `cause` | The cause's `slug` (e.g. `war-child`) or `id`, as listed in `causes` from [`/api/tiltify`](#get-apitiltify). Not case-sensitive. Use **`jingle-jam`** for the whole event, covering every cause and campaign. |
+| `cause` | The cause's `slug` (e.g. `war-child`) or `id`, as listed in `causes` from [`/api/summary`](#get-apisummary). Not case-sensitive. Use **`jingle-jam`** for the whole event, covering every cause and campaign. |
 
 The slug is the cause name in lowercase, with spaces replaced by hyphens and other punctuation removed, so each new cause gets an endpoint automatically. For the causes in the 2025 event:
 
@@ -402,7 +701,7 @@ The slug is the cause name in lowercase, with spaces replaced by hyphens and oth
 | Field | Type | Description |
 |---|---|---|
 | `date` | `string` | When this data was last refreshed (ISO 8601) |
-| `event` | `object` | `year`, `start` and `end`, the same as [`/api/tiltify`](#get-apitiltify) |
+| `event` | `object` | `year`, `start` and `end`, the same as [`/api/summary`](#get-apisummary) |
 | `dollarConversionRate` | `number` | GBP → USD rate |
 | `raised` | `number` | Total raised by the **whole event**, in pounds |
 | `scope` | `"cause"` \| `"event"` | `"event"` when requested with `jingle-jam` |
@@ -474,6 +773,7 @@ curl "https://dashboard.jinglejam.co.uk/api/causes/war-child?limit=5"
         "donationMatchMultiplier": 2,
         "type": "campaign",
         "team": null,
+        "teamEventId": null,
         "user": {
           "name": "ExampleStreamer",
           "slug": "examplestreamer",
@@ -603,12 +903,13 @@ A fundraiser on Tiltify, usually a streamer's or a team's.
 | `goal` | `number` | Fundraising goal, in pounds (`0` if none) |
 | `live` | `boolean` | Whether the campaign is streaming right now |
 | `donationMatchMultiplier` | `number` | `1` = no match, `2` = donations are currently matched 2×, `3` = 3×, and so on |
-| `type` | `string` | `"campaign"` for a single fundraiser, or `"team_event"` for a team event |
+| `type` | `string` | `"campaign"` for a campaign (including team campaigns and the campaigns supporting a team event), `"team_event"` for a team event, or `"auction_house"` for an auction house |
 | `team` | `object \| null` | The team the campaign belongs to, or `null` |
 | `team.name` | `string` | Team name |
 | `team.slug` | `string` | Team slug |
 | `team.avatar` | `string` | Team avatar URL |
 | `team.url` | `string` | Team page on Tiltify |
+| `teamEventId` | `string | null` | `id` of the team event this campaign supports, or `null`. See [`/api/team_events/{id}`](#get-apiteam_eventsid) |
 | `user.name` | `string` | Owner's display name |
 | `user.slug` | `string` | Owner's slug |
 | `user.avatar` | `string` | Owner's avatar URL (may be empty) |
@@ -629,11 +930,57 @@ The final result of one previous year.
 | `collections` | `number?` | Collections claimed (2020 onwards) |
 | `campaigns` | `number?` | Number of Tiltify campaigns (2021 onwards) |
 
+### `Social`
+
+A campaign's or team event's social media links. Every field is a URL, or `null` if it isn't set.
+
+| Field | Type |
+|---|---|
+| `discord`, `facebook`, `instagram`, `linkedin`, `snapchat`, `tiktok`, `twitch`, `twitter`, `website`, `youtube` | `string | null` |
+
+### `DonationMatch`
+
+A sponsor matching donations, pound for pound, up to a pledged amount.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Tiltify UUID of the match |
+| `matchedBy` | `string` | Who is matching the donations |
+| `pledged` | `number` | The most the sponsor will match, in pounds |
+| `matched` | `number` | The amount matched so far, in pounds |
+| `startsAt` | `string | null` | When the match started (ISO 8601) |
+| `endsAt` | `string | null` | When the match ends (ISO 8601) |
+
+### `Reward`
+
+Something a donor gets for donating at least `amount`.
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | `string` | Tiltify UUID of the reward |
+| `name` | `string` | Reward name |
+| `description` | `string` | Reward description |
+| `image` | `string | null` | Image URL |
+| `amount` | `number` | Minimum donation, in pounds |
+| `quantity` | `number | null` | How many are available in total, or `null` if unlimited |
+| `remaining` | `number | null` | How many are left, or `null` if unlimited |
+| `startsAt` | `string | null` | When the reward becomes available (ISO 8601) |
+| `endsAt` | `string | null` | When the reward stops being available (ISO 8601) |
+
+### `TopDonor`
+
+One entry of a donor leaderboard. A donor's donations are added together.
+
+| Field | Type | Description |
+|---|---|---|
+| `name` | `string` | Donor's name as shown on Tiltify (often `Anonymous`) |
+| `amount` | `number` | The donor's total, in pounds |
+
 <details>
 <summary><b>TypeScript definitions</b></summary>
 
 ```ts
-interface Summary {                 // GET /api/tiltify
+interface Summary {                 // GET /api/summary
   date: string;
   event: { year: number; start: string; end: string };
   dollarConversionRate: number;
@@ -645,17 +992,42 @@ interface Summary {                 // GET /api/tiltify
   campaigns: { count: number; live: number; list: Campaign[] };
 }
 
-interface CampaignPage {            // GET /api/campaigns
+interface Envelope {                // Fields shared by every endpoint except the graphs
+  date: string;
+  event: { year: number; start: string; end: string };
+  dollarConversionRate: number;
+}
+
+interface CampaignPage extends Envelope {   // GET /api/campaigns
   campaigns: Campaign[];
   total: number;
   limit: number;
   offset: number;
 }
 
-interface CauseSummary {            // GET /api/causes/{cause}
-  date: string;
-  event: { year: number; start: string; end: string };
-  dollarConversionRate: number;
+interface CampaignDetails extends Envelope {    // GET /api/campaigns/{id}
+  campaign: Campaign;
+  social: Social;
+  donationMatches: DonationMatch[];
+  rewards: Reward[];
+  topDonors: TopDonor[];
+}
+
+interface TeamEventDetails extends Envelope {   // GET /api/team_events/{id}
+  teamEvent: Campaign;
+  teamMemberCount: number | null;
+  social: Social;
+  donationMatches: DonationMatch[];
+  rewards: Reward[];
+  topDonors: TopDonor[];
+  campaigns: { count: number; live: number; list: Campaign[] };
+}
+
+interface CauseList extends Envelope {          // GET /api/causes
+  causes: Cause[];
+}
+
+interface CauseSummary extends Envelope {       // GET /api/causes/{cause}
   raised: number;
   scope: 'cause' | 'event';
   cause: Cause;
@@ -704,7 +1076,47 @@ interface Campaign {
   donationMatchMultiplier: number;
   type: string;
   team: { name: string; slug: string; avatar: string; url: string } | null;
+  teamEventId: string | null;
   user: { name: string; slug: string; avatar: string; url: string };
+}
+
+interface Social {
+  discord: string | null;
+  facebook: string | null;
+  instagram: string | null;
+  linkedin: string | null;
+  snapchat: string | null;
+  tiktok: string | null;
+  twitch: string | null;
+  twitter: string | null;
+  website: string | null;
+  youtube: string | null;
+}
+
+interface DonationMatch {
+  id: string;
+  matchedBy: string;
+  pledged: number;
+  matched: number;
+  startsAt: string | null;
+  endsAt: string | null;
+}
+
+interface Reward {
+  id: string;
+  name: string;
+  description: string;
+  image: string | null;
+  amount: number;
+  quantity: number | null;
+  remaining: number | null;
+  startsAt: string | null;
+  endsAt: string | null;
+}
+
+interface TopDonor {
+  name: string;
+  amount: number;
 }
 
 interface DonationHistory {
@@ -727,6 +1139,8 @@ interface DonationHistory {
 |---|---|---|
 | `400 Bad Request` | A query parameter is invalid | `{"error": "<message>"}` |
 | `404 Not Found` | The cause in [`/api/causes/{cause}`](#get-apicausescause) doesn't exist | `{"error": "Cause not found."}` |
+| `404 Not Found` | The campaign or team event in [`/api/campaigns/{id}`](#get-apicampaignsid) or [`/api/team_events/{id}`](#get-apiteam_eventsid) isn't in the current event, or is the other kind | `{"error": "Campaign not found."}` / `{"error": "Team event not found."}`, with a pointer to the right endpoint when it's the other kind |
+| `308 Permanent Redirect` | The old `/api/tiltify` path | Redirects to [`/api/summary`](#get-apisummary) |
 | `500 Internal Server Error` | Something went wrong on our side | Plain text `Internal Server Error` |
 
 > [!WARNING]
@@ -753,16 +1167,16 @@ Access-Control-Max-Age: 86400
 > [!CAUTION]
 > These endpoints are for the tracker's maintainers. They need the secret admin token and overwrite live data.
 
-Both endpoints need an `Authorization` header set to the admin token, **exactly as is** (no `Bearer` prefix). A missing or wrong token returns `401 Unauthorized`. A successful call returns `200` with the text `Manual Update Success`.
+Both endpoints need an `Authorization` header set to the admin token, **exactly as is** (no `Bearer` prefix). A missing or wrong token returns `401 Unauthorized`. A successful call returns `200` with the text `Manual Update Success`. (`POST /api/tiltify` still works: it redirects with a `308`, which keeps the method and body. Add `-L` to curl.)
 
 | Endpoint | Body | Effect |
 |---|---|---|
-| `POST /api/tiltify` | A full [`/api/tiltify`](#get-apitiltify) response | Replaces the cached summary. It is replaced again at the next refresh, if refreshing is on. |
+| `POST /api/summary` | A full [`/api/summary`](#get-apisummary) response | Replaces the cached summary. It is replaced again at the next refresh, if refreshing is on. |
 | `POST /api/graph/current` | An array of [graph points](#get-apigraphcurrent) | Replaces this year's graph. Send `[]` to clear it. |
 
 ```bash
 # Replace the summary
-curl -X POST https://dashboard.jinglejam.co.uk/api/tiltify \
+curl -X POST https://dashboard.jinglejam.co.uk/api/summary \
   -H "Authorization: $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   --data-binary @summary.json

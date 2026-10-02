@@ -6,11 +6,11 @@ The tracker pages are static HTML and jQuery in [website/](../website/). They ca
 
 | Page | URL | Data from |
 |---|---|---|
-| [Main tracker](#main-tracker) | [`/tracker`](https://dashboard.jinglejam.co.uk/tracker) | `/api/tiltify`, `/api/graph/current`, `/api/graph/previous` |
+| [Main tracker](#main-tracker) | [`/tracker`](https://dashboard.jinglejam.co.uk/tracker) | `/api/summary`, `/api/graph/current`, `/api/graph/previous` |
 | [Cause tracker](#cause-tracker) | [`/tracker/{cause}`](https://dashboard.jinglejam.co.uk/tracker/calm) | `/api/causes/{cause}` |
 | [Whole-event tracker](#whole-event-tracker) | [`/tracker/jingle-jam`](https://dashboard.jinglejam.co.uk/tracker/jingle-jam) | `/api/causes/jingle-jam` |
 | [TV mode](#tv-mode) | `/tracker/{cause}?tv` | `/api/causes/{cause}` |
-| [Totals only](#totals-only) | [`/total`](https://dashboard.jinglejam.co.uk/total) | `/api/tiltify` |
+| [Totals only](#totals-only) | [`/total`](https://dashboard.jinglejam.co.uk/total) | `/api/summary` |
 
 > [!NOTE]
 > The screenshots below were taken locally with sample data from a previous event.
@@ -61,7 +61,7 @@ The `{cause}` part of the URL is the cause's slug or Tiltify ID, the same values
 | War Child | [`/tracker/war-child`](https://dashboard.jinglejam.co.uk/tracker/war-child) |
 | WWF | [`/tracker/wwf`](https://dashboard.jinglejam.co.uk/tracker/wwf) |
 
-<sub>Causes change each year; this list is for the 2025 event. The current list is in `causes` from [`/api/tiltify`](API.md#get-apitiltify).</sub>
+<sub>Causes change each year; this list is for the 2025 event. The current list is in `causes` from [`/api/summary`](API.md#get-apisummary).</sub>
 
 ### On mobile
 

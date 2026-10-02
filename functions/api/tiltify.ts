@@ -1,21 +1,20 @@
-import { CacheResponse } from "../types/CacheResponse";
-import { Context, Env } from "../types/env";
-import { handleAPIRequest } from "./handler";
+import { Context } from "../types/env";
+import { CORS_HEADERS } from "./handler";
 
+// The summary moved to /api/summary. A 308 redirect keeps the method and body, so the admin POST still works.
 export async function onRequest(context: Context): Promise<Response> {
-  return await handleAPIRequest(context, handleRequest);
-}
-
-async function handleRequest(request: Request, env: Env, cacheName: string): Promise<CacheResponse> {
-  let response = '';
-
-  const id = env.TILTIFY_DATA.idFromName(cacheName);
-  const obj = env.TILTIFY_DATA.get(id);
-  const resp = await obj.fetch(request);
-  response = await resp.text();
-
-  return {
-    data: response,
-    status: resp.status
+  if (context.request.method === "OPTIONS") {
+    return new Response(null, {
+      status: 204,
+      headers: CORS_HEADERS
+    });
   }
+
+  const url = new URL(context.request.url);
+  url.pathname = '/api/summary';
+
+  return new Response(null, {
+    status: 308,
+    headers: { ...CORS_HEADERS, 'Location': url.toString() }
+  });
 }

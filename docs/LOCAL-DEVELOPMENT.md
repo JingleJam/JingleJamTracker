@@ -28,7 +28,7 @@ npm run dev                                                                  # S
 | Cause tracker | http://127.0.0.1:8788/tracker/war-child (one per cause in [kv/causes.json](../kv/causes.json)) |
 | Whole-event tracker | http://127.0.0.1:8788/tracker/jingle-jam |
 | TV mode | http://127.0.0.1:8788/tracker/war-child?tv |
-| API | http://127.0.0.1:8788/api/tiltify |
+| API | http://127.0.0.1:8788/api/summary |
 
 `npm run dev` runs two processes in one terminal, and **Ctrl+C** stops both:
 
@@ -58,7 +58,7 @@ The Pages Functions reach the Worker's Durable Objects through Wrangler's local 
 Both services share one local state directory, `.wrangler/state` in the repository root, so they see the same KV and Durable Object data.
 
 - **Static data.** `causes`, `summary` and `trends-previous` are copied from [kv/](../kv/) into local KV by `npm run seed`. This runs automatically before every `npm run dev`, so edits to those files take effect on the next start.
-- **Live data.** On the first request to `/api/tiltify` with an empty cache, the Worker fetches the current data from Tiltify. The timed refresh loops are **off** locally, so the data stays as it is until you restart or reset.
+- **Live data.** On the first request to `/api/summary` with an empty cache, the Worker fetches the current data from Tiltify. The timed refresh loops are **off** locally, so the data stays as it is until you restart or reset.
 - **Reset.** `npm run reset` deletes all local state and re-seeds KV.
 
 ### Turning on refresh loops
@@ -81,7 +81,7 @@ Outside December, Tiltify has nothing to show and the pages display a countdown.
 TOKEN=change-me   # Your ADMIN_TOKEN from .dev.vars
 
 # Save the current summary, then move the event so it is in progress
-curl -s http://127.0.0.1:8788/api/tiltify > summary.json
+curl -s http://127.0.0.1:8788/api/summary > summary.json
 node -e "
   const fs = require('fs'), s = JSON.parse(fs.readFileSync('summary.json'));
   const now = Date.now();
@@ -91,7 +91,7 @@ node -e "
   fs.writeFileSync('summary-live.json', JSON.stringify(s));
 "
 
-curl -X POST http://127.0.0.1:8788/api/tiltify \
+curl -X POST http://127.0.0.1:8788/api/summary \
   -H "Authorization: $TOKEN" -H "Content-Type: application/json" \
   --data-binary @summary-live.json
 ```
@@ -134,7 +134,7 @@ Swap `development` for `production` to upload to production. These need `wrangle
 | File | KV key | Contents |
 |---|---|---|
 | [causes.json](../kv/causes.json) | `causes` | This year's causes: Tiltify region `id`, `name`, `logo`, `borderedLogo`, `description`, `color`, `url`, `donateUrl`, and an optional `slug` and `override` |
-| [summary.json](../kv/summary.json) | `summary` | Final totals for every previous year (the `history` field of `/api/tiltify`) |
+| [summary.json](../kv/summary.json) | `summary` | Final totals for every previous year (the `history` field of `/api/summary`) |
 | [trends-previous.json](../kv/trends-previous.json) | `trends-previous` | Previous years' graph points (`/api/graph/previous`) |
 
 ## Troubleshooting
