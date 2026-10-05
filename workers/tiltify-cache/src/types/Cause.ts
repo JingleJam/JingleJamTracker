@@ -10,6 +10,7 @@ export interface Cause {
     donateUrl: string;
     override?: number;
     raised: number;
+    raisedDirect: number;   // The part of `raised` given to this cause specifically (summaries persisted before it was added don't have it)
     campaigns: number;
     live: number;
 }

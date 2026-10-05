@@ -7,10 +7,14 @@ export interface Campaign {
     url: string;
     startTime: string | null;
     raised: number;
+    raisedBreakdown?: {         // Team events only
+        teamEvent: number;      // Donations made to the team event itself
+        campaigns: number;      // Donations made to its supporting campaigns
+    };
     goal: number;
     live: boolean;
     donationMatchMultiplier: number;
-    type: string;
+    type: 'campaign' | 'team_event';   // Auction houses and every other kind of fundraiser count as campaigns
     team: {
         name: string;
         slug: string;

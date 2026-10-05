@@ -84,9 +84,9 @@ window.JingleJamSearch = (function () {
         //Causes are few and rarely change, so they are loaded once and searched here
         async function loadCauses() {
             try {
-                const response = await fetch(domain + '/api/causes');
+                const response = await fetch(domain + '/api/v1/causes');
                 const data = await response.json();
-                conversion = data.dollarConversionRate;
+                conversion = data.meta.dollarConversionRate;
                 causes = [{
                     type: 'cause',
                     id: EVENT_SLUG,
@@ -128,11 +128,11 @@ window.JingleJamSearch = (function () {
             spinner.hidden = false;
             let campaigns = [];
             try {
-                const response = await fetch(`${domain}/api/campaigns?search=${encodeURIComponent(query)}&limit=${CAMPAIGN_LIMIT}&type=campaign,team_campaign,team_event`);
+                const response = await fetch(`${domain}/api/v1/campaigns?search=${encodeURIComponent(query)}&limit=${CAMPAIGN_LIMIT}`);
                 const data = await response.json();
-                conversion = data.dollarConversionRate || conversion;
-                campaigns = (data.campaigns || []).map(campaign => ({
-                    type: campaign.type === 'team_event' ? 'team_event' : 'campaign',
+                conversion = data.meta.dollarConversionRate || conversion;
+                campaigns = data.campaigns.items.map(campaign => ({
+                    type: campaign.type,
                     id: campaign.id,
                     name: campaign.name,
                     subtitle: getOwner(campaign),

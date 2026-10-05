@@ -56,32 +56,32 @@ export class Router {
         const url = new URL(request.url);
         const method = request.method as HttpMethod;
 
-        // Find matching route
+        // Find matching route, noting whether the path exists for another method
         let route: RouteConfig | undefined;
         let params: RouteParams | null = null;
+        let pathMatched = false;
         for (const r of this.routes) {
-            if (r.method !== method) {
+            const match = matchPath(r.path, url.pathname);
+            if (!match) {
                 continue;
             }
-            params = matchPath(r.path, url.pathname);
-            if (params) {
+            pathMatched = true;
+            if (r.method === method) {
                 route = r;
+                params = match;
                 break;
             }
         }
 
         if (!route || !params) {
-            return new Response("Not found", { status: 404 });
+            return pathMatched
+                ? errorResponse('Method not allowed.', 405)
+                : errorResponse('Not found.', 404);
         }
 
         // Check authorization if required
-        if (route.requiresAuth) {
-            const authToken = route.authToken || '';
-            const requestAuth = request.headers.get('Authorization');
-            
-            if (!authToken || requestAuth !== authToken) {
-                return new Response("Unauthorized", { status: 401 });
-            }
+        if (route.requiresAuth && !isAuthorized(request, route.authToken)) {
+            return errorResponse('Unauthorized.', 401);
         }
 
         // Execute handler
@@ -89,9 +89,33 @@ export class Router {
             return await route.handler(request, url, params);
         } catch (error) {
             console.error('Route handler error:', error);
-            return new Response("Internal Server Error", { status: 500 });
+            return errorResponse('Internal server error.', 500);
         }
     }
+}
+
+export function jsonResponse(body: unknown, status = 200): Response {
+    return new Response(JSON.stringify(body), {
+        status,
+        headers: { 'Content-Type': 'application/json' }
+    });
+}
+
+export function errorResponse(error: string, status: number): Response {
+    return jsonResponse({ error }, status);
+}
+
+/**
+ * Check the Authorization header against the admin token, sent either as is or as "Bearer <token>"
+ */
+function isAuthorized(request: Request, authToken: string | undefined): boolean {
+    if (!authToken) {
+        return false;
+    }
+
+    const requestAuth = (request.headers.get('Authorization') || '').trim();
+    const bearer = requestAuth.match(/^Bearer\s+(.+)$/i);
+    return (bearer ? bearer[1] : requestAuth) === authToken;
 }
 
 /**

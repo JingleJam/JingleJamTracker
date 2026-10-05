@@ -23,10 +23,10 @@
             return !JingleJam.isWaiting() && !JingleJam.hasEnded();
         },
         isWaiting: function () {
-            return new Date() <= JingleJam.model.event.start;
+            return new Date() <= JingleJam.model.meta.event.startsAt;
         },
         hasEnded: function () {
-            return new Date() >= JingleJam.model.event.end;
+            return new Date() >= JingleJam.model.meta.event.endsAt;
         }
     };
 
@@ -106,8 +106,8 @@
     function afterLoadSetup() {
 
         //Set some compouted data
-        JingleJam.graphDates.minDate = JingleJam.model.event.start;//Date.parse('12/01/' + JingleJam.model.event.year + ' 17:00 GMT');
-        JingleJam.graphDates.maxDate = Date.parse('01/01/' + (JingleJam.model.event.year + 1) + ' 00:00 GMT');
+        JingleJam.graphDates.minDate = JingleJam.model.meta.event.startsAt;//Date.parse('12/01/' + JingleJam.model.meta.event.year + ' 17:00 GMT');
+        JingleJam.graphDates.maxDate = Date.parse('01/01/' + (JingleJam.model.meta.event.year + 1) + ' 00:00 GMT');
         JingleJam.timeLeft = getTimeLeft();
 
         //Setup components
@@ -115,7 +115,7 @@
 
         //Replace HTML components with model data
         $('.jj-start-year').text(JingleJam.startYear);
-        $('.jj-year').text(JingleJam.model.event.year);
+        $('.jj-year').text(JingleJam.model.meta.event.year);
         $('.jj-cause-count').text(JingleJam.model.causes.length);
 
         //Replace HTML tables with model data
@@ -156,14 +156,14 @@
         else {
             $('[data-status]').attr('data-status', 'countdown')
             $('#embedContainer #mainCounter').html(JingleJam.timeLeft.days + '<span class="countdown-label">d</span> ' + JingleJam.timeLeft.hours + '<span class="countdown-label">h</span> ' + JingleJam.timeLeft.minutes + '<span class="countdown-label">m</span> ' + JingleJam.timeLeft.seconds + '<span class="countdown-label">s</span> ');
-            $('#mainCounterHeader').html('<i class="clock icon"></i>Countdown to ' + JingleJam.model.event.year);
+            $('#mainCounterHeader').html('<i class="clock icon"></i>Countdown to ' + JingleJam.model.meta.event.year);
         }
     }
 
     //Gets the current time left until the JingleJame starts
     function getTimeLeft() {
         var now = new Date().getTime();
-        var totalTime = JingleJam.model.event.start - now;
+        var totalTime = JingleJam.model.meta.event.startsAt - now;
 
         var days = Math.floor(totalTime / (1000 * 60 * 60 * 24));
         var hours = Math.floor((totalTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -263,7 +263,7 @@
 
                 //If tab is back in focus and the screen did not refresh, refresh it after 1 second
                 setTimeout(function () {
-                    if (!JingleJam.model.date || (new Date() - new Date(JingleJam.model.date)) > (JingleJam.refreshTime + JingleJam.waitTime)) {
+                    if (!JingleJam.model.meta.updatedAt || (new Date() - new Date(JingleJam.model.meta.updatedAt)) > (JingleJam.refreshTime + JingleJam.waitTime)) {
                         updateModel();
                     }
                 }, 1000);
@@ -280,7 +280,7 @@
             smooth: true,
             labelDistance: 24,
             interpretLabel: function (value) {
-                let date = addHours(JingleJam.model.event.start, value);
+                let date = addHours(JingleJam.model.meta.event.startsAt, value);
 
                 if (date.getHours() === 0) {
                     if (window.innerWidth < 675) {
@@ -294,8 +294,8 @@
                 return "";
             },
             onChange: function (e, min, max) {
-                let minDate = addHours(JingleJam.model.event.start, min);
-                let maxDate = addHours(JingleJam.model.event.start, max);
+                let minDate = addHours(JingleJam.model.meta.event.startsAt, min);
+                let maxDate = addHours(JingleJam.model.meta.event.startsAt, max);
                 updateStep(minDate.getTime(), maxDate.getTime());
             }
         });
@@ -452,7 +452,7 @@
 
     //Creates the card components
     function createCards() {
-        let conversion = JingleJam.model.dollarConversionRate;
+        let conversion = JingleJam.model.meta.dollarConversionRate;
 
         let sortedCauses = JingleJam.model.causes.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0))
         let causesCards = '';
@@ -486,7 +486,7 @@
 
     //Update the totals on the charities cards
     function updateCards(instant = false) {
-        let conversion = JingleJam.model.dollarConversionRate;
+        let conversion = JingleJam.model.meta.dollarConversionRate;
 
         let sortedCauses = JingleJam.model.causes.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
         for (let cause of sortedCauses) {
@@ -525,7 +525,7 @@
 
     function updateCounts(instant = false) {
         //Get the current data
-        let conversion = JingleJam.model.dollarConversionRate;
+        let conversion = JingleJam.model.meta.dollarConversionRate;
 
         let avgDollars = !JingleJam.model.donations ? 0 : (JingleJam.model.raised * conversion) / JingleJam.model.donations;
         let avgPounds = !JingleJam.model.donations ? 0 : (JingleJam.model.raised) / JingleJam.model.donations;
@@ -588,7 +588,7 @@
 
         updateCards(instant);
 
-        $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.date).toLocaleString());
+        $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.meta.updatedAt).toLocaleString());
     }
 
     //Update the model
@@ -627,7 +627,7 @@
         }
 
         let now = new Date();
-        let modelUpdateTime = JingleJam.model.date ? new Date(JingleJam.model.date) : new Date();
+        let modelUpdateTime = JingleJam.model.meta.updatedAt ? new Date(JingleJam.model.meta.updatedAt) : new Date();
 
         return JingleJam.refreshTime - (now.getTime() - modelUpdateTime.getTime()) + JingleJam.waitTime;
     }
@@ -679,13 +679,13 @@
 
     //Get the current model data
     async function getTiltify() {
-        const response = await fetchWithTimeout(JingleJam.domain + '/api/summary');
+        const response = await fetchWithTimeout(JingleJam.domain + '/api/v1/event');
 
         let data = await response.json();
 
-        data.date = new Date(data.date);
-        data.event.start = new Date(data.event.start);
-        data.event.end = new Date(data.event.end);
+        data.meta.updatedAt = new Date(data.meta.updatedAt);
+        data.meta.event.startsAt = new Date(data.meta.event.startsAt);
+        data.meta.event.endsAt = new Date(data.meta.event.endsAt);
 
         return data;
     }
@@ -693,7 +693,7 @@
     //Get the current year graph data
     async function getCurrent() {
         try {
-            let response = await fetchWithTimeout(JingleJam.domain + '/api/graph/current');
+            let response = await fetchWithTimeout(JingleJam.domain + '/api/v1/timeline');
 
             let points = await response.json();
 
@@ -712,15 +712,15 @@
 
     //Get the previous year graph data
     async function getPrevious() {
-        let points = await (await fetchWithTimeout(JingleJam.domain + '/api/graph/previous')).json();
+        let points = await (await fetchWithTimeout(JingleJam.domain + '/api/v1/timeline/history')).json();
 
         for (let point of points) {
             point.time = new Date(point.timestamp);
 
             if (point.time.getMonth() < 10)
-                point.x = point.time.setFullYear(JingleJam.model.event.year + 1);
+                point.x = point.time.setFullYear(JingleJam.model.meta.event.year + 1);
             else
-                point.x = point.time.setFullYear(JingleJam.model.event.year);
+                point.x = point.time.setFullYear(JingleJam.model.meta.event.year);
         }
 
         JingleJam.previous = groupBy(points, x => x.year);
@@ -785,8 +785,8 @@
             /*
             if(JingleJam.isLive()){
                 currentData.push({
-                    x: JingleJam.model.date.getTime(),
-                    y: JingleJam.settings.isPounds ? JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers : (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) * JingleJam.model.dollarConversionRate
+                    x: JingleJam.model.meta.updatedAt.getTime(),
+                    y: JingleJam.settings.isPounds ? JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers : (JingleJam.model.raised.yogscast + JingleJam.model.raised.fundraisers) * JingleJam.model.meta.dollarConversionRate
                 });
             }
                 */
@@ -847,8 +847,8 @@
                             display: true,
                             text: `Day (GMT)`
                         },
-                        min: getDateTimeInGMT(new Date('12/01/' + JingleJam.model.event.year + ' 17:00 GMT')),
-                        max: getDateTimeInGMT(new Date('01/01/' + (JingleJam.model.event.year + 1) + ' 00:00 GMT')),
+                        min: getDateTimeInGMT(new Date('12/01/' + JingleJam.model.meta.event.year + ' 17:00 GMT')),
+                        max: getDateTimeInGMT(new Date('01/01/' + (JingleJam.model.meta.event.year + 1) + ' 00:00 GMT')),
                         grid: {
                             color: '#d4d4d4'
                         }

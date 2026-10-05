@@ -23,10 +23,10 @@
             return !JingleJam.isWaiting() && !JingleJam.hasEnded();
         },
         isWaiting: function () {
-            return new Date() <= JingleJam.model.event.start;
+            return new Date() <= JingleJam.model.meta.event.startsAt;
         },
         hasEnded: function () {
-            return new Date() >= JingleJam.model.event.end;
+            return new Date() >= JingleJam.model.meta.event.endsAt;
         }
     };
 
@@ -75,8 +75,8 @@
     function afterLoadSetup() {
 
         //Set some compouted data
-        JingleJam.graphDates.minDate = JingleJam.model.event.start;//Date.parse('12/01/' + JingleJam.model.event.year + ' 17:00 GMT');
-        JingleJam.graphDates.maxDate = Date.parse('01/01/' + (JingleJam.model.event.year + 1) + ' 00:00 GMT');
+        JingleJam.graphDates.minDate = JingleJam.model.meta.event.startsAt;//Date.parse('12/01/' + JingleJam.model.meta.event.year + ' 17:00 GMT');
+        JingleJam.graphDates.maxDate = Date.parse('01/01/' + (JingleJam.model.meta.event.year + 1) + ' 00:00 GMT');
         JingleJam.timeLeft = getTimeLeft();
 
         //Setup components
@@ -84,7 +84,7 @@
 
         //Replace HTML components with model data
         $('.jj-start-year').text(JingleJam.startYear);
-        $('.jj-year').text(JingleJam.model.event.year);
+        $('.jj-year').text(JingleJam.model.meta.event.year);
         $('.jj-cause-count').text(JingleJam.model.causes.length);
 
         //Set the data on load
@@ -107,7 +107,7 @@
         JingleJam.timeLeft = getTimeLeft();
         if (!JingleJam.isWaiting() || JingleJam.timeLeft.totalTime < 0) {
             $('[data-status]').attr('data-status', 'live')
-            $('#mainCounterHeader').text('Raised For ' + JingleJam.model.event.year);
+            $('#mainCounterHeader').text('Raised For ' + JingleJam.model.meta.event.year);
             if ($('#mainCounter').text().includes('h')) {
                 updateCounts(true);
             }
@@ -115,14 +115,14 @@
         else {
             $('[data-status]').attr('data-status', 'countdown')
             $('#mainCounter').html(JingleJam.timeLeft.days + "d " + JingleJam.timeLeft.hours + "h " + JingleJam.timeLeft.minutes + "m " + JingleJam.timeLeft.seconds + "s ");
-            $('#mainCounterHeader').text('Countdown to ' + JingleJam.model.event.year);
+            $('#mainCounterHeader').text('Countdown to ' + JingleJam.model.meta.event.year);
         }
     }
 
     //Gets the current time left until the JingleJame starts
     function getTimeLeft() {
         var now = new Date().getTime();
-        var totalTime = JingleJam.model.event.start - now;
+        var totalTime = JingleJam.model.meta.event.startsAt - now;
 
         var days = Math.floor(totalTime / (1000 * 60 * 60 * 24));
         var hours = Math.floor((totalTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -208,7 +208,7 @@
 
                 //If tab is back in focus and the screen did not refresh, refresh it after 1 second
                 setTimeout(function () {
-                    if (!JingleJam.model.date || (new Date() - new Date(JingleJam.model.date)) > (JingleJam.refreshTime + JingleJam.waitTime)) {
+                    if (!JingleJam.model.meta.updatedAt || (new Date() - new Date(JingleJam.model.meta.updatedAt)) > (JingleJam.refreshTime + JingleJam.waitTime)) {
                         updateModel();
                     }
                 }, 1000);
@@ -325,7 +325,7 @@
 
     //Update the totals on the charities cards
     function updateCards(instant = false) {
-        let conversion = JingleJam.model.dollarConversionRate;
+        let conversion = JingleJam.model.meta.dollarConversionRate;
 
         let sortedCauses = JingleJam.model.causes.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
         for (let cause of sortedCauses) {
@@ -343,7 +343,7 @@
 
     function updateCounts(instant = false) {
         //Get the current data
-        let conversion = JingleJam.model.dollarConversionRate;
+        let conversion = JingleJam.model.meta.dollarConversionRate;
         let totalPounds = JingleJam.model.history.reduce((sum, a) => sum + a.total.pounds, 0) + JingleJam.model.raised;
         let totalDollars = JingleJam.model.history.reduce((sum, a) => sum + a.total.dollars, 0) + JingleJam.model.raised * conversion;
 
@@ -396,7 +396,7 @@
 
         updateCards(instant);
 
-        $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.date).toLocaleString());
+        $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.meta.updatedAt).toLocaleString());
     }
 
     //Update the model
@@ -426,7 +426,7 @@
         }
 
         let now = new Date();
-        let modelUpdateTime = JingleJam.model.date ? new Date(JingleJam.model.date) : new Date();
+        let modelUpdateTime = JingleJam.model.meta.updatedAt ? new Date(JingleJam.model.meta.updatedAt) : new Date();
 
         return JingleJam.refreshTime - (now.getTime() - modelUpdateTime.getTime()) + JingleJam.waitTime;
     }
@@ -448,13 +448,13 @@
 
     //Get the current model data
     async function getTiltify() {
-        const response = await fetchWithTimeout(JingleJam.domain + '/api/summary');
+        const response = await fetchWithTimeout(JingleJam.domain + '/api/v1/event');
 
         let data = await response.json();
 
-        data.date = new Date(data.date);
-        data.event.start = new Date(data.event.start);
-        data.event.end = new Date(data.event.end);
+        data.meta.updatedAt = new Date(data.meta.updatedAt);
+        data.meta.event.startsAt = new Date(data.meta.event.startsAt);
+        data.meta.event.endsAt = new Date(data.meta.event.endsAt);
 
         return data;
     }

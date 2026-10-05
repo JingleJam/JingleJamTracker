@@ -4,7 +4,6 @@ export interface Env {
     DOLLAR_OFFSET: number;
     DONATION_DIFFERENCE: number;
     CONVERSION_RATE: number;
-    CAUSE_SLUG: string;
     FUNDRAISER_PUBLIC_ID: string;
     ALL_CHARITIES_REGION_ID: string;
     YOGSCAST_USERNAME: string;

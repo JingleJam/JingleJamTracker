@@ -1,35 +1,44 @@
 import { Env } from "tiltify-cache/types/env";
 import {
-    SUMMARY_API_PATH,
+    EVENT_API_PATH,
     CAMPAIGNS_API_PATH,
     CAMPAIGN_API_PATH,
-    TEAM_EVENT_API_PATH,
     CAUSES_API_PATH,
     CAUSE_API_PATH,
-    EVENT_NAME,
-    EVENT_COLOR,
-    EVENT_WEBSITE_URL,
-    EVENT_LOGO_PATH,
+    LEGACY_SUMMARY_API_PATH,
+    LEGACY_CAMPAIGNS_API_PATH,
     SNAPSHOT_INTERVAL_MS,
     IDLE_REFRESH_TIME,
     EVENT_WINDOW_PADDING_MS
 } from "tiltify-cache/constants";
 import { getLatestData } from "tiltify-cache/api";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
-import { generateSlug, getCacheKey, roundAmount, Router } from "tiltify-cache/utils";
+import { errorResponse, getCacheKey, jsonResponse, Router } from "tiltify-cache/utils";
 import { searchCampaigns } from "tiltify-cache/utils/search";
 import { Campaign } from "tiltify-cache/types/Campaign";
-import { Cause } from "tiltify-cache/types/Cause";
 import { CampaignStorageService } from "tiltify-cache/services/campaignStorage";
 import { FactDetailsService } from "tiltify-cache/services/factDetails";
+import {
+    EventResponse,
+    getCampaign,
+    getCampaignCollection,
+    getCause,
+    getCauseSlug,
+    getEventResponse,
+    getLegacyCampaign,
+    getLegacySummary,
+    getMeta,
+    getSummaryFromEventResponse
+} from "tiltify-cache/responses";
 
 const MAIN_CAMPAIGN_LIMIT = 100; // Number of campaigns included in the main cached response
-const CAMPAIGN_DEFAULT_LIMIT = 20; // Default number of campaigns in a page of the campaign list
+const CAMPAIGN_DEFAULT_LIMIT = 25; // Default number of campaigns in a page of the campaign list
 const CAMPAIGN_MAX_LIMIT = 100; // Maximum number of campaigns in a page of the campaign list
-const CAMPAIGN_TYPES = ['campaign', 'team_campaign', 'team_event']; // Values accepted by the campaign list's type filter
+const CAMPAIGN_TYPES = ['campaign', 'team_event']; // Values accepted by the campaign list's type filter
 const SEARCH_MAX_LENGTH = 100; // Maximum length of the campaign list's search text
-const CAUSE_CAMPAIGN_DEFAULT_LIMIT = 10; // Default number of top campaigns included in a cause response
+const CAUSE_CAMPAIGN_DEFAULT_LIMIT = 25; // Default number of top campaigns included in a cause response
 const CAUSE_CAMPAIGN_MAX_LIMIT = 100; // Maximum number of top campaigns included in a cause response
+const LEGACY_CAMPAIGN_DEFAULT_LIMIT = 100; // Default page size of the 2025 campaign list
 
 /*
   Tiltify Data Durable Object
@@ -40,6 +49,7 @@ const CAUSE_CAMPAIGN_MAX_LIMIT = 100; // Maximum number of top campaigns include
     - The full campaign list goes to a single KV value, only when it has changed
   Snapshots are only read after a cold start, until the first refresh completes.
 
+  The summary is kept in its internal format and turned into each response's shape by tiltify-cache/responses.
   Single campaigns and team events add live data fetched from Tiltify on request, cached briefly by FactDetailsService.
 */
 export class TiltifyData {
@@ -49,7 +59,7 @@ export class TiltifyData {
     private campaignStorage: CampaignStorageService;
     private factDetails = new FactDetailsService();
 
-    private summary: ApiResponse | null = null;             // Main response served by the Summary API path
+    private summary: ApiResponse | null = null;             // Totals, causes, history and top campaigns, in the internal format
     private campaigns: Campaign[] | null = null;            // Full sorted campaign list served by the Campaigns API path
     private refreshing: Promise<void> | null = null;        // In-flight refresh, shared by concurrent callers
     private alarmChecked = false;
@@ -76,31 +86,25 @@ export class TiltifyData {
     private setupRouter(): Router {
         const router = new Router();
 
-        // GET route: Get the event summary (totals, causes, history and top campaigns)
-        router.get(SUMMARY_API_PATH, async (request, url) => {
+        // GET route: Get the event (totals, causes, history and top campaigns)
+        router.get(EVENT_API_PATH, async (request, url) => {
             console.log('Called ' + url.pathname);
 
-            return jsonResponse(await this.getSummary());
+            return jsonResponse(getEventResponse(await this.getSummary()));
         });
 
-        // GET route: Get the paginated campaign list, optionally filtered by type and searched by text
+        // GET route: Get the paginated campaign list, optionally filtered by type and cause and searched by text
         router.get(CAMPAIGNS_API_PATH, async (request, url) => {
             console.log('Called ' + url.pathname);
 
-            const limitParam = url.searchParams.get('limit');
-            const offsetParam = url.searchParams.get('offset');
+            const paging = getPaging(url, CAMPAIGN_DEFAULT_LIMIT, CAMPAIGN_MAX_LIMIT);
+            if (paging instanceof Response) {
+                return paging;
+            }
+
             const typeParam = url.searchParams.get('type');
+            const causeParam = (url.searchParams.get('cause') || '').trim().toLowerCase();
             const search = (url.searchParams.get('search') || '').trim();
-
-            const limit = limitParam !== null ? parseInt(limitParam, 10) : CAMPAIGN_DEFAULT_LIMIT;
-            if (isNaN(limit) || limit < 1 || limit > CAMPAIGN_MAX_LIMIT) {
-                return errorResponse(`Invalid limit parameter. Limit must be between 1 and ${CAMPAIGN_MAX_LIMIT}.`, 400);
-            }
-
-            const offset = offsetParam !== null ? parseInt(offsetParam, 10) : 0;
-            if (isNaN(offset) || offset < 0) {
-                return errorResponse('Invalid offset parameter. Offset must be a positive number (0 or greater).', 400);
-            }
 
             const types = typeParam ? typeParam.split(',').map(type => type.trim().toLowerCase()) : null;
             if (types && types.some(type => !CAMPAIGN_TYPES.includes(type))) {
@@ -112,82 +116,65 @@ export class TiltifyData {
             }
 
             const summary = await this.getSummary();
+            const cause = causeParam ? summary.causes.find(c => getCauseSlug(c) === causeParam || c.id.toLowerCase() === causeParam) : null;
+            if (causeParam && !cause) {
+                return errorResponse(`Invalid cause parameter. Cause must be the slug or id of a cause from ${CAUSES_API_PATH}.`, 400);
+            }
+
             let campaigns = await this.getCampaignList();
             if (types) {
-                campaigns = campaigns.filter(campaign => types.includes(getCampaignType(campaign)));
+                campaigns = campaigns.filter(campaign => types.includes(campaign.type));
+            }
+            if (cause) {
+                campaigns = campaigns.filter(campaign => campaign.causeId === cause.id);
             }
             if (search) {
                 campaigns = searchCampaigns(campaigns, search);
             }
 
             return jsonResponse({
-                ...getEnvelope(summary),
-                campaigns: campaigns.slice(offset, offset + limit),
-                total: campaigns.length,
-                limit,
-                offset
+                meta: getMeta(summary),
+                campaigns: getCampaignCollection(campaigns, summary.causes, paging.limit, paging.offset)
             });
         });
 
-        // GET route: Get a single campaign or team campaign by id, with live data from Tiltify
+        // GET route: Get a single campaign or team event by id, with live data from Tiltify (and a team event's supporting campaigns)
         router.get(CAMPAIGN_API_PATH, async (request, url, params) => {
             console.log('Called ' + url.pathname);
 
             const summary = await this.getSummary();
             const campaign = await this.findCampaign(params.campaign);
 
-            if (!campaign || campaign.type !== 'campaign') {
-                return errorResponse(campaign?.type === 'team_event'
-                    ? `Campaign not found. This ID is a team event, use ${TEAM_EVENT_API_PATH.replace(':teamEvent', campaign.id)}.`
-                    : 'Campaign not found.', 404);
+            if (!campaign) {
+                return errorResponse('Campaign not found.', 404);
             }
 
-            const details = await this.factDetails.get(campaign.id);
+            const isTeamEvent = campaign.type === 'team_event';
+            const [details, allCampaigns] = await Promise.all([
+                this.factDetails.get(campaign.id),
+                isTeamEvent ? this.getCampaignList() : Promise.resolve([])
+            ]);
 
-            return jsonResponse({
-                ...getEnvelope(summary),
-                campaign,
+            const response = {
+                meta: getMeta(summary),
+                campaign: getCampaign(campaign, summary.causes),
                 social: details.social,
                 donationMatches: details.donationMatches,
                 rewards: details.rewards,
                 topDonors: details.topDonors,
                 latestDonations: details.latestDonations
-            });
-        });
+            };
 
-        // GET route: Get a single team event by id and its supporting campaigns, with live data from Tiltify
-        router.get(TEAM_EVENT_API_PATH, async (request, url, params) => {
-            console.log('Called ' + url.pathname);
-
-            const summary = await this.getSummary();
-            const teamEvent = await this.findCampaign(params.teamEvent);
-
-            if (!teamEvent || teamEvent.type !== 'team_event') {
-                return errorResponse(teamEvent?.type === 'campaign'
-                    ? `Team event not found. This ID is a campaign, use ${CAMPAIGN_API_PATH.replace(':campaign', teamEvent.id)}.`
-                    : 'Team event not found.', 404);
+            if (!isTeamEvent) {
+                return jsonResponse(response);
             }
 
-            const [details, allCampaigns] = await Promise.all([
-                this.factDetails.get(teamEvent.id),
-                this.getCampaignList()
-            ]);
-            const supportingCampaigns = allCampaigns.filter(campaign => campaign.teamEvent?.id === teamEvent.id);
-
+            // Every supporting campaign is included in one page
+            const supportingCampaigns = allCampaigns.filter(c => c.teamEvent?.id === campaign.id);
             return jsonResponse({
-                ...getEnvelope(summary),
-                teamEvent,
+                ...response,
                 teamMemberCount: details.teamMemberCount,
-                social: details.social,
-                donationMatches: details.donationMatches,
-                rewards: details.rewards,
-                topDonors: details.topDonors,
-                latestDonations: details.latestDonations,
-                campaigns: {
-                    count: supportingCampaigns.length,
-                    live: supportingCampaigns.filter(campaign => campaign.live).length,
-                    list: supportingCampaigns
-                }
+                campaigns: getCampaignCollection(supportingCampaigns, summary.causes, supportingCampaigns.length)
             });
         });
 
@@ -198,68 +185,82 @@ export class TiltifyData {
             const summary = await this.getSummary();
 
             return jsonResponse({
-                ...getEnvelope(summary),
-                causes: summary.causes.map(cause => ({ ...cause, slug: getCauseSlug(cause) }))
+                meta: getMeta(summary),
+                causes: summary.causes.map(getCause)
             });
         });
 
-        // GET route: Get the summary and top campaigns for a single cause, looked up by slug or id
-        // The CAUSE_SLUG env var returns the same summary for the whole event (every cause)
+        // GET route: Get a single cause and its top campaigns, looked up by slug or id
         router.get(CAUSE_API_PATH, async (request, url, params) => {
             console.log('Called ' + url.pathname);
 
-            // Validate limit parameter
-            const limitParam = url.searchParams.get('limit');
-            const limit = limitParam !== null ? parseInt(limitParam, 10) : CAUSE_CAMPAIGN_DEFAULT_LIMIT;
-            if (isNaN(limit) || limit < 1 || limit > CAUSE_CAMPAIGN_MAX_LIMIT) {
-                return errorResponse(`Invalid limit parameter. Limit must be between 1 and ${CAUSE_CAMPAIGN_MAX_LIMIT}.`, 400);
+            const paging = getPaging(url, CAUSE_CAMPAIGN_DEFAULT_LIMIT, CAUSE_CAMPAIGN_MAX_LIMIT);
+            if (paging instanceof Response) {
+                return paging;
             }
 
             const summary = await this.getSummary();
             const causeKey = params.cause.toLowerCase();
-            const isEvent = causeKey === this.env.CAUSE_SLUG.toLowerCase();
-            const cause = isEvent
-                ? getEventCause(summary, this.env, url)
-                : summary.causes.find(c => getCauseSlug(c) === causeKey || c.id.toLowerCase() === causeKey);
+            const cause = summary.causes.find(c => getCauseSlug(c) === causeKey || c.id.toLowerCase() === causeKey);
 
             if (!cause) {
                 return errorResponse('Cause not found.', 404);
             }
 
-            // Campaigns dedicated to this cause, or every campaign for the event (already sorted by amount raised)
-            const allCampaigns = await this.getCampaignList();
-            const causeCampaigns = isEvent ? allCampaigns : allCampaigns.filter(campaign => campaign.causeId === cause.id);
+            // Campaigns dedicated to this cause (already sorted by amount raised)
+            const causeCampaigns = (await this.getCampaignList()).filter(campaign => campaign.causeId === cause.id);
 
             return jsonResponse({
-                ...getEnvelope(summary),
-                raised: summary.raised,
-                scope: isEvent ? 'event' : 'cause',
-                cause: { ...cause, slug: getCauseSlug(cause) },
-                campaigns: {
-                    count: causeCampaigns.length,
-                    live: causeCampaigns.filter(campaign => campaign.live).length,
-                    matching: causeCampaigns.filter(campaign => campaign.donationMatchMultiplier > 1).length,
-                    list: causeCampaigns.slice(0, limit)
-                }
+                meta: getMeta(summary),
+                cause: getCause(cause),
+                campaigns: getCampaignCollection(causeCampaigns, summary.causes, paging.limit, paging.offset)
             });
         });
 
-        // POST route: Manually update the current cached summary
+        // POST route: Manually replace the cached summary, sent as an event response or in the internal format
         router.post(
-            SUMMARY_API_PATH,
+            EVENT_API_PATH,
             async (request, url) => {
                 console.log('Called ' + url.pathname);
 
-                const data: ApiResponse = await request.json();
+                const body: ApiResponse | EventResponse = await request.json();
+                const data = 'meta' in body ? getSummaryFromEventResponse(body, this.campaigns || []) : body;
                 this.summary = data;
                 await this.storage.put(getCacheKey(this.env.YEAR), data);
-                return new Response("Manual Update Success", { status: 200 });
+                return jsonResponse({ success: true });
             },
             {
                 requiresAuth: true,
                 authToken: this.env.ADMIN_TOKEN,
             }
         );
+
+        // GET route: The 2025 summary response, kept until the 2027 event
+        router.get(LEGACY_SUMMARY_API_PATH, async (request, url) => {
+            console.log('Called ' + url.pathname);
+
+            return jsonResponse(getLegacySummary(await this.getSummary()));
+        });
+
+        // GET route: The 2025 paginated campaign list (no search or filters), kept until the 2027 event
+        router.get(LEGACY_CAMPAIGNS_API_PATH, async (request, url) => {
+            console.log('Called ' + url.pathname);
+
+            const paging = getPaging(url, LEGACY_CAMPAIGN_DEFAULT_LIMIT, CAMPAIGN_MAX_LIMIT);
+            if (paging instanceof Response) {
+                return paging;
+            }
+
+            await this.getSummary();
+            const campaigns = await this.getCampaignList();
+
+            return jsonResponse({
+                campaigns: campaigns.slice(paging.offset, paging.offset + paging.limit).map(getLegacyCampaign),
+                total: campaigns.length,
+                limit: paging.limit,
+                offset: paging.offset
+            });
+        });
 
         return router;
     }
@@ -411,69 +412,22 @@ export class TiltifyData {
     }
 }
 
-function jsonResponse(body: unknown, status = 200): Response {
-    return new Response(JSON.stringify(body), {
-        status,
-        headers: { 'Content-Type': 'application/json' }
-    });
-}
+// Read and validate the limit and offset query parameters, or return a 400 response
+function getPaging(url: URL, defaultLimit: number, maxLimit: number): { limit: number; offset: number } | Response {
+    const limitParam = url.searchParams.get('limit');
+    const offsetParam = url.searchParams.get('offset');
 
-function errorResponse(error: string, status: number): Response {
-    return jsonResponse({ error }, status);
-}
-
-// Fields shared by the summary, list and single-object responses
-function getEnvelope(summary: ApiResponse) {
-    return {
-        date: summary.date,
-        event: summary.event,
-        dollarConversionRate: summary.dollarConversionRate
-    };
-}
-
-// The type used by the campaign list's type filter. A team campaign is a campaign owned by a team
-// (a team event's supporting campaigns are owned by users, so they are plain campaigns).
-function getCampaignType(campaign: Campaign): string {
-    if (campaign.type === 'campaign') {
-        return campaign.team ? 'team_campaign' : 'campaign';
+    const limit = limitParam !== null ? parseInt(limitParam, 10) : defaultLimit;
+    if (isNaN(limit) || limit < 1 || limit > maxLimit) {
+        return errorResponse(`Invalid limit parameter. Limit must be between 1 and ${maxLimit}.`, 400);
     }
-    return campaign.type;
-}
 
-// Builds a cause for the whole event, so it can be served in the same shape as a single cause
-function getEventCause(summary: ApiResponse, env: Env, url: URL): Cause {
-    const causeNames = summary.causes.map(cause => cause.name);
-    const causeList = causeNames.length > 1
-        ? `${causeNames.slice(0, -1).join(', ')} and ${causeNames[causeNames.length - 1]}`
-        : causeNames.join('');
+    const offset = offsetParam !== null ? parseInt(offsetParam, 10) : 0;
+    if (isNaN(offset) || offset < 0) {
+        return errorResponse('Invalid offset parameter. Offset must be a positive number (0 or greater).', 400);
+    }
 
-    // Every cause's donate link points at the same Tiltify fundraiser, so use its home page
-    let donateUrl = EVENT_WEBSITE_URL;
-    try {
-        if (summary.causes[0]?.donateUrl) {
-            donateUrl = new URL(summary.causes[0].donateUrl).origin;
-        }
-    } catch { }
-
-    return {
-        id: env.FUNDRAISER_PUBLIC_ID,
-        slug: env.CAUSE_SLUG,
-        name: EVENT_NAME,
-        logo: url.origin + EVENT_LOGO_PATH,
-        borderedLogo: url.origin + EVENT_LOGO_PATH,
-        description: `Raising money for ${causeNames.length} causes: ${causeList}.`,
-        color: EVENT_COLOR,
-        url: EVENT_WEBSITE_URL,
-        donateUrl: donateUrl,
-        raised: roundAmount(summary.raised),
-        campaigns: summary.campaigns.count,
-        live: summary.campaigns.live || 0,
-    };
-}
-
-// Summaries persisted before causes had a slug won't include one, so fall back to generating it from the name
-function getCauseSlug(cause: Cause): string {
-    return (cause.slug || generateSlug(cause.name) || cause.id).toLowerCase();
+    return { limit, offset };
 }
 
 async function hash(value: unknown): Promise<string> {

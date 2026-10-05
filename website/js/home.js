@@ -30,13 +30,13 @@
     async function loadCauses() {
         let data;
         try {
-            data = await (await fetch(JingleJam.domain + '/api/causes')).json();
+            data = await (await fetch(JingleJam.domain + '/api/v1/causes')).json();
         } catch {
             $('#causesError').show();
             return;
         }
 
-        $('.jj-year').text(data.event.year);
+        $('.jj-year').text(data.meta.event.year);
 
         let causes = data.causes.slice().sort((a, b) => a.name.localeCompare(b.name));
 

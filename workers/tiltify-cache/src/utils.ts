@@ -53,5 +53,5 @@ export {
   getCacheKey
 };
 
-export { Router } from './utils/router';
+export { Router, jsonResponse, errorResponse } from './utils/router';
 export type { HttpMethod, RouteHandler, RouteConfig, RouteParams } from './utils/router';

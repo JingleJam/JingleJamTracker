@@ -30,11 +30,11 @@ The Jingle Jam is an annual charity fundraiser, run on [Tiltify](https://tiltify
 The API is open to everyone. It needs no key and no sign-up, and CORS is enabled, so it can be called directly from a browser.
 
 ```bash
-curl https://dashboard.jinglejam.co.uk/api/summary
+curl https://dashboard.jinglejam.co.uk/api/v1/event
 ```
 
 ```js
-const res = await fetch('https://dashboard.jinglejam.co.uk/api/summary');
+const res = await fetch('https://dashboard.jinglejam.co.uk/api/v1/event');
 const data = await res.json();
 
 console.log(`£${data.raised.toLocaleString()} raised from ${data.donations.toLocaleString()} donations`);
@@ -42,16 +42,17 @@ console.log(`£${data.raised.toLocaleString()} raised from ${data.donations.toLo
 
 | Endpoint | Returns |
 |---|---|
-| [`GET /api/summary`](docs/API.md#get-apisummary) | Event totals, per-cause totals, yearly history and the top 100 campaigns |
-| [`GET /api/campaigns`](docs/API.md#get-apicampaigns) | Every campaign, paginated, searchable and filterable by type |
-| [`GET /api/campaigns/{id}`](docs/API.md#get-apicampaignsid) | One campaign, with live social links, donation matches, rewards and top donors |
-| [`GET /api/team_events/{id}`](docs/API.md#get-apiteam_eventsid) | One team event and its campaigns, with the same live data |
-| [`GET /api/causes`](docs/API.md#get-apicauses) | Every cause and its total |
-| [`GET /api/causes/{cause}`](docs/API.md#get-apicausescause) | One cause's total and its top campaigns |
-| [`GET /api/graph/current`](docs/API.md#get-apigraphcurrent) | This year's total over time, one point every 10 minutes |
-| [`GET /api/graph/previous`](docs/API.md#get-apigraphprevious) | Previous years' totals over time (2016 onwards) |
+| [`GET /api/v1/event`](docs/API.md#get-apiv1event) | Event totals, per-cause totals, yearly history and the top 25 campaigns |
+| [`GET /api/v1/campaigns`](docs/API.md#get-apiv1campaigns) | Every campaign and team event, paginated, searchable and filterable by type and cause |
+| [`GET /api/v1/campaigns/{id}`](docs/API.md#get-apiv1campaignsid) | One campaign or team event, with live social links, donation matches, rewards and top donors (and, for a team event, its campaigns) |
+| [`GET /api/v1/causes`](docs/API.md#get-apiv1causes) | Every cause and its total |
+| [`GET /api/v1/causes/{cause}`](docs/API.md#get-apiv1causescause) | One cause's total and its top campaigns |
+| [`GET /api/v1/timeline`](docs/API.md#get-apiv1timeline) | This year's total over time, one point every 10 minutes |
+| [`GET /api/v1/timeline/history`](docs/API.md#get-apiv1timelinehistory) | Previous years' totals over time (2016 onwards) |
 
 **Base URL:** `https://dashboard.jinglejam.co.uk`
+
+The 2025 endpoints (`/api/tiltify`, `/api/campaigns` and `/api/graph/*`) keep working until the 2027 event. See [Legacy endpoints](docs/API.md#legacy-endpoints).
 
 📖 See the **[API reference](docs/API.md)** for every field, error and example.
 
@@ -60,9 +61,9 @@ console.log(`£${data.raised.toLocaleString()} raised from ${data.donations.toLo
 The API is free to use. To keep it fast for everyone, please follow these guidelines:
 
 1. **Make at most 1 request per second**, counted across all of your users combined, not per user.
-2. **Don't poll faster than every 10 seconds.** The data only refreshes every 10 seconds during the event (and less often outside it), so faster polling returns the same response. Every response has a `date` field saying when it was last refreshed, so you can schedule your next request for about 15 seconds after that time.
+2. **Don't poll faster than every 10 seconds.** The data only refreshes every 10 seconds during the event (and less often outside it), so faster polling returns the same response. Every response except the two timelines has a `meta.updatedAt` field saying when it was last refreshed, so you can schedule your next request for about 15 seconds after that time.
 3. **Put a cache in front of the API if you have many users.** If your app, bot or overlay is used by lots of people, fetch from your own server and serve those users from your cache, instead of having every client call the API directly.
-4. **Expect a quiet off-season.** Outside December, totals are zero or carry over from the last event, and `event.start` / `event.end` show when the next one begins.
+4. **Expect a quiet off-season.** Outside December, totals are zero or carry over from the last event, and `meta.event.startsAt` / `meta.event.endsAt` show when the next one begins.
 
 See [Usage guide](docs/API.md#usage-guide) for polling code examples.
 

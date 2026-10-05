@@ -1,8 +1,8 @@
 import { Env } from "tiltify-cache/types/env";
-import { getCacheKey, roundAmount, Router } from "tiltify-cache/utils";
+import { getCacheKey, jsonResponse, roundAmount, Router } from "tiltify-cache/utils";
 import { CurrentGraphPoint } from "tiltify-cache/types/CurrentGraphPoint";
-import { ApiResponse } from "tiltify-cache/types/ApiResponse";
-import { GRAPH_API_PATH, SUMMARY_API_PATH } from "tiltify-cache/constants";
+import { EventResponse } from "tiltify-cache/responses";
+import { EVENT_API_PATH, TIMELINE_API_PATH } from "tiltify-cache/constants";
 
 /*
   Graph Data Durable Object
@@ -24,7 +24,7 @@ export class GraphData {
         const router = new Router();
 
         // GET route: Get the current cached graph list
-        router.get(GRAPH_API_PATH, async (request, url) => {
+        router.get(TIMELINE_API_PATH, async (request, url) => {
             console.log('Called ' + url.pathname);
             
             let data: any[] | null = await this.storage.get(getCacheKey(this.env.YEAR)) || [];
@@ -41,19 +41,19 @@ export class GraphData {
                 this.storage.setAlarm(Date.now());
             }
 
-            return new Response(JSON.stringify(data));
+            return jsonResponse(data);
         });
 
         // POST route: Manually update the current cached graph list
         router.post(
-            GRAPH_API_PATH,
+            TIMELINE_API_PATH,
             async (request, url) => {
                 console.log('Called ' + url.pathname);
                 
                 // Set the graph list to the new data manually
                 const data = await request.json();
                 await this.storage.put(getCacheKey(this.env.YEAR), data);
-                return new Response("Manual Update Success", { status: 200 });
+                return jsonResponse({ success: true });
             },
             {
                 requiresAuth: true,
@@ -96,15 +96,15 @@ export class GraphData {
         const tiltifyData = await this.getLatestData();
 
         // Check if the tiltify data is null or the date is not divisible by the update time frequency
-        if (!tiltifyData || new Date(tiltifyData.date).getMinutes() % (this.env.GRAPH_REFRESH_TIME/60) !== 0) {
+        if (!tiltifyData || new Date(tiltifyData.meta.updatedAt).getMinutes() % (this.env.GRAPH_REFRESH_TIME/60) !== 0) {
             console.log('Skipped alarm...');
             return null;
         }
 
         //Check if the date is within the event start and end date
-        const date = new Date(tiltifyData.date);
-        const startDate = new Date(tiltifyData.event.start);
-        const endDate = new Date(tiltifyData.event.end);
+        const date = new Date(tiltifyData.meta.updatedAt);
+        const startDate = new Date(tiltifyData.meta.event.startsAt);
+        const endDate = new Date(tiltifyData.meta.event.endsAt);
         if (date < startDate || date > endDate) {
             return null;
         }
@@ -122,14 +122,14 @@ export class GraphData {
         // Data exists in the graph list, add the new data point
         else {
             const pounds = roundAmount(tiltifyData.raised);
-            graphData.push(this.formatGraphData(date, pounds, roundAmount(pounds * tiltifyData.dollarConversionRate)));
+            graphData.push(this.formatGraphData(date, pounds, roundAmount(pounds * tiltifyData.meta.dollarConversionRate)));
         }
 
         return graphData;
     }
 
     // Get the default graph data point (either empty list or a 0 point)
-    async defaultObject(data?: ApiResponse): Promise<CurrentGraphPoint[]> {
+    async defaultObject(data?: EventResponse): Promise<CurrentGraphPoint[]> {
         if (!data) {
             data = await this.getLatestData();
         }
@@ -138,7 +138,7 @@ export class GraphData {
             return [];
         }
 
-        return [this.formatGraphData(new Date(data.event.start), 0, 0)];
+        return [this.formatGraphData(new Date(data.meta.event.startsAt), 0, 0)];
     }
 
     // Create a graph data point from the tiltify data
@@ -150,11 +150,11 @@ export class GraphData {
         };
     }
 
-    // Get the latest tiltify data from the real-time API endpoint
-    async getLatestData(): Promise<ApiResponse> {
+    // Get the latest event data from the TiltifyData Durable Object
+    async getLatestData(): Promise<EventResponse> {
         const id = this.env.TILTIFY_DATA.idFromName(getCacheKey(this.env.YEAR));
         const obj = this.env.TILTIFY_DATA.get(id);
-        const resp = await obj.fetch("http://127.0.0.1" + SUMMARY_API_PATH);
+        const resp = await obj.fetch("http://127.0.0.1" + EVENT_API_PATH);
         return await resp.json();
     }
 }

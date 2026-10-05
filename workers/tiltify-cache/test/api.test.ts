@@ -120,9 +120,10 @@ async function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
     throw new Error(`Unexpected fetch: ${url}`);
 }
 
-function createEnv(): Env {
+// overrides: manual adjustments to add to causes, by cause id
+function createEnv(overrides: Record<string, number> = {}): Env {
     const kv: Record<string, string> = {
-        causes: JSON.stringify(CAUSE_IDS.map(id => ({ id, name: id }))),
+        causes: JSON.stringify(CAUSE_IDS.map(id => ({ id, name: id, override: overrides[id] }))),
         summary: "[]",
     };
 
@@ -132,7 +133,6 @@ function createEnv(): Env {
         DOLLAR_OFFSET: 0,
         DONATION_DIFFERENCE: 0,
         CONVERSION_RATE: 1.33,
-        CAUSE_SLUG: "jingle-jam",
         FUNDRAISER_PUBLIC_ID: EVENT_ID,
         ALL_CHARITIES_REGION_ID,
         YOGSCAST_USERNAME: "yogscast",
@@ -249,6 +249,21 @@ describe("getLatestData", () => {
 
             expect(data.campaigns.list.map(campaign => campaign.id)).toEqual([kept.id]);
         });
+
+        it("types every fundraiser as a campaign or a team event, counting auction houses as campaigns", async () => {
+            const teamEvent = fundraiser({ type: "team_event", total_amount_raised: 30 });
+            const auctionHouse = fundraiser({ type: "auction_house", total_amount_raised: 20 });
+            const plain = fundraiser({ total_amount_raised: 10 });
+            fundraisers.push(teamEvent, auctionHouse, plain);
+
+            const data = await getLatestData(createEnv());
+
+            expect(data.campaigns.list.map(campaign => [campaign.id, campaign.type])).toEqual([
+                [teamEvent.id, "team_event"],
+                [auctionHouse.id, "campaign"],
+                [plain.id, "campaign"],
+            ]);
+        });
     });
 
     describe("cause totals", () => {
@@ -343,6 +358,42 @@ describe("getLatestData", () => {
 
             expect(data.raised).toBe(eventTotal);
             expect(causeSum).toBeCloseTo(eventTotal, 2);
+        });
+
+        it("records the part of each cause's total given to it directly", async () => {
+            fundraisers.push(
+                fundraiser({ region_public_id: "cause-1", total_amount_raised: 300 }),
+                fundraiser({ region_public_id: ALL_CHARITIES_REGION_ID, total_amount_raised: 80 }),
+            );
+            // Fundraisers plus 160 donated directly to the event
+            eventTotal = 540;
+
+            const causes = (await getLatestData(createEnv())).causes;
+
+            expect(causes.find(cause => cause.id === "cause-1")).toMatchObject({ raised: 330, raisedDirect: 300 });
+            expect(causes.find(cause => cause.id === "cause-2")).toMatchObject({ raised: 30, raisedDirect: 0 });
+        });
+
+        it("counts a manual adjustment as given directly to its cause", async () => {
+            fundraisers.push(fundraiser({ region_public_id: ALL_CHARITIES_REGION_ID, total_amount_raised: 800 }));
+            eventTotal = 800;
+
+            const causes = (await getLatestData(createEnv({ "cause-1": 80 }))).causes;
+
+            expect(causes.find(cause => cause.id === "cause-1")).toMatchObject({ raised: 170, raisedDirect: 80 });
+            expect(causes.find(cause => cause.id === "cause-2")).toMatchObject({ raised: 90, raisedDirect: 0 });
+        });
+
+        it("breaks down a team event's total into its own donations and its supporting campaigns'", async () => {
+            const teamEvent = fundraiser({ type: "team_event", region_public_id: "cause-1", amount_raised: 100, total_amount_raised: 400 });
+            const supporting = fundraiser({ region_public_id: "cause-2", team_event_public_id: teamEvent.id, total_amount_raised: 300 });
+            fundraisers.push(teamEvent, supporting);
+            eventTotal = 400;
+
+            const list = (await getLatestData(createEnv())).campaigns.list;
+
+            expect(list.find(campaign => campaign.id === teamEvent.id)?.raisedBreakdown).toEqual({ teamEvent: 100, campaigns: 300 });
+            expect(list.find(campaign => campaign.id === supporting.id)).not.toHaveProperty("raisedBreakdown");
         });
     });
 });

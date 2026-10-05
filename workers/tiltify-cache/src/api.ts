@@ -132,6 +132,9 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
           // If the campaign is for a specific cause or applies to all causes
           if (cause.id === campaignRegionId || isAllCauseCampaign) {
             cause.raised += causeAmount;
+            if (!isAllCauseCampaign) {
+              cause.raisedDirect += causeAmount;
+            }
           }
         }
       }
@@ -153,6 +156,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
           for(const apiCause of apiResponse.causes){
             if(cause.id === apiCause.id){
               apiCause.raised += cause.override;
+              apiCause.raisedDirect += cause.override;   // Moves money from the shared amount to this cause
             }
 
             apiCause.raised -= cause.override/causes.length;
@@ -163,6 +167,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
       // Round the raised amounts for each cause
       for (const cause of apiResponse.causes) {
         cause.raised = roundAmount(cause.raised);
+        cause.raisedDirect = roundAmount(cause.raisedDirect);
       }
     }
 
@@ -226,7 +231,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
         live: campaign.live === true,
         donationMatchMultiplier: (campaign.match_count || 0) + 1,   // match_count is the number of extra matches (1 = 2x)
         causeId: causeId || null,
-        type: campaign.type,
+        type: campaign.type === 'team_event' ? 'team_event' : 'campaign',
         team: campaign.team_public_id ? {
           name: campaign.team_name || '',
           slug: teamSlug,
@@ -234,6 +239,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
           url: `https://tiltify.com/+${teamSlug}`,
         } : null,
         teamEvent: getTeamEvent(teamEvents.get(campaign.team_event_public_id || '')),
+        ...(campaign.type === 'team_event' ? getTeamEventBreakdown(campaign) : {}),
         user: {
           name: campaign.username,
           slug: userSlug,
@@ -253,6 +259,19 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
   }
 
   return apiResponse;
+}
+
+// A team event's total, split into donations made to the team event itself and to its supporting campaigns
+function getTeamEventBreakdown(teamEvent: TiltifyMultiSearchCampaign): Pick<Campaign, 'raisedBreakdown'> {
+  const raised = roundAmount(teamEvent.total_amount_raised || 0);
+  const raisedTeamEvent = roundAmount(teamEvent.amount_raised || 0);
+
+  return {
+    raisedBreakdown: {
+      teamEvent: raisedTeamEvent,
+      campaigns: roundAmount(raised - raisedTeamEvent),
+    },
+  };
 }
 
 // The details of the team event a campaign supports, or null if it doesn't support one (or the team event isn't in this year's list)
@@ -327,6 +346,7 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
     url: cause.url,
     donateUrl: cause.donateUrl,
     raised: 0,
+    raisedDirect: 0,
     campaigns: 0,
     live: 0,
   })) || [];

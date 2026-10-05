@@ -1,6 +1,7 @@
 import { Context } from "../../types/env";
-import { forwardToDurableObject, handleAPIRequest } from "../handler";
+import { redirect } from "../handler";
 
+// Moved to /api/v1/timeline, with the same response. Kept until the 2027 event.
 export async function onRequest(context: Context): Promise<Response> {
-    return await handleAPIRequest(context, (request, env, cacheName) => forwardToDurableObject(env.GRAPH_DATA, request, cacheName));
+  return redirect(context, '/api/v1/timeline');
 }

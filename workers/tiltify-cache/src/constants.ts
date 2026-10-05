@@ -1,16 +1,17 @@
-const GRAPH_API_PATH = '/api/graph/current'; // API Path for the Graph Data
-const SUMMARY_API_PATH = '/api/summary'; // API Path for the event summary (the old /api/tiltify path redirects here)
-const CAMPAIGNS_API_PATH = '/api/campaigns'; // API Path for the paginated and searchable campaign list
-const CAMPAIGN_API_PATH = '/api/campaigns/:campaign'; // API Path for a single campaign or team campaign (by id), with live Tiltify data
-const TEAM_EVENT_API_PATH = '/api/team_events/:teamEvent'; // API Path for a single team event (by id), with live Tiltify data
-const CAUSES_API_PATH = '/api/causes'; // API Path for the list of causes
-const CAUSE_API_PATH = '/api/causes/:cause'; // API Path for a single cause's summary (by slug or id)
+const EVENT_API_PATH = '/api/v1/event'; // API Path for the event (totals, causes, history and top campaigns)
+const CAMPAIGNS_API_PATH = '/api/v1/campaigns'; // API Path for the paginated and searchable campaign list
+const CAMPAIGN_API_PATH = '/api/v1/campaigns/:campaign'; // API Path for a single campaign or team event (by id), with live Tiltify data
+const CAUSES_API_PATH = '/api/v1/causes'; // API Path for the list of causes
+const CAUSE_API_PATH = '/api/v1/causes/:cause'; // API Path for a single cause and its top campaigns (by slug or id)
+const TIMELINE_API_PATH = '/api/v1/timeline'; // API Path for the current event's total over time
 
-// Details for the event-level (all causes) view served by the cause API path at the CAUSE_SLUG env var
-const EVENT_NAME = 'Jingle Jam';
-const EVENT_COLOR = '#e21251';
-const EVENT_WEBSITE_URL = 'https://www.jinglejam.co.uk';
-const EVENT_LOGO_PATH = '/assets/jingle-jam-2026-logo.webp';
+// Paths from the 2025 event, which keep serving their 2025 response shape until the 2027 event
+const LEGACY_SUMMARY_API_PATH = '/api/tiltify';
+const LEGACY_CAMPAIGNS_API_PATH = '/api/campaigns';
+
+// The cause shown for a campaign that supports every cause
+const ALL_CAUSES_NAME = 'All The Charities';
+const ALL_CAUSES_COLOR = '#e21251'; // Jingle Jam pink
 
 const SNAPSHOT_INTERVAL_MS = 60 * 1000; // Minimum time between persisted snapshots of the live data (KV reads are cached for ~60s)
 const IDLE_REFRESH_TIME = 5 * 60; // Refresh interval (seconds) outside the event window
@@ -20,17 +21,16 @@ const TOP_DONOR_LIMIT = 25; // Number of top donors included for a single campai
 const LATEST_DONATION_LIMIT = 25; // Number of latest donations included for a single campaign or team event
 
 export {
-    SUMMARY_API_PATH,
-    GRAPH_API_PATH,
+    EVENT_API_PATH,
     CAMPAIGNS_API_PATH,
     CAMPAIGN_API_PATH,
-    TEAM_EVENT_API_PATH,
     CAUSES_API_PATH,
     CAUSE_API_PATH,
-    EVENT_NAME,
-    EVENT_COLOR,
-    EVENT_WEBSITE_URL,
-    EVENT_LOGO_PATH,
+    TIMELINE_API_PATH,
+    LEGACY_SUMMARY_API_PATH,
+    LEGACY_CAMPAIGNS_API_PATH,
+    ALL_CAUSES_NAME,
+    ALL_CAUSES_COLOR,
     SNAPSHOT_INTERVAL_MS,
     IDLE_REFRESH_TIME,
     EVENT_WINDOW_PADDING_MS,

@@ -6,14 +6,14 @@ The tracker pages are static HTML and jQuery in [website/](../website/). They ca
 
 | Page | URL | Data from |
 |---|---|---|
-| [Home](#home) | [`/home`](https://dashboard.jinglejam.co.uk/home) | `/api/causes`, `/api/campaigns?search=` |
-| [Main tracker](#main-tracker) | [`/tracker`](https://dashboard.jinglejam.co.uk/tracker) | `/api/summary`, `/api/graph/current`, `/api/graph/previous` |
-| [Whole-event tracker](#whole-event-tracker) | [`/jingle-jam`](https://dashboard.jinglejam.co.uk/jingle-jam) | `/api/causes/jingle-jam` |
-| [Cause tracker](#cause-tracker) | [`/causes/{cause}`](https://dashboard.jinglejam.co.uk/causes/calm) | `/api/causes/{cause}` |
-| [Campaign tracker](#campaign-and-team-event-trackers) | `/campaigns/{id}` | `/api/campaigns/{id}`, `/api/causes` |
-| [Team event tracker](#campaign-and-team-event-trackers) | `/team_events/{id}` | `/api/team_events/{id}`, `/api/causes` |
+| [Home](#home) | [`/home`](https://dashboard.jinglejam.co.uk/home) | `/api/v1/causes`, `/api/v1/campaigns?search=` |
+| [Main tracker](#main-tracker) | [`/tracker`](https://dashboard.jinglejam.co.uk/tracker) | `/api/v1/event`, `/api/v1/timeline`, `/api/v1/timeline/history` |
+| [Whole-event tracker](#whole-event-tracker) | [`/jingle-jam`](https://dashboard.jinglejam.co.uk/jingle-jam) | `/api/v1/event` |
+| [Cause tracker](#cause-tracker) | [`/causes/{cause}`](https://dashboard.jinglejam.co.uk/causes/calm) | `/api/v1/causes/{cause}?limit=25` |
+| [Campaign tracker](#campaign-and-team-event-trackers) | `/campaigns/{id}` | `/api/v1/campaigns/{id}`, `/api/v1/causes` |
+| [Team event tracker](#campaign-and-team-event-trackers) | `/team_events/{id}` | `/api/v1/campaigns/{id}`, `/api/v1/causes` |
 | [TV view](#tv-view) | [`/tv?type={type}&id={id}`](https://dashboard.jinglejam.co.uk/tv) | The same as the page it shows |
-| [Totals only](#totals-only) | [`/total`](https://dashboard.jinglejam.co.uk/total) | `/api/summary` |
+| [Totals only](#totals-only) | [`/total`](https://dashboard.jinglejam.co.uk/total) | `/api/v1/event` |
 
 > [!NOTE]
 > The screenshots below were taken locally with sample data from a previous event.
@@ -51,7 +51,7 @@ The tracker pages are static HTML and jQuery in [website/](../website/). They ca
 
 ## Whole-event tracker
 
-**[`/jingle-jam`](https://dashboard.jinglejam.co.uk/jingle-jam)**. This is the [cause tracker](#cause-tracker) layout applied to the whole event: the event total, every campaign, and a description listing all the causes.
+**[`/jingle-jam`](https://dashboard.jinglejam.co.uk/jingle-jam)**. This is the [cause tracker](#cause-tracker) layout applied to the whole event: the event total, the top 25 campaigns across every cause, and a description listing all the causes. The page builds its "Jingle Jam" header from the [`/api/v1/event`](API.md#get-apiv1event) data.
 
 ![Whole-event tracker](images/event-tracker.png)
 
@@ -66,12 +66,12 @@ The tracker pages are static HTML and jQuery in [website/](../website/). They ca
 | Section | Shows |
 |---|---|
 | **Raised for {cause}** | The cause's total, including its share of campaigns that support all causes |
-| **Campaigns** | Number of campaigns dedicated to this cause, and how many have an active donation match |
+| **Campaigns** | Number of campaigns dedicated to this cause |
 | **Live now** | Number of those campaigns streaming right now |
 | **Cause details** | Logo, description, and links to donate and to the cause's website |
 | **Top campaigns** | The top 25 campaigns for this cause, with progress towards each goal and badges for **Live** and **Donation match** (e.g. 2× Match). Click a campaign to open it on Tiltify. |
 
-The `{cause}` part of the URL is the cause's slug or Tiltify ID, the same values that [`/api/causes/{cause}`](API.md#get-apicausescause) accepts. New causes get a page automatically. An unknown cause shows **Cause Not Found**.
+The `{cause}` part of the URL is the cause's slug or Tiltify ID, the same values that [`/api/v1/causes/{cause}`](API.md#get-apiv1causescause) accepts. New causes get a page automatically. An unknown cause shows **Cause Not Found**.
 
 | Cause | Tracker |
 |---|---|
@@ -84,7 +84,7 @@ The `{cause}` part of the URL is the cause's slug or Tiltify ID, the same values
 | War Child | [`/causes/war-child`](https://dashboard.jinglejam.co.uk/causes/war-child) |
 | WWF | [`/causes/wwf`](https://dashboard.jinglejam.co.uk/causes/wwf) |
 
-<sub>Causes change each year; this list is for the 2025 event. The current list is in `causes` from [`/api/causes`](API.md#get-apicauses), and on the [home page](#home).</sub>
+<sub>Causes change each year; this list is for the 2025 event. The current list is in `causes` from [`/api/v1/causes`](API.md#get-apiv1causes), and on the [home page](#home).</sub>
 
 ### On mobile
 
@@ -96,7 +96,7 @@ The cards stack into a single column, and each campaign's total and goal move be
 
 ## Campaign and team event trackers
 
-**`/campaigns/{id}`** for a campaign or team campaign, and **`/team_events/{id}`** for a team event. `{id}` is the Tiltify ID from [`/api/campaigns`](API.md#get-apicampaigns), and the [home page](#home)'s search links to them. The pages use the cause tracker's layout, styled in the colour of the cause the fundraiser supports (Jingle Jam pink if it supports every cause).
+**`/campaigns/{id}`** for a campaign or team campaign, and **`/team_events/{id}`** for a team event. `{id}` is the Tiltify ID from [`/api/v1/campaigns`](API.md#get-apiv1campaigns), and the [home page](#home)'s search links to them. Both pages load [`/api/v1/campaigns/{id}`](API.md#get-apiv1campaignsid), which returns campaigns and team events. The pages use the cause tracker's layout, styled in the colour of the cause the fundraiser supports (Jingle Jam pink if it supports every cause).
 
 | Section | Shows |
 |---|---|
@@ -111,9 +111,9 @@ The cards stack into a single column, and each campaign's total and goal move be
 | **Top Donors** and **Latest Donations** | Side by side at the bottom of the page: the top 25 donors (each donor's donations added together; some fundraisers turn their donor leaderboard off on Tiltify, and the page says so), and the 25 most recent donations with each donor's comment |
 | **Rewards** | The fundraiser's own rewards (not the Games Collection). Hidden when there are none. |
 
-Opening a team event's ID at `/campaigns/{id}` (or a campaign's at `/team_events/{id}`) switches to the right page. An unknown ID shows **Campaign Not Found** or **Team Event Not Found**.
+Opening a team event's ID at `/campaigns/{id}` (or a campaign's at `/team_events/{id}`) switches to the right page, based on the `type` in the response, and corrects the URL. An unknown ID shows **Campaign Not Found** or **Team Event Not Found**.
 
-The live details (matches, rewards, donors, social links) come from Tiltify and can be up to 30 seconds old. See [`/api/campaigns/{id}`](API.md#get-apicampaignsid).
+The live details (matches, rewards, donors, social links) come from Tiltify and can be up to 30 seconds old. See [`/api/v1/campaigns/{id}`](API.md#get-apiv1campaignsid).
 
 ---
 
@@ -153,7 +153,7 @@ These apply to every tracker page.
 
 | Option | How |
 |---|---|
-| **Pounds or dollars** | The `$ / £` switch in the top right. Dollar amounts use the API's live `dollarConversionRate`. The choice is saved in the browser and applies to every tracker page, the home page and the TV view. |
+| **Pounds or dollars** | The `$ / £` switch in the top right. Dollar amounts use the API's live `meta.dollarConversionRate`. The choice is saved in the browser and applies to every tracker page, the home page and the TV view. |
 
 **Updating.** While the event is live, each page fetches new data about 15 seconds after the server's last refresh (never more often than every 5 seconds). The *Live* indicator spins while it fetches. Polling pauses while the tab is hidden and catches up when you come back. Before the event the pages show a countdown, and after it they show the final totals and stop polling.
 

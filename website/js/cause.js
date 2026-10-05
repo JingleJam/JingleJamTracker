@@ -17,15 +17,27 @@
             isPounds: true,
         },
         timeLeft: null,
+        isEvent: function () {
+            return JingleJam.causeSlug === EVENT.slug;
+        },
         isLive: function () {
             return !JingleJam.isWaiting() && !JingleJam.hasEnded();
         },
         isWaiting: function () {
-            return new Date() <= JingleJam.model.event.start;
+            return new Date() <= JingleJam.model.meta.event.startsAt;
         },
         hasEnded: function () {
-            return new Date() >= JingleJam.model.event.end;
+            return new Date() >= JingleJam.model.meta.event.endsAt;
         }
+    };
+
+    //The whole event (every cause) is shown at /jingle-jam, in the same layout as a cause
+    const EVENT = {
+        slug: 'jingle-jam',
+        name: 'Jingle Jam',
+        color: '#e21251',
+        url: 'https://www.jinglejam.co.uk',
+        logoPath: '/assets/jingle-jam-2026-logo.webp',
     };
 
     //On page setup
@@ -112,7 +124,7 @@
 
         //The whole event is at /jingle-jam, each cause at /causes/<cause>
         if (/^\/jingle-jam\/?$/i.test(window.location.pathname))
-            return 'jingle-jam';
+            return EVENT.slug;
 
         let match = window.location.pathname.match(/^\/causes\/([^/]+)\/?$/i);
         if (!match)
@@ -154,14 +166,14 @@
         else {
             $('[data-status]').attr('data-status', 'countdown')
             $('#embedContainer #mainCounter').html(JingleJam.timeLeft.days + '<span class="countdown-label">d</span> ' + JingleJam.timeLeft.hours + '<span class="countdown-label">h</span> ' + JingleJam.timeLeft.minutes + '<span class="countdown-label">m</span> ' + JingleJam.timeLeft.seconds + '<span class="countdown-label">s</span> ');
-            $('#mainCounterHeader').html('<i class="clock icon"></i>Countdown to ' + JingleJam.model.event.year);
+            $('#mainCounterHeader').html('<i class="clock icon"></i>Countdown to ' + JingleJam.model.meta.event.year);
         }
     }
 
     //Gets the current time left until the JingleJame starts
     function getTimeLeft() {
         var now = new Date().getTime();
-        var totalTime = JingleJam.model.event.start - now;
+        var totalTime = JingleJam.model.meta.event.startsAt - now;
 
         var days = Math.floor(totalTime / (1000 * 60 * 60 * 24));
         var hours = Math.floor((totalTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -261,7 +273,7 @@
 
                 //If tab is back in focus and the screen did not refresh, refresh it after 1 second
                 setTimeout(function () {
-                    if (!JingleJam.model.date || (new Date() - new Date(JingleJam.model.date)) > (JingleJam.refreshTime + JingleJam.waitTime)) {
+                    if (!JingleJam.model.meta.updatedAt || (new Date() - new Date(JingleJam.model.meta.updatedAt)) > (JingleJam.refreshTime + JingleJam.waitTime)) {
                         updateModel();
                     }
                 }, 1000);
@@ -315,7 +327,7 @@
         if (!isTvMode())
             return;
 
-        let campaigns = JingleJam.model.campaigns.list;
+        let campaigns = JingleJam.model.campaigns.items;
         let track = $('#tvTickerTrack');
 
         $('#tvTickerEmpty').toggle(campaigns.length === 0);
@@ -389,7 +401,7 @@
         let cause = JingleJam.model.cause;
 
         //The event-level page (every cause) uses the same layout, with a few cause-specific parts swapped out
-        let isEvent = JingleJam.model.scope === 'event';
+        let isEvent = JingleJam.isEvent();
         $('#embedContainer').toggleClass('event-scope', isEvent);
         document.title = isEvent ? 'Jingle Jam Tracker' : cause.name + ' - Jingle Jam Tracker';
 
@@ -399,7 +411,7 @@
         $('#homeButton').attr('href', JingleJam.domain + '/home');
         setupSearchButton();
 
-        $('.jj-year').text(JingleJam.model.event.year);
+        $('.jj-year').text(JingleJam.model.meta.event.year);
         $('.jj-cause-name').text(cause.name);
 
         $('#causeName').text(cause.name);
@@ -517,7 +529,7 @@
 
     //Converts a pounds amount to the selected currency
     function toCurrency(pounds) {
-        return JingleJam.settings.isPounds ? pounds : pounds * JingleJam.model.dollarConversionRate;
+        return JingleJam.settings.isPounds ? pounds : pounds * JingleJam.model.meta.dollarConversionRate;
     }
 
     //Animates a counter (targetPrimary = pounds, tagetSecondary = dollars for currency values)
@@ -625,8 +637,8 @@
 
     //Creates or updates the top campaigns list
     function updateCampaigns(instant = false) {
-        let campaigns = JingleJam.model.campaigns.list;
-        let conversion = JingleJam.model.dollarConversionRate;
+        let campaigns = JingleJam.model.campaigns.items;
+        let conversion = JingleJam.model.meta.dollarConversionRate;
         let list = $('#campaignList');
 
         $('#campaignsEmpty').toggle(campaigns.length === 0);
@@ -679,15 +691,6 @@
         return badges;
     }
 
-    //Sets the donation matching count under the campaign count
-    function updateCampaignActivity() {
-        let matching = JingleJam.model.campaigns.matching || 0;
-
-        $('#campaignActivity')
-            .html(matching > 0 ? `<span class="activity-matching"><i class="handshake icon"></i>${formatInt(matching)} matching donations</span>` : '')
-            .toggle(matching > 0);
-    }
-
     //Creates the HTML for a single campaign in the list
     function createCampaignItem(campaign, index) {
         let owner = escapeHtml(campaign.user.name) + (campaign.team ? ' &middot; ' + escapeHtml(campaign.team.name) : '');
@@ -722,7 +725,7 @@
 
     function updateCounts(instant = false) {
         //Get the current data
-        let conversion = JingleJam.model.dollarConversionRate;
+        let conversion = JingleJam.model.meta.dollarConversionRate;
         let cause = JingleJam.model.cause;
         //Live campaigns for the cause (or whole event), falling back to the campaign totals for older cached data
         let liveCount = cause.live ?? JingleJam.model.campaigns.live ?? 0;
@@ -732,7 +735,7 @@
             if (!JingleJam.isWaiting()) {
                 setCount('#embedContainer #mainCounter', toCurrency(cause.raised), formatCurrency);
             }
-            setCount('#embedContainer #campaignCount', JingleJam.model.campaigns.count, formatInt);
+            setCount('#embedContainer #campaignCount', JingleJam.model.campaigns.total, formatInt);
             setCount('#embedContainer #liveCampaignCount', liveCount, formatInt);
         }
         //Update the components by counting up
@@ -767,15 +770,14 @@
                     }
                 }
             }
-            animateCount('#embedContainer #campaignCount', formatInt, JingleJam.model.campaigns.count);
+            animateCount('#embedContainer #campaignCount', formatInt, JingleJam.model.campaigns.total);
             animateCount('#embedContainer #liveCampaignCount', formatInt, liveCount);
         }
 
         updateCampaigns(instant);
-        updateCampaignActivity();
         updateTicker();
 
-        $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.date).toLocaleString());
+        $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.meta.updatedAt).toLocaleString());
     }
 
     //Update the model
@@ -801,7 +803,7 @@
         }
 
         let now = new Date();
-        let modelUpdateTime = JingleJam.model.date ? new Date(JingleJam.model.date) : new Date();
+        let modelUpdateTime = JingleJam.model.meta.updatedAt ? new Date(JingleJam.model.meta.updatedAt) : new Date();
 
         return JingleJam.refreshTime - (now.getTime() - modelUpdateTime.getTime()) + JingleJam.waitTime;
     }
@@ -825,9 +827,11 @@
         }, Math.max(getNextUpdateTime(), JingleJam.minRefreshTime));
     }
 
-    //Get the current cause data
+    //Get the current cause data, or the whole event's (which includes its top 25 campaigns)
     async function getCause() {
-        const response = await fetchWithTimeout(JingleJam.domain + '/api/causes/' + encodeURIComponent(JingleJam.causeSlug) + '?limit=' + JingleJam.campaignLimit);
+        const response = await fetchWithTimeout(JingleJam.isEvent()
+            ? JingleJam.domain + '/api/v1/event'
+            : JingleJam.domain + '/api/v1/causes/' + encodeURIComponent(JingleJam.causeSlug) + '?limit=' + JingleJam.campaignLimit);
 
         if (response.status === 404) {
             JingleJam.notFound = true;
@@ -838,11 +842,44 @@
 
         let data = await response.json();
 
-        data.date = new Date(data.date);
-        data.event.start = new Date(data.event.start);
-        data.event.end = new Date(data.event.end);
+        data.meta.updatedAt = new Date(data.meta.updatedAt);
+        data.meta.event.startsAt = new Date(data.meta.event.startsAt);
+        data.meta.event.endsAt = new Date(data.meta.event.endsAt);
+
+        if (JingleJam.isEvent())
+            data.cause = getEventCause(data);
 
         return data;
+    }
+
+    //Describes the whole event as a cause, so it can use the same layout
+    function getEventCause(data) {
+        let names = data.causes.map(cause => cause.name);
+        let causeList = names.length > 1 ? names.slice(0, -1).join(', ') + ' and ' + names[names.length - 1] : names.join('');
+
+        //Every cause's donate link points at the same Tiltify fundraiser, so use its home page
+        let donateUrl = EVENT.url;
+        try {
+            if (data.causes[0] && data.causes[0].donateUrl)
+                donateUrl = new URL(data.causes[0].donateUrl).origin;
+        } catch { }
+
+        //Absolute, since the page only shows http(s) image URLs
+        let logo = (JingleJam.domain || window.location.origin) + EVENT.logoPath;
+
+        return {
+            slug: EVENT.slug,
+            name: EVENT.name,
+            logo: logo,
+            borderedLogo: logo,
+            description: `Raising money for ${names.length} causes: ${causeList}.`,
+            color: EVENT.color,
+            url: EVENT.url,
+            donateUrl: donateUrl,
+            raised: data.raised,
+            campaigns: data.campaigns.total,
+            live: data.campaigns.live,
+        };
     }
 
     onLoad();

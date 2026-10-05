@@ -42,10 +42,11 @@ flowchart LR
 | Component | Code | Role |
 |---|---|---|
 | **Website** | [website/](../website/) | Static pages that call `/api/*` and animate the totals: loaders in `pages/`, HTML fragments in `fragments/`, scripts in `js/` and the stylesheet in `css/`. [`_redirects`](../website/_redirects) maps each page URL to its loader. See [Web Pages](WEB-PAGES.md). |
-| **Pages Functions** | [functions/api/](../functions/api/) | One file per endpoint. Each forwards the request to a Durable Object (or reads KV) and adds CORS headers ([handler.ts](../functions/api/handler.ts)). The old `/api/tiltify` path answers with a `308` redirect to `/api/summary`. [`_routes.json`](../_routes.json) sends only `/api/*` to Functions. |
-| **`TiltifyData`** Durable Object | [tiltifyData.ts](../workers/tiltify-cache/src/do/tiltifyData.ts) | Fetches from Tiltify and Yogscast, holds the live data in memory, and serves every `/api/*` endpoint except the graphs. Single campaigns and team events add live data fetched from Tiltify on request ([factDetails.ts](../workers/tiltify-cache/src/services/factDetails.ts)). |
-| **`GraphData`** Durable Object | [graphData.ts](../workers/tiltify-cache/src/do/graphData.ts) | Reads the total from `TiltifyData` every minute, records a point every 10 minutes, and serves `/api/graph/current`. |
-| **Data fetching** | [api.ts](../workers/tiltify-cache/src/api.ts), [dependencies/](../workers/tiltify-cache/src/dependencies/) | Calls Tiltify and Yogscast and builds the [`/api/summary`](API.md#get-apisummary) response. |
+| **Pages Functions** | [functions/api/](../functions/api/) | One file per endpoint, with the current ones under `v1/`. Each forwards the request to a Durable Object (or reads KV) and adds CORS headers and JSON errors ([handler.ts](../functions/api/handler.ts)). The 2025 paths `/api/tiltify` and `/api/campaigns` still serve their 2025 response shapes, and `/api/graph/current` and `/api/graph/previous` answer with a `308` redirect to `/api/v1/timeline` and `/api/v1/timeline/history`, until the 2027 event ([legacy endpoints](API.md#legacy-endpoints)). Any other `/api/*` path gets a JSON `404` from [`[[path]].ts`](../functions/api/%5B%5Bpath%5D%5D.ts). [`_routes.json`](../_routes.json) sends only `/api/*` to Functions. |
+| **`TiltifyData`** Durable Object | [tiltifyData.ts](../workers/tiltify-cache/src/do/tiltifyData.ts) | Fetches from Tiltify and Yogscast, holds the live data in memory, and serves every `/api/*` endpoint except the timelines. Single campaigns and team events add live data fetched from Tiltify on request ([factDetails.ts](../workers/tiltify-cache/src/services/factDetails.ts)). |
+| **`GraphData`** Durable Object | [graphData.ts](../workers/tiltify-cache/src/do/graphData.ts) | Reads the total from `TiltifyData`'s `/api/v1/event` every minute, records a point every 10 minutes, and serves `/api/v1/timeline`. |
+| **Data fetching** | [api.ts](../workers/tiltify-cache/src/api.ts), [dependencies/](../workers/tiltify-cache/src/dependencies/) | Calls Tiltify and Yogscast and builds the summary, which `TiltifyData` keeps in an internal format. |
+| **Response shapes** | [responses.ts](../workers/tiltify-cache/src/responses.ts) | Turns the internal summary into each v1 response (with its [`meta`](API.md#meta) object and [campaign collections](API.md#campaign-collection)) and into the 2025 legacy shapes. |
 | **KV** (`JINGLE_JAM_DATA`) | [kv/](../kv/) | Hand-maintained data (causes, yearly history, previous years' graph), plus the campaign list backup. |
 
 The Durable Objects live in a separate Worker, `tiltify-cache` ([workers/tiltify-cache/](../workers/tiltify-cache/)), because Pages projects can't define Durable Objects. The Pages project binds to them by script name in [wrangler.toml](../wrangler.toml).
@@ -59,23 +60,23 @@ The Durable Objects live in a separate Worker, `tiltify-cache` ([workers/tiltify
 3. In parallel, it fetches the fundraiser's totals and rewards from Tiltify, the donation count from the Yogscast API, and the `@yogscast` user's lifetime dollar total (used for the conversion rate).
 4. It fetches every campaign from Tiltify, 6 pages of 100 at a time.
 5. It works out each cause's total, builds the campaign list sorted by amount raised, and replaces what is in memory:
-   - the **summary** (the `/api/summary` response, with the top 100 campaigns)
-   - the **full campaign list** (used by `/api/campaigns`, `/api/campaigns/{id}`, `/api/team_events/{id}` and `/api/causes/{cause}`)
+   - the **summary** (totals, causes, history and the top 100 campaigns, in an internal format; [`/api/v1/event`](API.md#get-apiv1event) serves the top 25 of them and the legacy `/api/tiltify` all 100)
+   - the **full campaign list** (used by `/api/v1/campaigns`, `/api/v1/campaigns/{id}`, `/api/v1/causes/{cause}` and the legacy `/api/campaigns`)
 
 If a refresh comes back with a total of 0 or no campaigns while the previous data had them, the previous data is kept. A brief Tiltify outage never blanks the tracker.
 
 ### 2. API request
 
-1. A visitor's browser, or an API user, calls an endpoint such as `/api/summary`, `/api/campaigns` or `/api/causes/{cause}`.
+1. A visitor's browser, or an API user, calls an endpoint such as `/api/v1/event`, `/api/v1/campaigns` or `/api/v1/causes/{cause}`.
 2. The Pages Function forwards the request to `TiltifyData`.
-3. `TiltifyData` answers from memory without reading storage.
-4. For `/api/campaigns/{id}` and `/api/team_events/{id}`, it first checks the id is in this year's campaign list (so the API can't be used to look up any Tiltify fundraiser), then adds live data from two Tiltify queries: the fundraiser's page data (social links, donation matches, rewards, team member count) and its donor leaderboard. That data is kept in memory for 30 seconds (`FACT_DETAILS_TTL_MS`) and shared between concurrent requests. If Tiltify fails, the last data fetched is kept.
+3. `TiltifyData` answers from memory without reading storage, building the response's shape with [responses.ts](../workers/tiltify-cache/src/responses.ts).
+4. For `/api/v1/campaigns/{id}` (a campaign or a team event), it first checks the id is in this year's campaign list (so the API can't be used to look up any Tiltify fundraiser), then adds live data from two Tiltify queries: the fundraiser's page data (social links, donation matches, rewards, team member count) and its donor leaderboard. That data is kept in memory for 30 seconds (`FACT_DETAILS_TTL_MS`) and shared between concurrent requests. If Tiltify fails, the last data fetched is kept.
 
 The first request after a cold start also starts the alarm loop if it isn't already running.
 
 ### 3. Graph (every minute)
 
-`GraphData` has its own alarm that fires every minute. It reads the current total from `TiltifyData`. When the refresh time falls on a multiple of 10 minutes (`GRAPH_REFRESH_TIME`) and is inside the event, it appends a `{ date, p, d }` point to its storage. `/api/graph/previous` doesn't touch a Durable Object; it returns the `trends-previous` KV value.
+`GraphData` has its own alarm that fires every minute. It reads the current total from `TiltifyData`'s `/api/v1/event`. When the refresh time falls on a multiple of 10 minutes (`GRAPH_REFRESH_TIME`) and is inside the event, it appends a `{ date, p, d }` point to its storage, which `/api/v1/timeline` serves. `/api/v1/timeline/history` doesn't touch a Durable Object; it returns the `trends-previous` KV value.
 
 ### 4. Backups
 
@@ -178,7 +179,6 @@ Worker variables are set in [workers/tiltify-cache/wrangler.toml](../workers/til
 | `CONVERSION_RATE` | Fallback GBP → USD rate |
 | `COLLECTIONS_AVAILABLE` | Fallback collections total if Tiltify's rewards can't be read |
 | `DONATION_DIFFERENCE` | Donation count adjustment (currently unused) |
-| `CAUSE_SLUG` | Slug for the whole-event view of `/api/causes/{cause}` (`jingle-jam`) |
 | `LIVE_REFRESH_TIME` | Seconds between refreshes during the event (`10`) |
 | `ENABLE_REFRESH` | Turns the Tiltify refresh loop on |
 | `GRAPH_REFRESH_TIME` | Seconds between graph points (`600`) |
@@ -205,26 +205,30 @@ JingleJamTracker/
 │   ├── css/style.css            Styles for every page
 │   └── _redirects               Page URLs → loaders, and /script.js and /style.css for the embed
 ├── functions/api/           Pages Functions, one per endpoint
-│   ├── summary.ts               → TiltifyData
-│   ├── tiltify.ts               Redirects to /api/summary
-│   ├── campaigns/index.ts       → TiltifyData
-│   ├── campaigns/[campaign].ts  → TiltifyData
-│   ├── team_events/[team_event].ts → TiltifyData
-│   ├── causes/index.ts          → TiltifyData
-│   ├── causes/[cause].ts        → TiltifyData
-│   ├── graph/current.ts         → GraphData
-│   ├── graph/previous.ts        → KV
-│   └── handler.ts               Shared CORS and response handling
+│   ├── v1/event.ts              → TiltifyData
+│   ├── v1/causes/index.ts       → TiltifyData
+│   ├── v1/causes/[cause].ts     → TiltifyData
+│   ├── v1/campaigns/index.ts    → TiltifyData
+│   ├── v1/campaigns/[campaign].ts → TiltifyData (campaigns and team events)
+│   ├── v1/timeline/index.ts     → GraphData
+│   ├── v1/timeline/history.ts   → KV
+│   ├── tiltify.ts               → TiltifyData (2025 summary shape, until the 2027 event)
+│   ├── campaigns/index.ts       → TiltifyData (2025 list shape, until the 2027 event)
+│   ├── graph/current.ts         Redirects to /api/v1/timeline (until the 2027 event)
+│   ├── graph/previous.ts        Redirects to /api/v1/timeline/history (until the 2027 event)
+│   ├── [[path]].ts              JSON 404 for any other /api path
+│   └── handler.ts               Shared CORS, JSON error and redirect handling
 ├── workers/tiltify-cache/   The caching Worker
 │   └── src/
 │       ├── do/                  TiltifyData and GraphData Durable Objects
 │       ├── api.ts               Builds the summary from Tiltify and Yogscast
+│       ├── responses.ts         Builds the v1 and legacy response shapes from the summary
 │       ├── dependencies/        Tiltify and Yogscast API clients
 │       ├── services/            Campaign list backup (KV), live data for single fundraisers
 │       ├── types/               Response and upstream API types
 │       ├── utils/router.ts      Minimal router with :param and admin auth
 │       ├── utils/search.ts      Typo-tolerant campaign search
-│       └── constants.ts         Paths, intervals, whole-event details
+│       └── constants.ts         Paths, intervals and limits
 ├── kv/                      Hand-maintained KV data
 ├── scripts/                 Local dev helpers (seed KV, clean dev registry)
 ├── docs/                    This documentation

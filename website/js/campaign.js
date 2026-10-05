@@ -2,11 +2,11 @@
     let JingleJam = {
         model: null,
         oldModel: null,
-        kind: null,                 //'campaigns' or 'team_events', the API path the fundraiser is loaded from
+        kind: null,                 //'campaigns' or 'team_events', from the page URL until the fundraiser's type is loaded
         fundraiserId: null,
         fromUrl: false,             //Whether the fundraiser came from the page URL (rather than an embed or /tv attribute)
         notFound: false,
-        causes: {},                 //Causes by id, for the cause name and colour
+        causes: {},                 //Causes by id, for the cause logo and the number of causes
         refreshTime: 10000,         //How often to wait for an API refresh
         waitTime: 5000,             //How long to wait for the data on the backend to be updated
         minRefreshTime: 5000,       //Minimum refresh time for the API
@@ -26,10 +26,10 @@
             return !JingleJam.isWaiting() && !JingleJam.hasEnded();
         },
         isWaiting: function () {
-            return new Date() <= JingleJam.model.event.start;
+            return new Date() <= JingleJam.model.meta.event.startsAt;
         },
         hasEnded: function () {
-            return new Date() >= JingleJam.model.event.end;
+            return new Date() >= JingleJam.model.meta.event.endsAt;
         }
     };
 
@@ -182,14 +182,14 @@
         else {
             $('[data-status]').attr('data-status', 'countdown')
             $('#embedContainer #mainCounter').html(JingleJam.timeLeft.days + '<span class="countdown-label">d</span> ' + JingleJam.timeLeft.hours + '<span class="countdown-label">h</span> ' + JingleJam.timeLeft.minutes + '<span class="countdown-label">m</span> ' + JingleJam.timeLeft.seconds + '<span class="countdown-label">s</span> ');
-            $('#mainCounterHeader').html('<i class="clock icon"></i>Countdown to ' + JingleJam.model.event.year);
+            $('#mainCounterHeader').html('<i class="clock icon"></i>Countdown to ' + JingleJam.model.meta.event.year);
         }
     }
 
     //Gets the current time left until the JingleJame starts
     function getTimeLeft() {
         var now = new Date().getTime();
-        var totalTime = JingleJam.model.event.start - now;
+        var totalTime = JingleJam.model.meta.event.startsAt - now;
 
         var days = Math.floor(totalTime / (1000 * 60 * 60 * 24));
         var hours = Math.floor((totalTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -294,7 +294,7 @@
 
                 //If tab is back in focus and the screen did not refresh, refresh it after 1 second
                 setTimeout(function () {
-                    if (!JingleJam.model.date || (new Date() - new Date(JingleJam.model.date)) > (JingleJam.refreshTime + JingleJam.waitTime)) {
+                    if (!JingleJam.model.meta.updatedAt || (new Date() - new Date(JingleJam.model.meta.updatedAt)) > (JingleJam.refreshTime + JingleJam.waitTime)) {
                         updateModel();
                     }
                 }, 1000);
@@ -356,7 +356,7 @@
             return;
 
         let mode = getTickerMode();
-        let items = mode === 'donors' ? JingleJam.model.topDonors : mode === 'campaigns' ? JingleJam.model.campaigns.list : [];
+        let items = mode === 'donors' ? JingleJam.model.topDonors : mode === 'campaigns' ? JingleJam.model.campaigns.items : [];
         let track = $('#tvTickerTrack');
 
         $('#tvTickerIcon').attr('class', (mode === 'campaigns' ? 'flag' : 'trophy') + ' icon');
@@ -454,7 +454,8 @@
     //Sets the fundraiser name, avatar, links and colours
     function setFundraiserDetails() {
         let fundraiser = JingleJam.model.fundraiser;
-        let cause = JingleJam.causes[fundraiser.causeId];
+        //The full cause (for its logo) if the causes loaded, otherwise the campaign's own name and colour for it. Null for every cause.
+        let cause = fundraiser.cause.id ? (JingleJam.causes[fundraiser.cause.id] || fundraiser.cause) : null;
         let isTeamEvent = JingleJam.isTeamEvent();
 
         $('#embedContainer').toggleClass('team-event-scope', isTeamEvent);
@@ -466,7 +467,7 @@
         $('#homeButton').attr('href', JingleJam.domain + '/home');
         setupSearchButton();
 
-        $('.jj-year').text(JingleJam.model.event.year);
+        $('.jj-year').text(JingleJam.model.meta.event.year);
         $('.jj-fundraiser-kind').text(isTeamEvent ? 'team event' : 'campaign');
 
         $('#fundraiserAvatar').html(createAvatar(getAvatarUrl(fundraiser), getInitial(fundraiser.name)));
@@ -714,7 +715,7 @@
 
     //Converts a pounds amount to the selected currency
     function toCurrency(pounds) {
-        return JingleJam.settings.isPounds ? pounds : pounds * JingleJam.model.dollarConversionRate;
+        return JingleJam.settings.isPounds ? pounds : pounds * JingleJam.model.meta.dollarConversionRate;
     }
 
     //Animates a counter (targetPrimary = pounds, tagetSecondary = dollars for currency values)
@@ -834,8 +835,8 @@
         if (!JingleJam.isTeamEvent())
             return;
 
-        let campaigns = JingleJam.model.campaigns.list;
-        let conversion = JingleJam.model.dollarConversionRate;
+        let campaigns = JingleJam.model.campaigns.items;
+        let conversion = JingleJam.model.meta.dollarConversionRate;
         let list = $('#campaignList');
 
         $('#campaignsEmpty').toggle(campaigns.length === 0);
@@ -923,7 +924,7 @@
     //Creates or updates the top donors list
     function updateDonors(instant = false) {
         let donors = JingleJam.model.topDonors;
-        let conversion = JingleJam.model.dollarConversionRate;
+        let conversion = JingleJam.model.meta.dollarConversionRate;
         let list = $('#donorList');
 
         let message = donors === null
@@ -1081,16 +1082,16 @@
         if (JingleJam.isTeamEvent()) {
             let campaigns = JingleJam.model.campaigns;
             if (instant) {
-                setCount('#embedContainer #campaignCount', campaigns.count, formatInt);
+                setCount('#embedContainer #campaignCount', campaigns.total, formatInt);
                 setCount('#embedContainer #liveCampaignCount', campaigns.live, formatInt);
             }
             else {
-                animateCount('#embedContainer #campaignCount', formatInt, campaigns.count);
+                animateCount('#embedContainer #campaignCount', formatInt, campaigns.total);
                 animateCount('#embedContainer #liveCampaignCount', formatInt, campaigns.live);
             }
 
             let members = JingleJam.model.teamMemberCount;
-            let matching = campaigns.list.filter(campaign => campaign.donationMatchMultiplier > 1).length;
+            let matching = campaigns.items.filter(campaign => campaign.donationMatchMultiplier > 1).length;
             let activity = (members ? `<span><i class="users icon"></i>${formatInt(members)} team members</span>` : '')
                 + (matching > 0 ? `<span class="activity-matching"><i class="handshake icon"></i>${formatInt(matching)} matching donations</span>` : '');
             $('#campaignActivity').html(activity).toggle(activity.length > 0);
@@ -1117,7 +1118,7 @@
 
     function updateCounts(instant = false) {
         //Get the current data
-        let conversion = JingleJam.model.dollarConversionRate;
+        let conversion = JingleJam.model.meta.dollarConversionRate;
         let fundraiser = JingleJam.model.fundraiser;
 
         //Update the components instantly
@@ -1169,7 +1170,7 @@
         updateRewards();
         updateTicker();
 
-        $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.date).toLocaleString());
+        $('#labelDate').text('Last Updated: ' + new Date(JingleJam.model.meta.updatedAt).toLocaleString());
     }
 
     //Update the model
@@ -1196,7 +1197,7 @@
         }
 
         let now = new Date();
-        let modelUpdateTime = JingleJam.model.date ? new Date(JingleJam.model.date) : new Date();
+        let modelUpdateTime = JingleJam.model.meta.updatedAt ? new Date(JingleJam.model.meta.updatedAt) : new Date();
 
         return JingleJam.refreshTime - (now.getTime() - modelUpdateTime.getTime()) + JingleJam.waitTime;
     }
@@ -1220,10 +1221,10 @@
         }, Math.max(getNextUpdateTime(), JingleJam.minRefreshTime));
     }
 
-    //Load the causes once, for the cause name and colour of the fundraiser
+    //Load the causes once, for the logo of the fundraiser's cause and the number of causes
     async function loadCauses() {
         try {
-            const response = await fetchWithTimeout(JingleJam.domain + '/api/causes');
+            const response = await fetchWithTimeout(JingleJam.domain + '/api/v1/causes');
             if (response.ok) {
                 for (let cause of (await response.json()).causes)
                     JingleJam.causes[cause.id] = cause;
@@ -1232,30 +1233,10 @@
     }
 
     //Get the current fundraiser data
-    async function getFundraiser(retried = false) {
-        const response = await fetchWithTimeout(JingleJam.domain + '/api/' + JingleJam.kind + '/' + encodeURIComponent(JingleJam.fundraiserId));
+    async function getFundraiser() {
+        const response = await fetchWithTimeout(JingleJam.domain + '/api/v1/campaigns/' + encodeURIComponent(JingleJam.fundraiserId));
 
         if (response.status === 404) {
-            //A campaign ID opened as a team event (or the other way around) is pointed at the right endpoint, so switch to it
-            let error = '';
-            try {
-                error = (await response.json()).error || '';
-            } catch { }
-
-            let otherKind = JingleJam.isTeamEvent() ? 'campaigns' : 'team_events';
-            if (!retried && error.includes('/api/' + otherKind + '/')) {
-                JingleJam.kind = otherKind;
-                if (JingleJam.fromUrl) {
-                    history.replaceState(null, '', window.location.pathname.replace(/^\/(campaigns|team_events)\//i, '/' + otherKind + '/') + window.location.search);
-                }
-                else if (JingleJam.tvPage) {
-                    let params = new URLSearchParams(window.location.search);
-                    params.set('type', getTvType());
-                    history.replaceState(null, '', window.location.pathname + '?' + params.toString());
-                }
-                return await getFundraiser(true);
-            }
-
             JingleJam.notFound = true;
         }
         if (!response.ok) {
@@ -1264,12 +1245,30 @@
 
         let data = await response.json();
 
-        data.date = new Date(data.date);
-        data.event.start = new Date(data.event.start);
-        data.event.end = new Date(data.event.end);
-        data.fundraiser = data.campaign || data.teamEvent;
+        data.meta.updatedAt = new Date(data.meta.updatedAt);
+        data.meta.event.startsAt = new Date(data.meta.event.startsAt);
+        data.meta.event.endsAt = new Date(data.meta.event.endsAt);
+        data.fundraiser = data.campaign;
+
+        setKind(data.campaign.type === 'team_event' ? 'team_events' : 'campaigns');
 
         return data;
+    }
+
+    //A campaign ID opened as a team event (or the other way around) switches to the right kind, and the page URL is updated to match
+    function setKind(kind) {
+        if (kind === JingleJam.kind)
+            return;
+
+        JingleJam.kind = kind;
+        if (JingleJam.fromUrl) {
+            history.replaceState(null, '', window.location.pathname.replace(/^\/(campaigns|team_events)\//i, '/' + kind + '/') + window.location.search);
+        }
+        else if (JingleJam.tvPage) {
+            let params = new URLSearchParams(window.location.search);
+            params.set('type', getTvType());
+            history.replaceState(null, '', window.location.pathname + '?' + params.toString());
+        }
     }
 
     onLoad();

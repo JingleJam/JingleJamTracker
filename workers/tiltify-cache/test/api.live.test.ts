@@ -21,7 +21,7 @@ const SEARCH_LIMIT = 1000;
 
 // Final 2025 figures from Tiltify, after the event was retired
 const EVENT_TOTAL_2025 = 3501359.21;
-const FUNDRAISERS_2025 = { campaign: 934, team_event: 29, auction_house: 4 };
+const FUNDRAISERS_2025 = { campaign: 938, team_event: 29 }; // The 4 auction houses count as campaigns
 
 function createEnv(): Env {
     const kv: Record<string, string> = {
@@ -35,7 +35,6 @@ function createEnv(): Env {
         DOLLAR_OFFSET: 8215739.75,
         DONATION_DIFFERENCE: 0,
         CONVERSION_RATE: 1.33,
-        CAUSE_SLUG: "jingle-jam",
         FUNDRAISER_PUBLIC_ID: EVENT_2025,
         ALL_CHARITIES_REGION_ID: ALL_CHARITIES_REGION_2025,
         YOGSCAST_USERNAME: "yogscast",
@@ -101,7 +100,7 @@ describe("getLatestData against Tiltify (Jingle Jam 2025)", () => {
             expect(new Set(ids).size).toBe(ids.length);
         });
 
-        it("returns the expected mix of campaigns, team events and auction houses", () => {
+        it("returns the expected mix of campaigns and team events, counting auction houses as campaigns", () => {
             const byType: Record<string, number> = {};
             for (const campaign of data.campaigns.list) {
                 byType[campaign.type] = (byType[campaign.type] || 0) + 1;

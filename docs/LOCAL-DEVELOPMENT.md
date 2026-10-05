@@ -28,10 +28,10 @@ npm run dev                                                                  # S
 | Main tracker | http://127.0.0.1:8788/tracker |
 | Whole-event tracker | http://127.0.0.1:8788/jingle-jam |
 | Cause tracker | http://127.0.0.1:8788/causes/war-child (one per cause in [kv/causes.json](../kv/causes.json)) |
-| Campaign tracker | http://127.0.0.1:8788/campaigns/{id} (any `id` from `/api/campaigns`) |
-| Team event tracker | http://127.0.0.1:8788/team_events/{id} (any `id` from `/api/campaigns?type=team_event`) |
+| Campaign tracker | http://127.0.0.1:8788/campaigns/{id} (any `id` from `/api/v1/campaigns`) |
+| Team event tracker | http://127.0.0.1:8788/team_events/{id} (any `id` from `/api/v1/campaigns?type=team_event`) |
 | TV view | http://127.0.0.1:8788/tv?type=cause&id=war-child |
-| API | http://127.0.0.1:8788/api/summary |
+| API | http://127.0.0.1:8788/api/v1/event |
 
 `npm run dev` runs two processes in one terminal, and **Ctrl+C** stops both:
 
@@ -61,7 +61,7 @@ The Pages Functions reach the Worker's Durable Objects through Wrangler's local 
 Both services share one local state directory, `.wrangler/state` in the repository root, so they see the same KV and Durable Object data.
 
 - **Static data.** `causes`, `summary` and `trends-previous` are copied from [kv/](../kv/) into local KV by `npm run seed`. This runs automatically before every `npm run dev`, so edits to those files take effect on the next start.
-- **Live data.** On the first request to `/api/summary` with an empty cache, the Worker fetches the current data from Tiltify. The timed refresh loops are **off** locally, so the data stays as it is until you restart or reset.
+- **Live data.** On the first request to `/api/v1/event` with an empty cache, the Worker fetches the current data from Tiltify. The timed refresh loops are **off** locally, so the data stays as it is until you restart or reset.
 - **Reset.** `npm run reset` deletes all local state and re-seeds KV.
 
 ### Turning on refresh loops
@@ -84,22 +84,22 @@ Outside December, Tiltify has nothing to show and the pages display a countdown.
 TOKEN=change-me   # Your ADMIN_TOKEN from .dev.vars
 
 # Save the current summary, then move the event so it is in progress
-curl -s http://127.0.0.1:8788/api/summary > summary.json
+curl -s http://127.0.0.1:8788/api/v1/event > summary.json
 node -e "
   const fs = require('fs'), s = JSON.parse(fs.readFileSync('summary.json'));
   const now = Date.now();
-  s.date = new Date(now).toISOString();
-  s.event.start = new Date(now - 6 * 864e5).toISOString();
-  s.event.end = new Date(now + 8 * 864e5).toISOString();
+  s.meta.updatedAt = new Date(now).toISOString();
+  s.meta.event.startsAt = new Date(now - 6 * 864e5).toISOString();
+  s.meta.event.endsAt = new Date(now + 8 * 864e5).toISOString();
   fs.writeFileSync('summary-live.json', JSON.stringify(s));
 "
 
-curl -X POST http://127.0.0.1:8788/api/summary \
+curl -X POST http://127.0.0.1:8788/api/v1/event \
   -H "Authorization: $TOKEN" -H "Content-Type: application/json" \
   --data-binary @summary-live.json
 ```
 
-`/api/campaigns` and `/api/causes/{cause}` use the full campaign list in memory, which this doesn't replace. To see campaigns, the Worker needs a list from Tiltify or the `campaigns-{YEAR}` KV backup. POST an array of points to `/api/graph/current` to fill the main tracker's graph. POST the saved `summary.json` back, or run `npm run reset`, to undo.
+`/api/v1/campaigns`, `/api/v1/campaigns/{id}` and `/api/v1/causes/{cause}` use the full campaign list in memory, which this doesn't replace. To see campaigns, the Worker needs a list from Tiltify or the `campaigns-{YEAR}` KV backup. POST an array of points to `/api/v1/timeline` to fill the main tracker's graph. POST the saved `summary.json` back, or run `npm run reset`, to undo.
 
 Setting `ENABLE_DEBUG = true` in the Worker's `wrangler.toml` is a quicker alternative. It generates rising fake totals without calling Tiltify, but no campaigns.
 
@@ -137,8 +137,8 @@ Swap `development` for `production` to upload to production. These need `wrangle
 | File | KV key | Contents |
 |---|---|---|
 | [causes.json](../kv/causes.json) | `causes` | This year's causes: Tiltify region `id`, `name`, `logo`, `borderedLogo`, `description`, `color`, `url`, `donateUrl`, and an optional `slug` and `override` |
-| [summary.json](../kv/summary.json) | `summary` | Final totals for every previous year (the `history` field of `/api/summary`) |
-| [trends-previous.json](../kv/trends-previous.json) | `trends-previous` | Previous years' graph points (`/api/graph/previous`) |
+| [summary.json](../kv/summary.json) | `summary` | Final totals for every previous year (the `history` field of `/api/v1/event`) |
+| [trends-previous.json](../kv/trends-previous.json) | `trends-previous` | Previous years' graph points (`/api/v1/timeline/history`) |
 
 ## Troubleshooting
 
@@ -166,7 +166,7 @@ That's the normal off-season state: the event is in December. See [Testing with 
 <details>
 <summary><b>Admin requests return 401</b></summary>
 
-The `Authorization` header must be the token value exactly, with no `Bearer ` prefix, and `ADMIN_TOKEN` must be set in `.dev.vars`. Restart `npm run dev` after editing `.dev.vars`.
+The `Authorization` header must be the token value, on its own or as `Bearer <token>`, and `ADMIN_TOKEN` must be set in `.dev.vars`. Restart `npm run dev` after editing `.dev.vars`.
 
 </details>
 
