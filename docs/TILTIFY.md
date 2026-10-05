@@ -53,19 +53,17 @@ A fundraiser has three choices:
 - **All The Charities**: a special region that means "split my money evenly across every charity". Like the charity regions, it is a new region every year.
 - **No charity**: the fundraiser has no region at all. The tracker treats this the same as All The Charities.
 
-There are two edge cases. A charity can occasionally have a second region in the same year, and a fundraiser copied from an earlier year can keep that year's old region. The tracker doesn't recognise either region, so it treats them the same as All The Charities and splits the money evenly.
-
-One thing to note is that Regions are relatively hidden from Tiltify's public API.
+One thing to note is that Regions are relatively hidden from Tiltify's public API, so you won't find them doucumented in their API documentation.
 
 ### Reward
 
-A reward is something donors get for donating. The Jingle Jam has one reward on the event: the Jingle Jam Games Collection, a bundle of games donors receive when they give enough. Tiltify tracks how many collections exist and how many are still left, and the tracker uses those two numbers to show how many have been claimed.
+A reward is something donors get for donating. The Jingle Jam has one reward on the event: the Jingle Jam Games Collection, a collection of games donors receive when they give above a certain threshold. Tiltify tracks how many collections exist and how many are still left, and the tracker uses those two numbers to show how many have been claimed.
 
 Each year has its own Games Collection with a different set of games, so each year's event gets a new reward. A reward belongs to one event only and is never reused in a later year. The games collection reward is required and automatically added to every campaign and team event.
 
-## Campaign vs. Team Event vs. Supporting Campaign
+## How are Donations handled?
 
-The first two are fundraising pages that belong to the year's event. Each has its own page, goal, charity and total. The difference is who owns them:
+Donations are made either to Campaigns or Team Events. Each has its own page, goal, charity and total. The difference is who owns them:
 
 - **Campaign**: a fundraiser owned by one user, for example a streamer raising money on their own channel. A team can also own a campaign. Tiltify calls that a "team campaign", but it is still an ordinary campaign and isn't part of a team event.
 - **Team Event**: a fundraiser run by a team, for example a group of creators raising money together. It has its own page, and people can donate directly to it, just like a campaign.
@@ -74,38 +72,35 @@ A **Supporting Campaign** is a campaign that sits under a team event. A user sta
 
 ### Choosing a charity
 
-Campaigns, team events and supporting campaigns each pick their own charity. A supporting campaign does **not** have to use its team event's charity. It can pick a different single charity, All The Charities, or no charity, whatever the team event picked.
+Campaigns, team events and supporting campaigns each pick their own charity. A supporting campaign does **not** have to use its team event's charity. It can pick a different single charity, All The Charities, or whatever the team event picked.
 
 So the money in a team event can be going to several different charities at once: the team event's own charity for donations made directly to it, and each supporting campaign's charity for the money that campaign raised.
 
 ### How the tracker counts them
 
-The tracker gets its list of fundraisers from Tiltify's search, filtered to the year's event. It asks for everything with a status of **published** (still running) or **retired** (finished), which leaves out deleted and unpublished ones.
-
-It filters on status rather than on Tiltify's `public` flag, because the flag behaves differently for team events. A campaign stays public after it is retired, but a team event stops being public as soon as it is retired. Filtering on `public` would make every team event disappear from the list when the event ends.
-
-Each pound is counted once, towards the charity that was picked for it:
+Each amount is counted once, towards the charity that was picked for it:
 
 - **Campaigns and supporting campaigns** count their whole total towards the charity they picked.
 - **Team events** count only the money donated directly to them, towards the team event's charity. Their full total also includes their supporting campaigns, which are already counted on their own.
-- **Donations made directly to the fundraising event** don't belong to any fundraiser. They make up the gap between the event total and the sum of all fundraisers, and the tracker splits that gap evenly across every charity.
+- **Donations made directly to the fundraising event** don't belong to any fundraiser. They make up the gap between the event total and the sum of all fundraisers, and the tracker splits that gap evenly across every charity. See [Donations to the Fundraising Event](#donations-to-the-fundraising-event).
+
+## Donations to the Fundraising Event
+
+Evet though I stated above that donations come in either through Campaigns or Team Events, they don't have to come in that way. Donations can also be added straight to the fundraising event.
+
+The public can't donate to the event directly, because Tiltify has no donation page for it. These donations are added by the Jingle Jam's managers instead, usually as adjustments to the total or to record donations made outside of Tiltify.
+
+A donation added to the event has no fundraiser and no charity attached, so it only shows up as part of the event's total. The tracker works out how much of this money there is by subtracting the sum of every fundraiser from the event total. It treats that amount the same as All The Charities and splits it evenly across every charity.
+
+### Assigning them to a charity
+
+Sometimes a donation made to the event is meant for a specific charity, or for several charities in set amounts. Tiltify doesn't record this, so it has to be set by hand in [kv/causes.json](../kv/causes.json) using each cause's `override` field.
+
+`override` is the amount, in pounds, of the event's direct donations that belongs to that charity. The tracker adds the override to that charity, then takes an equal share of it back from every charity, including that one. This moves the money out of the even split and into that charity, so the event total stays the same.
+
+For example, with 8 charities, a manager adds £8,000 to the event for Become. By default, the tracker splits it evenly and gives each charity £1,000. Setting `"override": 8000` on Become adds £8,000 to Become and takes £1,000 back from each of the 8 charities. Become ends up with the full £8,000 and the other charities get nothing from that donation.
 
 ## User vs. Team
 
 - **User**: a single Tiltify account belonging to one person. Users start campaigns and can join teams.
 - **Team**: a group of users under one shared name. A team owns its team events and can also own campaigns. Its members can support its team events with supporting campaigns.
-
-## Querying Tiltify
-
-The tracker reads Tiltify through two of the APIs its website uses:
-
-- **Search** (`api.tiltify.com/search/multi-search`, Meilisearch): the list of fundraisers for the event, filtered by event, status and region. It returns at most 1000 results per query, which is why the tracker splits the search into groups.
-- **GraphQL** (`api.tiltify.com`): a single fact's details (the event's totals and rewards, or one campaign's social links, donation matches and rewards) and its donor leaderboard.
-
-The GraphQL API only accepts the queries Tiltify's own website sends. Any other query, even a smaller version of an allowed one, fails with `Client query not allowed`. To read something new, find the request a Tiltify page makes in the browser's network tab and copy its query exactly (whitespace differences are fine). The queries in use are in [dependencies/tiltify.ts](../workers/tiltify-cache/src/dependencies/tiltify.ts), and `npm run test:live` checks they are still accepted.
-
-A few things worth knowing about the GraphQL data:
-
-- **Rewards** on a campaign include the event's own reward (the Games Collection), with `ownerUsageType` `fundraising_event_activation`. A campaign's own rewards have `campaign`, and rewards set up by a team event (`team_event`) also appear on its supporting campaigns.
-- **The donor leaderboard** adds up each donor's donations, so it ranks donors, not single donations. The `donations` query, by contrast, lists the most recent donations, not the largest.
-- **Supporting campaigns** have `team_event_public_id` set in search results and no `team_public_id`. Team campaigns (owned by a team, not part of a team event) have `team_public_id` set.
