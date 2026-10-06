@@ -8,6 +8,9 @@
 /causes/*           /pages/cause        200
 /campaigns/*        /pages/campaign     200
 
+# API docs (Swagger UI, rendering /openapi.yaml)
+/swagger            /pages/swagger      200
+
 # The jinglejam.co.uk embed loads / (index.html, the main tracker fragment), /script.js and /style.css directly
 /script.js          /js/tracker.js      200
 /style.css          /css/style.css      200

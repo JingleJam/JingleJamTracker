@@ -54,7 +54,7 @@ console.log(`£${data.raised.toLocaleString()} raised from ${data.donations.toLo
 
 The 2025 endpoints (`/api/tiltify`, `/api/campaigns` and `/api/graph/*`) keep working until the 2027 event. See [Legacy endpoints](docs/API.md#legacy-endpoints).
 
-📖 See the **[API reference](docs/API.md)** for every field, error and example.
+📖 See the **[API reference](docs/API.md)** for every field, error and example, or load the [OpenAPI spec](website/openapi.yaml) (served at `/openapi.yaml`) into your tools.
 
 ### Usage guidelines
 

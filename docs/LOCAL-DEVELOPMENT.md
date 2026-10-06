@@ -204,4 +204,4 @@ The `Authorization` header must be the token value, on its own or as `Bearer <to
 
 - Run `npm run typecheck` and `npm test`. CI runs the same checks, plus dry-run builds of the Functions and both Worker environments.
 - Open pull requests against `develop`. Merging to `develop` deploys to the development environment, and `master` is production.
-- If you change an endpoint or a response field, update [API.md](API.md).
+- If you change an endpoint or a response field, update [API.md](API.md) and [openapi.yaml](../website/openapi.yaml).

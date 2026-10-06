@@ -8,6 +8,8 @@ The Jingle Jam Tracker API is a free, public, read-only JSON API with live and h
 curl https://dashboard.jinglejam.co.uk/api/v1/event
 ```
 
+An [OpenAPI 3.1 spec](../website/openapi.yaml) is served at [`/openapi.yaml`](https://dashboard.jinglejam.co.uk/openapi.yaml), for generating clients or loading into tools like Postman. To browse it and try the endpoints out, open [`/swagger`](https://dashboard.jinglejam.co.uk/swagger).
+
 > [!NOTE]
 > This is version 1 of the API, at `/api/v1/`. The endpoints from the 2025 event (`/api/tiltify`, `/api/campaigns` and `/api/graph/*`) keep working through the 2026 event and **will be removed before the 2027 event**. See [Legacy endpoints](#legacy-endpoints) for how to move over.
 

@@ -179,5 +179,7 @@ Each page is a loader in `pages/` → an HTML fragment → a script in `js/`.
 | [`js/search-box.js`](../website/js/search-box.js) | The search box used by the home page and the TV view |
 | [`_redirects`](../website/_redirects) | Serves each page URL from its loader, and `/script.js` and `/style.css` from their new locations |
 | [`assets/`](../website/assets/) | Logo, favicon and the self-hosted Montserrat font |
+| [`openapi.yaml`](../website/openapi.yaml) | The [API](API.md)'s OpenAPI spec, served at `/openapi.yaml` |
+| [`pages/swagger.html`](../website/pages/swagger.html) | The API docs at `/swagger`: Swagger UI rendering `openapi.yaml`, with this site selected as the server for "Try it out" |
 
-Third-party libraries are loaded from cdnjs: jQuery, Fomantic UI, and (main tracker only) Chart.js with Moment.js.
+Third-party libraries are loaded from cdnjs: jQuery, Fomantic UI, and (main tracker only) Chart.js with Moment.js. Swagger UI (`/swagger` only) is loaded from jsDelivr.
