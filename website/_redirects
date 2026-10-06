@@ -7,7 +7,6 @@
 /jingle-jam         /pages/cause        200
 /causes/*           /pages/cause        200
 /campaigns/*        /pages/campaign     200
-/team_events/*      /pages/campaign     200
 
 # The jinglejam.co.uk embed loads / (index.html, the main tracker fragment), /script.js and /style.css directly
 /script.js          /js/tracker.js      200

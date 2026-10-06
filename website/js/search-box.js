@@ -4,7 +4,7 @@
     JingleJamSearch.create(element, options) fills the element with a search input and a results list
     (createOverlay() shows one over the page, and getPageUrl() gives the tracker page for a result):
         options.domain      API domain ('' for the same site)
-        options.getUrl      (result) => the URL to open for a result, where result.type is 'cause', 'campaign' or 'team_event'
+        options.getUrl      (result) => the URL to open for a result, where result.type is 'cause' or 'campaign' (a campaign or team event)
         options.onEscape    Called when Escape is pressed in an empty search
         options.autofocus   Focus the input straight away
 */
@@ -132,7 +132,8 @@ window.JingleJamSearch = (function () {
                 const data = await response.json();
                 conversion = data.meta.dollarConversionRate || conversion;
                 campaigns = data.campaigns.items.map(campaign => ({
-                    type: campaign.type,
+                    type: 'campaign',
+                    isTeamEvent: campaign.type === 'team_event',
                     id: campaign.id,
                     name: campaign.name,
                     subtitle: getOwner(campaign),
@@ -179,7 +180,7 @@ window.JingleJamSearch = (function () {
 
         function createResult(result, index) {
             let initial = escapeHtml((result.name || '?').trim().charAt(0).toUpperCase());
-            let label = result.type === 'team_event' ? '<span class="jj-search-tag">Team event</span>' : '';
+            let label = result.isTeamEvent ? '<span class="jj-search-tag">Team event</span>' : '';
             let live = result.live ? '<span class="jj-search-tag jj-search-live">Live</span>' : '';
             let raised = typeof result.raised === 'number' ? `<div class="jj-search-raised">${escapeHtml(formatCurrency(result.raised))}</div>` : '';
 
@@ -250,7 +251,7 @@ window.JingleJamSearch = (function () {
     function getPageUrl(result, domain = '') {
         if (result.type === 'cause')
             return domain + (result.id === EVENT_SLUG ? '/jingle-jam' : '/causes/' + encodeURIComponent(result.id));
-        return domain + (result.type === 'team_event' ? '/team_events/' : '/campaigns/') + encodeURIComponent(result.id);
+        return domain + '/campaigns/' + encodeURIComponent(result.id);
     }
 
     /*

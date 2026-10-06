@@ -28,8 +28,7 @@ npm run dev                                                                  # S
 | Main tracker | http://127.0.0.1:8788/tracker |
 | Whole-event tracker | http://127.0.0.1:8788/jingle-jam |
 | Cause tracker | http://127.0.0.1:8788/causes/war-child (one per cause in [kv/causes.json](../kv/causes.json)) |
-| Campaign tracker | http://127.0.0.1:8788/campaigns/{id} (any `id` from `/api/v1/campaigns`) |
-| Team event tracker | http://127.0.0.1:8788/team_events/{id} (any `id` from `/api/v1/campaigns?type=team_event`) |
+| Campaign and team event tracker | http://127.0.0.1:8788/campaigns/{id} (any `id` from `/api/v1/campaigns`, including team events from `/api/v1/campaigns?type=team_event`) |
 | TV view | http://127.0.0.1:8788/tv?type=cause&id=war-child |
 | API | http://127.0.0.1:8788/api/v1/event |
 

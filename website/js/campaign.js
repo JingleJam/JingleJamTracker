@@ -2,9 +2,7 @@
     let JingleJam = {
         model: null,
         oldModel: null,
-        kind: null,                 //'campaigns' or 'team_events', from the page URL until the fundraiser's type is loaded
         fundraiserId: null,
-        fromUrl: false,             //Whether the fundraiser came from the page URL (rather than an embed or /tv attribute)
         notFound: false,
         causes: {},                 //Causes by id, for the cause logo and the number of causes
         refreshTime: 10000,         //How often to wait for an API refresh
@@ -14,13 +12,13 @@
         tvPage: false,              //Whether this is the /tv page, which is always in TV mode
         tvControlsTimeout: null,
         tvTickerSpeed: 16,          //Seconds for the TV ticker to scroll one screen width
-        domain: '',                 //Root-relative, since the page is served at /campaigns/<id> and /team_events/<id>
+        domain: '',                 //Root-relative, since the page is served at /campaigns/<id>
         settings: {
             isPounds: true,
         },
         timeLeft: null,
         isTeamEvent: function () {
-            return JingleJam.kind === 'team_events';
+            return !!JingleJam.model && JingleJam.model.fundraiser.type === 'team_event';
         },
         isLive: function () {
             return !JingleJam.isWaiting() && !JingleJam.hasEnded();
@@ -66,7 +64,7 @@
         }
         else {
             if (!JingleJam.fundraiserId || JingleJam.notFound) {
-                $('#embedContainer #errorMessage').text(JingleJam.isTeamEvent() ? 'Team Event Not Found' : 'Campaign Not Found');
+                $('#embedContainer #errorMessage').text('Campaign Not Found');
             }
             $('#loader').hide();
             $('#embedContainer #error').show();
@@ -89,13 +87,8 @@
             window.location.hostname.includes('yogscast.com'))
             JingleJam.domain = 'https://dashboard.jinglejam.co.uk';
 
-        //Fundraiser lookup, from the embed container or the /campaigns/<id> or /team_events/<id> URL
-        let target = getFundraiserTarget();
-        if (target) {
-            JingleJam.kind = target.kind;
-            JingleJam.fundraiserId = target.id;
-            JingleJam.fromUrl = target.fromUrl;
-        }
+        //Fundraiser lookup, from the embed container or the /campaigns/<id> URL
+        JingleJam.fundraiserId = getFundraiserId();
 
         //The /tv page loads this page with a data-tv attribute
         JingleJam.tvPage = $('#embedContainer').is('[data-tv]');
@@ -129,33 +122,26 @@
         setTimeout(positionChangeCounter, 100);
     }
 
-    //Gets the fundraiser to load
-    function getFundraiserTarget() {
+    //Gets the campaign or team event to load
+    function getFundraiserId() {
         let container = $('#embedContainer');
         if (container.attr('data-campaign'))
-            return { kind: 'campaigns', id: container.attr('data-campaign'), fromUrl: false };
-        if (container.attr('data-team-event'))
-            return { kind: 'team_events', id: container.attr('data-team-event'), fromUrl: false };
+            return container.attr('data-campaign');
 
-        let match = window.location.pathname.match(/^\/(campaigns|team_events)\/([^/]+)\/?$/i);
+        let match = window.location.pathname.match(/^\/campaigns\/([^/]+)\/?$/i);
         if (!match)
             return null;
 
         try {
-            return { kind: match[1].toLowerCase(), id: decodeURIComponent(match[2]), fromUrl: true };
+            return decodeURIComponent(match[1]);
         } catch {
             return null;
         }
     }
 
-    //The /tv page's type for this fundraiser
-    function getTvType() {
-        return JingleJam.isTeamEvent() ? 'team_event' : 'campaign';
-    }
-
     //The /tv page for this campaign or team event
     function getTvUrl() {
-        return JingleJam.domain + '/tv?type=' + getTvType() + '&id=' + encodeURIComponent(JingleJam.fundraiserId);
+        return JingleJam.domain + '/tv?type=campaign&id=' + encodeURIComponent(JingleJam.fundraiserId);
     }
 
     //Loop to update data on the page as needed
@@ -507,7 +493,7 @@
             cards += createTeamCard('Team', fundraiser.team, safeUrl(fundraiser.team.url), true, 'View team');
         }
         if (fundraiser.teamEvent) {
-            cards += createTeamCard('Team event', fundraiser.teamEvent, JingleJam.domain + '/team_events/' + encodeURIComponent(fundraiser.teamEvent.id), false, 'View team event');
+            cards += createTeamCard('Team event', fundraiser.teamEvent, JingleJam.domain + '/campaigns/' + encodeURIComponent(fundraiser.teamEvent.id), false, 'View team event');
         }
         $('#teamCards').html(cards).toggle(cards.length > 0);
     }
@@ -1250,25 +1236,7 @@
         data.meta.event.endsAt = new Date(data.meta.event.endsAt);
         data.fundraiser = data.campaign;
 
-        setKind(data.campaign.type === 'team_event' ? 'team_events' : 'campaigns');
-
         return data;
-    }
-
-    //A campaign ID opened as a team event (or the other way around) switches to the right kind, and the page URL is updated to match
-    function setKind(kind) {
-        if (kind === JingleJam.kind)
-            return;
-
-        JingleJam.kind = kind;
-        if (JingleJam.fromUrl) {
-            history.replaceState(null, '', window.location.pathname.replace(/^\/(campaigns|team_events)\//i, '/' + kind + '/') + window.location.search);
-        }
-        else if (JingleJam.tvPage) {
-            let params = new URLSearchParams(window.location.search);
-            params.set('type', getTvType());
-            history.replaceState(null, '', window.location.pathname + '?' + params.toString());
-        }
     }
 
     onLoad();

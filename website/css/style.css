@@ -2508,7 +2508,7 @@ html.jj-tv-mode body {
 
 /*
 
-    CAMPAIGN TRACKER (/tracker/campaigns/<id> and /tracker/team_events/<id>)
+    CAMPAIGN TRACKER (/campaigns/<id>, for campaigns and team events)
     Built on the cause tracker's layout and TV mode, coloured with the campaign's cause by scriptCampaign.js
 
 */

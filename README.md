@@ -73,9 +73,8 @@ The API is free to use. To keep it fast for everyone, please follow these guidel
 | Main tracker | [`/tracker`](https://dashboard.jinglejam.co.uk/tracker) |
 | Whole-event tracker | [`/jingle-jam`](https://dashboard.jinglejam.co.uk/jingle-jam) |
 | Cause tracker | [`/causes/{cause}`](https://dashboard.jinglejam.co.uk/causes/calm), e.g. `/causes/calm` |
-| Campaign tracker | `/campaigns/{id}` |
-| Team event tracker | `/team_events/{id}` |
-| TV view | [`/tv?type={cause, campaign or team_event}&id={id}`](https://dashboard.jinglejam.co.uk/tv), e.g. `/tv?type=cause&id=calm` |
+| Campaign and team event tracker | `/campaigns/{id}` |
+| TV view | [`/tv?type={cause or campaign}&id={id}`](https://dashboard.jinglejam.co.uk/tv), e.g. `/tv?type=cause&id=calm` |
 
 🖥️ See **[Web Pages](docs/WEB-PAGES.md)** for a tour of each page and its options.
 

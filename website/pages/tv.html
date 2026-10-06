@@ -21,14 +21,13 @@
 
         <script>
             (function(){
-                // Served at /tv?type=<cause|campaign|team_event>&id=<id>, showing that page in TV mode
+                // Served at /tv?type=<cause|campaign>&id=<id>, showing that page in TV mode (campaign covers team events)
                 const domain = '/';
 
                 // The page for each type, and the attribute its script reads the id from
                 const PAGES = {
                     cause: { fragment: 'fragments/cause', script: 'js/cause.js', attribute: 'data-cause' },
                     campaign: { fragment: 'fragments/campaign', script: 'js/campaign.js', attribute: 'data-campaign' },
-                    team_event: { fragment: 'fragments/campaign', script: 'js/campaign.js', attribute: 'data-team-event' },
                 };
 
                 const params = new URLSearchParams(window.location.search);

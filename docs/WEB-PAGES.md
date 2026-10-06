@@ -10,8 +10,7 @@ The tracker pages are static HTML and jQuery in [website/](../website/). They ca
 | [Main tracker](#main-tracker) | [`/tracker`](https://dashboard.jinglejam.co.uk/tracker) | `/api/v1/event`, `/api/v1/timeline`, `/api/v1/timeline/history` |
 | [Whole-event tracker](#whole-event-tracker) | [`/jingle-jam`](https://dashboard.jinglejam.co.uk/jingle-jam) | `/api/v1/event` |
 | [Cause tracker](#cause-tracker) | [`/causes/{cause}`](https://dashboard.jinglejam.co.uk/causes/calm) | `/api/v1/causes/{cause}?limit=25` |
-| [Campaign tracker](#campaign-and-team-event-trackers) | `/campaigns/{id}` | `/api/v1/campaigns/{id}`, `/api/v1/causes` |
-| [Team event tracker](#campaign-and-team-event-trackers) | `/team_events/{id}` | `/api/v1/campaigns/{id}`, `/api/v1/causes` |
+| [Campaign and team event tracker](#campaign-and-team-event-tracker) | `/campaigns/{id}` | `/api/v1/campaigns/{id}`, `/api/v1/causes` |
 | [TV view](#tv-view) | [`/tv?type={type}&id={id}`](https://dashboard.jinglejam.co.uk/tv) | The same as the page it shows |
 | [Totals only](#totals-only) | [`/total`](https://dashboard.jinglejam.co.uk/total) | `/api/v1/event` |
 
@@ -94,9 +93,9 @@ The cards stack into a single column, and each campaign's total and goal move be
 
 ---
 
-## Campaign and team event trackers
+## Campaign and team event tracker
 
-**`/campaigns/{id}`** for a campaign or team campaign, and **`/team_events/{id}`** for a team event. `{id}` is the Tiltify ID from [`/api/v1/campaigns`](API.md#get-apiv1campaigns), and the [home page](#home)'s search links to them. Both pages load [`/api/v1/campaigns/{id}`](API.md#get-apiv1campaignsid), which returns campaigns and team events. The pages use the cause tracker's layout, styled in the colour of the cause the fundraiser supports (Jingle Jam pink if it supports every cause).
+**`/campaigns/{id}`** for a campaign, team campaign or team event. `{id}` is the Tiltify ID from [`/api/v1/campaigns`](API.md#get-apiv1campaigns), and the [home page](#home)'s search links to it. The page loads [`/api/v1/campaigns/{id}`](API.md#get-apiv1campaignsid) and shows the campaign or team event layout based on the `type` in the response. The page uses the cause tracker's layout, styled in the colour of the cause the fundraiser supports (Jingle Jam pink if it supports every cause).
 
 | Section | Shows |
 |---|---|
@@ -105,13 +104,13 @@ The cards stack into a single column, and each campaign's total and goal move be
 | **Campaigns** and **Live Now** (team events) | Number of campaigns supporting the team event and the team's member count, and how many of those campaigns are live |
 | **Goal** | The percentage of the goal raised, a progress bar, the amount raised against the goal, and how much is left (or **Goal reached**). Hidden when there's no goal. |
 | **Details** | Avatar, name, the description on one line (hover it for the full text), then **{owner} | {cause logo}**: the user (or a team event's team) and the logo of the cause it supports, or the Jingle Jam logo if it supports every cause (hover the logo for the cause's name), and social media links (hover an icon to see the username or address; one that isn't a web address, usually a username, is copied when clicked). A **Donate** button opens the fundraiser on Tiltify, and a campaign links to its owner's Tiltify page. |
-| **Team** / **Team event** | The team the fundraiser belongs to (opens the team on Tiltify), and the team event a campaign supports (opens the [team event's tracker](#campaign-and-team-event-trackers)). Hidden when there are none. |
+| **Team** / **Team event** | The team the fundraiser belongs to (opens the team on Tiltify), and the team event a campaign supports (opens the team event's tracker). Hidden when there are none. |
 | **Donation Matches** | Each active match: who is matching, how much of their pledge has been used, and when it ends. Hidden when there are none. |
 | **Campaigns** (team events) | Every campaign supporting the team event, in the same style as the cause tracker's top campaigns |
 | **Top Donors** and **Latest Donations** | Side by side at the bottom of the page: the top 25 donors (each donor's donations added together; some fundraisers turn their donor leaderboard off on Tiltify, and the page says so), and the 25 most recent donations with each donor's comment |
 | **Rewards** | The fundraiser's own rewards (not the Games Collection). Hidden when there are none. |
 
-Opening a team event's ID at `/campaigns/{id}` (or a campaign's at `/team_events/{id}`) switches to the right page, based on the `type` in the response, and corrects the URL. An unknown ID shows **Campaign Not Found** or **Team Event Not Found**.
+An unknown ID shows **Campaign Not Found**.
 
 The live details (matches, rewards, donors, social links) come from Tiltify and can be up to 30 seconds old. See [`/api/v1/campaigns/{id}`](API.md#get-apiv1campaignsid).
 
@@ -124,8 +123,7 @@ The live details (matches, rewards, donors, social links) come from Tiltify and 
 | `type` | `id` | Example |
 |---|---|---|
 | `cause` | A cause's slug or ID, or `jingle-jam` for the whole event | [`/tv?type=cause&id=calm`](https://dashboard.jinglejam.co.uk/tv?type=cause&id=calm), [`/tv?type=cause&id=jingle-jam`](https://dashboard.jinglejam.co.uk/tv?type=cause&id=jingle-jam) |
-| `campaign` | A campaign's or team campaign's ID | `/tv?type=campaign&id={id}` |
-| `team_event` | A team event's ID | `/tv?type=team_event&id={id}` |
+| `campaign` | A campaign's, team campaign's or team event's ID | `/tv?type=campaign&id={id}` |
 
 The TV icon (🖥) next to the currency switch on any cause, campaign or team event tracker opens that page's TV view. [`/tv`](https://dashboard.jinglejam.co.uk/tv) on its own opens the search, to pick what to show.
 
@@ -171,7 +169,7 @@ Each page is a loader in `pages/` → an HTML fragment → a script in `js/`.
 | `/tracker` | [`pages/tracker.html`](../website/pages/tracker.html) | [`index.html`](../website/index.html) (served at `/`) | [`js/tracker.js`](../website/js/tracker.js) (also served at `/script.js`) |
 | `/home` | [`pages/home.html`](../website/pages/home.html) | [`fragments/home.html`](../website/fragments/home.html) | [`js/home.js`](../website/js/home.js) + [`js/search-box.js`](../website/js/search-box.js) |
 | `/jingle-jam`, `/causes/{cause}` | [`pages/cause.html`](../website/pages/cause.html) | [`fragments/cause.html`](../website/fragments/cause.html) | [`js/cause.js`](../website/js/cause.js) |
-| `/campaigns/{id}`, `/team_events/{id}` | [`pages/campaign.html`](../website/pages/campaign.html) | [`fragments/campaign.html`](../website/fragments/campaign.html) | [`js/campaign.js`](../website/js/campaign.js) |
+| `/campaigns/{id}` | [`pages/campaign.html`](../website/pages/campaign.html) | [`fragments/campaign.html`](../website/fragments/campaign.html) | [`js/campaign.js`](../website/js/campaign.js) |
 | `/tv` | [`pages/tv.html`](../website/pages/tv.html) | The cause or campaign fragment | The cause or campaign script, + [`js/search-box.js`](../website/js/search-box.js) |
 | `/total` | [`pages/total.html`](../website/pages/total.html) | [`fragments/total.html`](../website/fragments/total.html) | [`js/total.js`](../website/js/total.js) |
 
