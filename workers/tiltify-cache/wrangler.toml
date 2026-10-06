@@ -38,7 +38,7 @@ LIVE_REFRESH_TIME = 10
 ENABLE_REFRESH = false
 GRAPH_REFRESH_TIME = 600
 ENABLE_GRAPH_REFRESH = false
-ENABLE_DEBUG = false
+DEMO_MODE = ""   # "starting", "running" or "ending" serves generated demo data instead of Tiltify's (see docs/LOCAL-DEVELOPMENT.md)
 
 
 [env.development]
@@ -65,4 +65,4 @@ LIVE_REFRESH_TIME = 10
 ENABLE_REFRESH = false
 GRAPH_REFRESH_TIME = 600
 ENABLE_GRAPH_REFRESH = false
-ENABLE_DEBUG = false
+DEMO_MODE = ""   # "starting", "running" or "ending" serves generated demo data instead of Tiltify's (see docs/LOCAL-DEVELOPMENT.md)

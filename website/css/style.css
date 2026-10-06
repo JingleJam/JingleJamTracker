@@ -2385,20 +2385,6 @@ html.jj-tv-mode body {
     white-space: nowrap;
 }
 
-#embedContainer .tv-campaign-badges {
-    display: flex;
-    gap: calc(var(--tvt) * 0.72);
-}
-
-#embedContainer .tv-campaign-badges:empty {
-    display: none;
-}
-
-#embedContainer .tv-campaign-badges .campaign-badge {
-    padding: calc(var(--tvt) * 0.36) calc(var(--tvt) * 1.2);
-    font-size: calc(var(--tvt) * 1.68);
-}
-
 /* Goal pill, filled up to the campaign's progress towards its goal */
 #embedContainer .tv-campaign-goal {
     position: relative;
@@ -2734,6 +2720,15 @@ html.jj-tv-mode body {
 #embedContainer.tv-mode.campaign-tracker .cause-info-content .campaign-name-row {
     gap: calc(var(--tv) * 1.4);
     margin-bottom: 0;
+}
+
+/* The campaign or team event name stays on one line, cut off with an ellipsis */
+#embedContainer.tv-mode.campaign-tracker .cause-info-content .cause-info-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding-bottom: 0.1em;   /* Room for letters like g and y, which the overflow would otherwise cut off */
+    margin-bottom: -0.1em;
 }
 
 #embedContainer.tv-mode #fundraiserBadges .campaign-badge {

@@ -379,9 +379,8 @@
             }
 
             elements.find('.tv-campaign-total').text(formatCurrency(toCurrency(item.raised)));
-            //LIVE sits next to the user name, the donation match badge next to the amount
+            //LIVE sits next to the user name
             elements.find('.tv-campaign-live').html(createCampaignBadges({ live: item.live }));
-            elements.find('.tv-campaign-badges').html(createCampaignBadges({ donationMatchMultiplier: item.donationMatchMultiplier }));
 
             //Goal pill: the fill shows progress towards the goal, and turns green once it's reached
             if (item.goal > 0) {
@@ -413,7 +412,6 @@
                 <div class="tv-campaign-owner"><span class="tv-campaign-owner-name">${owner}</span><span class="tv-campaign-live"></span></div>
                 <div class="tv-campaign-meta">
                   <span class="tv-campaign-total"></span>
-                  <span class="tv-campaign-badges"></span>
                   ${campaign.goal > 0 ? '<span class="tv-campaign-goal"></span>' : ''}
                 </div>
               </div>
@@ -550,8 +548,9 @@
             })
             .join('');
 
+        //The TV page has no social links (showing them would override the CSS that hides them)
         setHtmlIfChanged('#fundraiserSocial', links);
-        $('#fundraiserSocial').toggle(links.length > 0);
+        $('#fundraiserSocial').toggle(links.length > 0 && !JingleJam.tvPage);
     }
 
     //A full web address, or one without https:// (e.g. "discord.gg/abc" or "www.example.com"), otherwise null
@@ -1063,7 +1062,9 @@
     //Sets the stat cards: donation match (latest donation in TV mode) and status for a campaign, campaign counts for a team event
     function updateStatCards(instant) {
         let fundraiser = JingleJam.model.fundraiser;
-        $('#fundraiserBadges').html(createCampaignBadges(fundraiser));
+        //The TV page leaves out a team event's live badge
+        let tvTeamEvent = JingleJam.tvPage && JingleJam.isTeamEvent();
+        $('#fundraiserBadges').html(createCampaignBadges(tvTeamEvent ? { donationMatchMultiplier: fundraiser.donationMatchMultiplier } : fundraiser));
 
         if (JingleJam.isTeamEvent()) {
             let campaigns = JingleJam.model.campaigns;
@@ -1077,7 +1078,8 @@
             }
 
             let members = JingleJam.model.teamMemberCount;
-            let matching = campaigns.items.filter(campaign => campaign.donationMatchMultiplier > 1).length;
+            //The TV page leaves out the matching donations count
+            let matching = JingleJam.tvPage ? 0 : campaigns.items.filter(campaign => campaign.donationMatchMultiplier > 1).length;
             let activity = (members ? `<span><i class="users icon"></i>${formatInt(members)} team members</span>` : '')
                 + (matching > 0 ? `<span class="activity-matching"><i class="handshake icon"></i>${formatInt(matching)} matching donations</span>` : '');
             $('#campaignActivity').html(activity).toggle(activity.length > 0);

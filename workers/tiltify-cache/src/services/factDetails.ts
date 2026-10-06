@@ -124,7 +124,7 @@ function getLatestDonations(donations: TiltifyDonations): FactDetails['latestDon
     }));
 }
 
-function getEmptyDetails(): FactDetails {
+export function getEmptyDetails(): FactDetails {
     return {
         social: Object.fromEntries(SOCIAL_KEYS.map(key => [key, null])) as unknown as Social,
         donationMatches: [],

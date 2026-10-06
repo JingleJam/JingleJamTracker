@@ -11,7 +11,7 @@ export interface Env {
     ENABLE_REFRESH: boolean;
     GRAPH_REFRESH_TIME: number;
     ENABLE_GRAPH_REFRESH: boolean;
-    ENABLE_DEBUG: boolean;
+    DEMO_MODE?: string;     // Empty to use Tiltify, or "starting", "running" or "ending" to serve generated demo data (see tiltify-cache/demo)
     ADMIN_TOKEN: string | undefined;
     JINGLE_JAM_DATA: KVNamespace;
     TILTIFY_DATA: DurableObjectNamespace;

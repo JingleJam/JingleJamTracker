@@ -187,9 +187,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
 
     // Create and format the campaign list from the Tiltify API data
     for (const campaign of campaigns) {
-      const description = campaign.description?.length > maxDescriptionLength
-        ? `${campaign.description.slice(0, maxDescriptionLength)}...`
-        : campaign.description;
+      const description = truncateDescription(campaign.description);
 
       // Skip campaigns without a username or if not published
       if (!campaign.username) {
@@ -261,6 +259,13 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
   return apiResponse;
 }
 
+// Shorten a long campaign description, marking where it was cut off
+export function truncateDescription(description: string): string {
+  return description?.length > maxDescriptionLength
+    ? `${description.slice(0, maxDescriptionLength)}...`
+    : description;
+}
+
 // A team event's total, split into donations made to the team event itself and to its supporting campaigns
 function getTeamEventBreakdown(teamEvent: TiltifyMultiSearchCampaign): Pick<Campaign, 'raisedBreakdown'> {
   const raised = roundAmount(teamEvent.total_amount_raised || 0);
@@ -322,7 +327,7 @@ async function getCampaignGroup(env: Env, filter: string): Promise<TiltifyMultiS
 }
 
 // Get the default response data before any Tiltify or Yogscast API calls
-async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] | null = null): Promise<ApiResponse> {
+export async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] | null = null): Promise<ApiResponse> {
   let donationHistory: DonationHistory[] = [];
 
   try {
@@ -376,41 +381,18 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
 }
 
 
-const debugStartDate = new Date("2026-09-28T00:00:00Z");
-const debugEndDate = new Date("2026-12-15T08:00:00Z");
-
-// Create fake data for debugging purposes
-async function getDebugData(env: Env): Promise<ApiResponse> {
-  const defaultResponse = await getDefaultResponse(env);
-
-  defaultResponse.event.start = debugStartDate;
-  defaultResponse.event.end = debugEndDate;
-
-  const amount = 1 * Math.max(((new Date().getTime() - debugStartDate.getTime()) / 3.5913 % 5000000), 0);
-
-  defaultResponse.raised = amount;
-
-  defaultResponse.collections.redeemed = parseInt((amount / 40.84).toFixed(0));
-  defaultResponse.donations = defaultResponse.collections.redeemed + 945;
-
-  for (const cause of defaultResponse.causes) {
-    cause.raised = (amount / defaultResponse.causes.length);
-  }
-
-  return defaultResponse;
-}
-
-// Get the latest data from the Tiltify and Yogscast APIs
-export async function getLatestData(env: Env): Promise<ApiResponse> {
+// Variables set in .dev.vars are strings, so turn the numeric ones into numbers
+export function normalizeEnv(env: Env): void {
   env.DONATION_DIFFERENCE = parseInt(env.DONATION_DIFFERENCE.toString());
   env.DOLLAR_OFFSET = parseFloat(env.DOLLAR_OFFSET.toString());
   env.COLLECTIONS_AVAILABLE = parseInt(env.COLLECTIONS_AVAILABLE.toString());
   env.YEAR = parseInt(env.YEAR.toString());
   env.CONVERSION_RATE = parseFloat(env.CONVERSION_RATE.toString());
+}
 
-  if (env.ENABLE_DEBUG) {
-    return await getDebugData(env);
-  }
+// Get the latest data from the Tiltify and Yogscast APIs
+export async function getLatestData(env: Env): Promise<ApiResponse> {
+  normalizeEnv(env);
 
   return await getSummaryData(env);
 }

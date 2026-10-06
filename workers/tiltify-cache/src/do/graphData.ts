@@ -3,20 +3,26 @@ import { getCacheKey, jsonResponse, roundAmount, Router } from "tiltify-cache/ut
 import { CurrentGraphPoint } from "tiltify-cache/types/CurrentGraphPoint";
 import { EventResponse } from "tiltify-cache/responses";
 import { EVENT_API_PATH, TIMELINE_API_PATH } from "tiltify-cache/constants";
+import { getDemoMode } from "tiltify-cache/demo/clock";
+import { DemoSource } from "tiltify-cache/demo/demoSource";
 
 /*
   Graph Data Durable Object
 
   This Durable Object is responsible for caching the current graph data points for the Jingle Jam event.
+  When DEMO_MODE is set, it serves the demo's generated timeline instead, and its graph loop doesn't run.
 */
 export class GraphData {
     storage: DurableObjectStorage;
     env: Env;
     private router: Router;
+    private demo: DemoSource | null;
 
     constructor(state: DurableObjectState, env: Env) {
         this.storage = state.storage;
         this.env = env;
+        const demoMode = getDemoMode(env);
+        this.demo = demoMode ? new DemoSource(env, demoMode) : null;
         this.router = this.setupRouter();
     }
 
@@ -26,6 +32,10 @@ export class GraphData {
         // GET route: Get the current cached graph list
         router.get(TIMELINE_API_PATH, async (request, url) => {
             console.log('Called ' + url.pathname);
+
+            if (this.demo) {
+                return jsonResponse(await this.demo.getTimeline());
+            }
             
             let data: any[] | null = await this.storage.get(getCacheKey(this.env.YEAR)) || [];
 
@@ -70,6 +80,11 @@ export class GraphData {
     }
 
     async alarm(): Promise<void> {
+        // The demo's timeline is generated, so stop the loop rather than record demo points over the real ones
+        if (this.demo) {
+            return;
+        }
+
         // Check if the graph refresh is enabled and set the alarm if it is
         if (this.env.ENABLE_GRAPH_REFRESH) {
             this.storage.setAlarm(Date.now() + 60 * 1000);

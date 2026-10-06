@@ -42,7 +42,7 @@ function createEnv(): Env {
         ENABLE_REFRESH: false,
         GRAPH_REFRESH_TIME: 600,
         ENABLE_GRAPH_REFRESH: false,
-        ENABLE_DEBUG: false,
+        DEMO_MODE: "",
         ADMIN_TOKEN: undefined,
         JINGLE_JAM_DATA: { get: async (key: string) => kv[key] ?? null } as unknown as KVNamespace,
         TILTIFY_DATA: {} as DurableObjectNamespace,

@@ -11,13 +11,13 @@ import {
     IDLE_REFRESH_TIME,
     EVENT_WINDOW_PADDING_MS
 } from "tiltify-cache/constants";
-import { getLatestData } from "tiltify-cache/api";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
 import { errorResponse, getCacheKey, jsonResponse, Router } from "tiltify-cache/utils";
 import { searchCampaigns } from "tiltify-cache/utils/search";
 import { Campaign } from "tiltify-cache/types/Campaign";
 import { CampaignStorageService } from "tiltify-cache/services/campaignStorage";
-import { FactDetailsService } from "tiltify-cache/services/factDetails";
+import { createDataSource } from "tiltify-cache/services/dataSource";
+import { DataSource } from "tiltify-cache/types/DataSource";
 import {
     EventResponse,
     getCampaign,
@@ -51,13 +51,16 @@ const LEGACY_CAMPAIGN_DEFAULT_LIMIT = 100; // Default page size of the 2025 camp
 
   The summary is kept in its internal format and turned into each response's shape by tiltify-cache/responses.
   Single campaigns and team events add live data fetched from Tiltify on request, cached briefly by FactDetailsService.
+
+  The data comes from a DataSource: Tiltify, or generated demo data when DEMO_MODE is set (tiltify-cache/demo).
+  Demo data always refreshes, and is never persisted or restored, so it never replaces the stored Tiltify data.
 */
 export class TiltifyData {
     storage: DurableObjectStorage;
     env: Env;
     private router: Router;
     private campaignStorage: CampaignStorageService;
-    private factDetails = new FactDetailsService();
+    private source: DataSource;
 
     private summary: ApiResponse | null = null;             // Totals, causes, history and top campaigns, in the internal format
     private campaigns: Campaign[] | null = null;            // Full sorted campaign list served by the Campaigns API path
@@ -70,10 +73,13 @@ export class TiltifyData {
         this.storage = state.storage;
         this.env = env;
         this.campaignStorage = new CampaignStorageService(env.JINGLE_JAM_DATA, env.YEAR);
+        this.source = createDataSource(env);
         this.router = this.setupRouter();
 
         state.blockConcurrencyWhile(async () => {
-            this.summary = await this.storage.get<ApiResponse>(getCacheKey(this.env.YEAR)) || null;
+            if (!this.source.demo) {
+                this.summary = await this.storage.get<ApiResponse>(getCacheKey(this.env.YEAR)) || null;
+            }
 
             try {
                 await CampaignStorageService.deleteLegacyChunks(this.storage);
@@ -151,7 +157,7 @@ export class TiltifyData {
 
             const isTeamEvent = campaign.type === 'team_event';
             const [details, allCampaigns] = await Promise.all([
-                this.factDetails.get(campaign.id),
+                this.source.getFactDetails(campaign.id),
                 isTeamEvent ? this.getCampaignList() : Promise.resolve([])
             ]);
 
@@ -292,7 +298,7 @@ export class TiltifyData {
 
     // Get the full sorted campaign list, serving the KV snapshot after a cold start until the next refresh, or fetching if there is none
     private async getCampaignList(): Promise<Campaign[]> {
-        if (!this.campaigns) {
+        if (!this.campaigns && !this.source.demo) {
             const snapshot = await this.campaignStorage.getCampaigns();
             if (!this.campaigns && snapshot.length > 0) {
                 this.campaigns = snapshot;
@@ -332,7 +338,7 @@ export class TiltifyData {
 
     // Refresh every LIVE_REFRESH_TIME seconds during the event window, and every IDLE_REFRESH_TIME seconds outside it
     private scheduleNextAlarm(): void {
-        if (!this.env.ENABLE_REFRESH) {
+        if (!this.env.ENABLE_REFRESH && !this.source.demo) {
             return;
         }
 
@@ -360,16 +366,17 @@ export class TiltifyData {
     }
 
     private async fetchLatestData(): Promise<void> {
-        const newData = await getLatestData(this.env);
+        const newData = await this.source.getLatestData();
+        const checkFailures = !this.source.demo;    // A demo that starts again legitimately goes back to nothing raised
 
         // Keep the current data if the raised amount is not valid
-        if (!newData || (this.summary && newData.raised === 0 && this.summary.raised !== 0)) {
+        if (!newData || (checkFailures && this.summary && newData.raised === 0 && this.summary.raised !== 0)) {
             console.log(`Raised amount invalid... Keeping old data`);
             return;
         }
 
         // Check if the campaigns failed to load, if so, keep the old campaigns
-        if (this.summary && newData.campaigns.count === 0 && this.summary.campaigns.count > 0) {
+        if (checkFailures && this.summary && newData.campaigns.count === 0 && this.summary.campaigns.count > 0) {
             console.log(`Campaigns failed to load... Keeping old data`);
 
             newData.campaigns = this.summary.campaigns;
@@ -393,7 +400,7 @@ export class TiltifyData {
     // Persist the in-memory data for cold starts, at most every SNAPSHOT_INTERVAL_MS
     private async persistSnapshots(): Promise<void> {
         const now = Date.now();
-        if (now - this.lastSnapshot < SNAPSHOT_INTERVAL_MS) {
+        if (this.source.demo || now - this.lastSnapshot < SNAPSHOT_INTERVAL_MS) {
             return;
         }
         this.lastSnapshot = now;

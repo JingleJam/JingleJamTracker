@@ -45,7 +45,8 @@ flowchart LR
 | **Pages Functions** | [functions/api/](../functions/api/) | One file per endpoint, with the current ones under `v1/`. Each forwards the request to a Durable Object (or reads KV) and adds CORS headers and JSON errors ([handler.ts](../functions/api/handler.ts)). The 2025 paths `/api/tiltify` and `/api/campaigns` still serve their 2025 response shapes, and `/api/graph/current` and `/api/graph/previous` answer with a `308` redirect to `/api/v1/timeline` and `/api/v1/timeline/history`, until the 2027 event ([legacy endpoints](API.md#legacy-endpoints)). Any other `/api/*` path gets a JSON `404` from [`[[path]].ts`](../functions/api/%5B%5Bpath%5D%5D.ts). [`_routes.json`](../_routes.json) sends only `/api/*` to Functions. |
 | **`TiltifyData`** Durable Object | [tiltifyData.ts](../workers/tiltify-cache/src/do/tiltifyData.ts) | Fetches from Tiltify and Yogscast, holds the live data in memory, and serves every `/api/*` endpoint except the timelines. Single campaigns and team events add live data fetched from Tiltify on request ([factDetails.ts](../workers/tiltify-cache/src/services/factDetails.ts)). |
 | **`GraphData`** Durable Object | [graphData.ts](../workers/tiltify-cache/src/do/graphData.ts) | Reads the total from `TiltifyData`'s `/api/v1/event` every minute, records a point every 10 minutes, and serves `/api/v1/timeline`. |
-| **Data fetching** | [api.ts](../workers/tiltify-cache/src/api.ts), [dependencies/](../workers/tiltify-cache/src/dependencies/) | Calls Tiltify and Yogscast and builds the summary, which `TiltifyData` keeps in an internal format. |
+| **Data fetching** | [api.ts](../workers/tiltify-cache/src/api.ts), [dependencies/](../workers/tiltify-cache/src/dependencies/) | Calls Tiltify and Yogscast and builds the summary, which `TiltifyData` keeps in an internal format. `TiltifyData` gets it through a data source ([dataSource.ts](../workers/tiltify-cache/src/services/dataSource.ts)). |
+| **Demo data** | [demo/](../workers/tiltify-cache/src/demo/) | Replaces Tiltify when `DEMO_MODE` is set: generated campaigns, team events, live data for single fundraisers and the timeline, for an event about to start, under way, or about to end. See [Demo mode](LOCAL-DEVELOPMENT.md#demo-mode). |
 | **Response shapes** | [responses.ts](../workers/tiltify-cache/src/responses.ts) | Turns the internal summary into each v1 response (with its [`meta`](API.md#meta) object and [campaign collections](API.md#campaign-collection)) and into the 2025 legacy shapes. |
 | **KV** (`JINGLE_JAM_DATA`) | [kv/](../kv/) | Hand-maintained data (causes, yearly history, previous years' graph), plus the campaign list backup. |
 
@@ -183,7 +184,7 @@ Worker variables are set in [workers/tiltify-cache/wrangler.toml](../workers/til
 | `ENABLE_REFRESH` | Turns the Tiltify refresh loop on |
 | `GRAPH_REFRESH_TIME` | Seconds between graph points (`600`) |
 | `ENABLE_GRAPH_REFRESH` | Turns the graph loop on |
-| `ENABLE_DEBUG` | Serves generated fake totals instead of calling Tiltify |
+| `DEMO_MODE` | Empty to use Tiltify, or `starting`, `running` or `ending` to serve [generated demo data](LOCAL-DEVELOPMENT.md#demo-mode). Leave it empty when deploying. |
 | `ADMIN_TOKEN` | *Secret.* Token for the [admin endpoints](API.md#admin-endpoints) |
 
 ### Preparing for a new year
@@ -222,9 +223,10 @@ JingleJamTracker/
 │   └── src/
 │       ├── do/                  TiltifyData and GraphData Durable Objects
 │       ├── api.ts               Builds the summary from Tiltify and Yogscast
+│       ├── demo/                Generated demo data (DEMO_MODE)
 │       ├── responses.ts         Builds the v1 and legacy response shapes from the summary
 │       ├── dependencies/        Tiltify and Yogscast API clients
-│       ├── services/            Campaign list backup (KV), live data for single fundraisers
+│       ├── services/            Data sources, campaign list backup (KV), live data for single fundraisers
 │       ├── types/               Response and upstream API types
 │       ├── utils/router.ts      Minimal router with :param and admin auth
 │       ├── utils/search.ts      Typo-tolerant campaign search

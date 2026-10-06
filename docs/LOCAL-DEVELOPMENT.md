@@ -100,7 +100,38 @@ curl -X POST http://127.0.0.1:8788/api/v1/event \
 
 `/api/v1/campaigns`, `/api/v1/campaigns/{id}` and `/api/v1/causes/{cause}` use the full campaign list in memory, which this doesn't replace. To see campaigns, the Worker needs a list from Tiltify or the `campaigns-{YEAR}` KV backup. POST an array of points to `/api/v1/timeline` to fill the main tracker's graph. POST the saved `summary.json` back, or run `npm run reset`, to undo.
 
-Setting `ENABLE_DEBUG = true` in the Worker's `wrangler.toml` is a quicker alternative. It generates rising fake totals without calling Tiltify, but no campaigns.
+[Demo mode](#demo-mode) is usually quicker. It fills every page with generated data, campaigns included.
+
+### Demo mode
+
+Set `DEMO_MODE` in `workers/tiltify-cache/.dev.vars` to serve generated data instead of Tiltify's, then restart `npm run dev`:
+
+```ini
+DEMO_MODE="running"
+```
+
+| Mode | On the first request |
+|---|---|
+| `starting` | The event starts in 30 seconds. Until then there are no campaigns, team events or donations, so you can watch the countdown end and everything appear. |
+| `running` | The event is 3 days in, with the totals, campaigns and graph already filled. |
+| `ending` | The event ends in 30 seconds, with almost everything raised, so you can watch it finish. |
+
+The demo uses the causes and history from KV, with generated campaigns, team events and their supporting campaigns, teams without a team event, live streams, donation matches, rewards, top donors, latest donations and social links. It also includes campaigns for checking the extremes:
+- long and unicode names, and text that needs escaping
+- missing and broken avatars
+- no goal, far over goal, and nothing raised
+- streams that are always live or never live
+- leaderboards turned off and sold-out rewards
+
+The last cause gets no campaigns of its own, so it only has its share of the money given to every cause.
+
+- **Timing.** The event lasts as long as the real one, and money comes in at about the real event's pace, so the totals move on every refresh. The data refreshes every `LIVE_REFRESH_TIME` seconds, even with `ENABLE_REFRESH` off.
+- **Campaigns.** There are no campaigns or team events before the start. About 140 go up as the event starts, including the team events and the edge cases, and the rest during the event, more of them early on, until there are about 350. Each raises its money between being published and the end. Goals are 10–50% of what a campaign raises by the end, so most pass their goal around the middle of the event.
+- **Live streams.** Streams last half an hour to a few hours. How many are live follows the time of day, counted from a 17:00 start like the real event: most in the evening, fewest in the morning, and extra on the opening night and the final day.
+- **Restarting the demo.** The first request stores the demo's start time in KV (`demo-clock`), so the totals, the graph and every page agree, and file changes don't restart it. `npm run seed` clears it, which also happens on every `npm run dev`. Changing the mode also starts again.
+- **Real data is left alone.** The demo never calls Tiltify, and it never saves its data to Durable Object storage, to the `campaigns-{YEAR}` backup, or to the graph. Turning the demo off goes straight back to the stored Tiltify data.
+
+A `DEMO_MODE` that isn't one of the modes fails every request instead of calling Tiltify. Leave it empty in `wrangler.toml`, so the deployed Workers never serve demo data.
 
 ## Admin token
 

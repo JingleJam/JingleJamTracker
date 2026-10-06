@@ -355,9 +355,8 @@
         campaigns.forEach((campaign, index) => {
             let items = track.find(`.tv-campaign[data-index="${index}"]`);
             items.find('.tv-campaign-total').text(formatCurrency(toCurrency(campaign.raised)));
-            //LIVE sits next to the user name, the donation match badge next to the amount
+            //LIVE sits next to the user name
             items.find('.tv-campaign-live').html(createCampaignBadges({ live: campaign.live }));
-            items.find('.tv-campaign-badges').html(createCampaignBadges({ donationMatchMultiplier: campaign.donationMatchMultiplier }));
 
             //Goal pill: the fill shows progress towards the goal, and turns green once it's reached
             if (campaign.goal > 0) {
@@ -389,7 +388,6 @@
                 <div class="tv-campaign-owner"><span class="tv-campaign-owner-name">${owner}</span><span class="tv-campaign-live"></span></div>
                 <div class="tv-campaign-meta">
                   <span class="tv-campaign-total"></span>
-                  <span class="tv-campaign-badges"></span>
                   ${campaign.goal > 0 ? '<span class="tv-campaign-goal"></span>' : ''}
                 </div>
               </div>
