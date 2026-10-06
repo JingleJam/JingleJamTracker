@@ -65,8 +65,6 @@ The API is free to use. To keep it fast for everyone, please follow these guidel
 3. **Put a cache in front of the API if you have many users.** If your app, bot or overlay is used by lots of people, fetch from your own server and serve those users from your cache, instead of having every client call the API directly.
 4. **Expect a quiet off-season.** Outside December, totals are zero or carry over from the last event, and `meta.event.startsAt` / `meta.event.endsAt` show when the next one begins.
 
-See [Usage guide](docs/API.md#usage-guide) for polling code examples.
-
 ## The web pages
 
 | Page | URL |
@@ -85,7 +83,7 @@ See [Usage guide](docs/API.md#usage-guide) for polling code examples.
 
 | Document | For |
 |---|---|
-| 📖 [API](docs/API.md) | Developers using the API: endpoints, fields, errors, usage guide |
+| 📖 [API](docs/API.md) | Developers using the API: endpoints, fields, errors |
 | 🖥️ [Web Pages](docs/WEB-PAGES.md) | Everyone: what each page shows, URL options, TV mode |
 | 🏗️ [Architecture](docs/ARCHITECTURE.md) | Contributors: how data gets from Tiltify to the page, storage, freshness, deployment |
 | 🛠️ [Local Development](docs/LOCAL-DEVELOPMENT.md) | Contributors: setup, scripts, local data, debugging, admin endpoints |

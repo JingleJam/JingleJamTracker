@@ -15,7 +15,6 @@ curl https://dashboard.jinglejam.co.uk/api/v1/event
 
 - [Base URLs](#base-urls)
 - [Usage guidelines](#usage-guidelines)
-- [Usage guide](#usage-guide): quick start, polling, recipes
 - [Endpoints](#endpoints)
   - [`GET /api/v1/event`](#get-apiv1event): the current event, with the top 25 campaigns
   - [`GET /api/v1/causes`](#get-apiv1causes): every cause
@@ -49,145 +48,11 @@ The API is free for anyone to use. To keep it fast and affordable for everyone, 
 > [!IMPORTANT]
 > **Make at most 1 request per second**, counted across all of your users combined, not per user.
 
-- **Don't poll faster than every 10 seconds.** During the event the data refreshes every 10 seconds (less often outside it), so faster polling returns the same response. See [Polling for live updates](#polling-for-live-updates).
+- **Don't poll faster than every 10 seconds.** During the event the data refreshes every 10 seconds (less often outside it), so faster polling returns the same response. Every response except the two timelines has a `meta.updatedAt` field saying when it was last refreshed, so you can schedule your next request for about 15 seconds after that time.
 - **Put a cache in front of the API if you have many users.** If your app, website, bot or overlay has lots of users, fetch from your own server and serve those users from your cache, instead of having every client call the API directly.
 - **Fetch only what you need.** `/api/v1/event` already includes the top 25 campaigns, and `/api/v1/causes/{cause}` a cause's top campaigns. To find a particular campaign, use `search` on `/api/v1/campaigns` instead of paging through every campaign.
 - **Poll single campaigns and team events at most every 30 seconds.** [`/api/v1/campaigns/{id}`](#get-apiv1campaignsid) fetches live data from Tiltify, which is reused for 30 seconds.
 - **Link back to the Jingle Jam** ([jinglejam.co.uk](https://www.jinglejam.co.uk)) where it makes sense, so people can donate.
-
----
-
-## Usage guide
-
-### Quick start
-
-<details open>
-<summary><b>JavaScript (browser or Node.js 18+)</b></summary>
-
-```js
-const res = await fetch('https://dashboard.jinglejam.co.uk/api/v1/event');
-const data = await res.json();
-
-console.log(`Jingle Jam ${data.meta.event.year}`);
-console.log(`£${data.raised.toLocaleString('en-GB')} raised`);
-console.log(`$${Math.round(data.raised * data.meta.dollarConversionRate).toLocaleString('en-US')} raised`);
-console.log(`${data.donations.toLocaleString()} donations, ${data.campaigns.total} campaigns`);
-
-for (const cause of data.causes) {
-  console.log(`${cause.name}: £${cause.raised.toLocaleString('en-GB')}`);
-}
-```
-
-</details>
-
-<details>
-<summary><b>Python</b></summary>
-
-```python
-import requests
-
-data = requests.get("https://dashboard.jinglejam.co.uk/api/v1/event", timeout=10).json()
-
-print(f"Jingle Jam {data['meta']['event']['year']}")
-print(f"£{data['raised']:,.2f} raised from {data['donations']:,} donations")
-
-for cause in data["causes"]:
-    print(f"{cause['name']}: £{cause['raised']:,.2f}")
-```
-
-</details>
-
-<details>
-<summary><b>curl + jq</b></summary>
-
-```bash
-# Total raised
-curl -s https://dashboard.jinglejam.co.uk/api/v1/event | jq '.raised'
-
-# Each cause and its total
-curl -s https://dashboard.jinglejam.co.uk/api/v1/causes | jq -r '.causes[] | "\(.name): £\(.raised)"'
-
-# The top 5 campaigns for War Child
-curl -s "https://dashboard.jinglejam.co.uk/api/v1/causes/war-child?limit=5" | jq -r '.campaigns.items[] | "\(.name) (\(.user.name)): £\(.raised)"'
-```
-
-</details>
-
-### Polling for live updates
-
-Every response (except the timelines) has a `meta.updatedAt` field: the time the server last fetched fresh data from Tiltify. During the event that happens every 10 seconds. Tiltify's own totals can also lag by a few seconds.
-
-The simplest correct approach is to poll every **15 seconds**. To stay closer to the live figures, schedule each request about 15 seconds after the previous response's `meta.updatedAt`, which is what the official tracker does:
-
-```js
-const API = 'https://dashboard.jinglejam.co.uk/api/v1/event';
-const REFRESH_MS = 10_000;   // How often the server refreshes
-const DELAY_MS = 5_000;      // Allowance for the refresh to complete
-const MIN_WAIT_MS = 5_000;   // Never poll more often than this
-
-async function poll() {
-  let wait = 15_000;
-  try {
-    const data = await (await fetch(API)).json();
-    render(data);
-
-    // Wait until shortly after the next server refresh is due
-    const age = Date.now() - new Date(data.meta.updatedAt).getTime();
-    wait = Math.max(REFRESH_MS + DELAY_MS - age, MIN_WAIT_MS);
-  } catch (err) {
-    console.error('Update failed, retrying', err);
-  }
-  setTimeout(poll, wait);
-}
-
-poll();
-```
-
-> [!TIP]
-> Outside the event window (`meta.event.startsAt` to `meta.event.endsAt`) the totals don't change, so you can stop polling or back off to a few minutes. The official tracker stops polling once the event ends and pauses while the browser tab is hidden.
-
-### Recipes
-
-**Show a countdown before the event starts.** `meta.event.startsAt` and `meta.event.endsAt` are ISO 8601 UTC timestamps. The event normally runs from 1 December 17:00 UTC to 15 December 08:00 UTC.
-
-```js
-const { meta } = await (await fetch('https://dashboard.jinglejam.co.uk/api/v1/event')).json();
-const now = new Date();
-const status = now < new Date(meta.event.startsAt) ? 'upcoming'
-             : now > new Date(meta.event.endsAt)   ? 'ended'
-             : 'live';
-```
-
-**Show amounts in dollars.** Amounts are in pounds (GBP). Multiply by `meta.dollarConversionRate` to get US dollars:
-
-```js
-const dollars = data.raised * data.meta.dollarConversionRate;
-```
-
-**Track a single cause.** Use `/api/v1/causes/{cause}` with the cause's `slug` from `/api/v1/causes`, e.g. `war-child`. For the whole event, use `/api/v1/event`.
-
-```js
-const warChild = await (await fetch('https://dashboard.jinglejam.co.uk/api/v1/causes/war-child')).json();
-console.log(`${warChild.cause.name}: £${warChild.cause.raised}, ${warChild.campaigns.live} live now`);
-```
-
-**Find a streamer's campaign.** Search `/api/v1/campaigns` by name. The search matches campaign, user and team names and tolerates small typos, best match first:
-
-```js
-const { campaigns } = await (await fetch('https://dashboard.jinglejam.co.uk/api/v1/campaigns?search=spiffing&limit=5')).json();
-const campaign = campaigns.items[0];
-```
-
-**Show a campaign's donation matches and top donors.** Use the campaign's `id` with [`/api/v1/campaigns/{id}`](#get-apiv1campaignsid). This works for team events too:
-
-```js
-const details = await (await fetch(`https://dashboard.jinglejam.co.uk/api/v1/campaigns/${campaign.id}`)).json();
-for (const match of details.donationMatches) {
-  console.log(`${match.matchedBy} is matching donations, £${match.matched} of £${match.pledged} so far`);
-}
-```
-
-**Plot this year against previous years.** Combine [`/api/v1/timeline`](#get-apiv1timeline) and [`/api/v1/timeline/history`](#get-apiv1timelinehistory). To line the years up, plot each point by time since its own event start, not by calendar date.
 
 ---
 
@@ -384,11 +249,7 @@ GET /api/v1/causes/{cause}?limit=25&offset=0
 |---|---|
 | `cause` | The cause's `slug` (e.g. `war-child`) or `id`, as listed in [`/api/v1/causes`](#get-apiv1causes). Not case-sensitive. |
 
-The slug is the cause name in lowercase, with spaces replaced by hyphens and other punctuation removed, so each new cause gets an endpoint automatically. For the causes in the 2025 event:
-
-`autistica` · `become` · `calm` · `the-grand-appeal` · `make-a-wish` · `the-trevor-project` · `war-child` · `wwf`
-
-For the whole event, use [`/api/v1/event`](#get-apiv1event).
+The slug is the cause name in lowercase, with spaces replaced by hyphens and other punctuation removed, so each new cause gets an endpoint automatically.
 
 #### Query parameters
 
