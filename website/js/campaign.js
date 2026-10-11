@@ -458,15 +458,21 @@
         $('#fundraiserName').text(fundraiser.name);
         //The description on one line (the full text shows on hover), then the cause it supports
         $('#fundraiserDescription').text(fundraiser.description || '').attr('title', fundraiser.description || '').toggle(!!fundraiser.description);
-        //"<owner> | <cause logo>", with the Jingle Jam logo for fundraisers supporting every cause (the logo's hover names the cause)
+        //"<owner> | <cause logo>", with the Jingle Jam logo for fundraisers supporting every cause (the logo's hover names the cause). TV mode hides the logo.
         let causeName = cause ? cause.name : getAllCausesText();
         let causeLogo = cause
-            ? `<img src="${escapeHtml(safeUrl(cause.logo || cause.borderedLogo))}" alt="${escapeHtml(causeName)}" title="${escapeHtml(causeName)}" onerror="this.remove()">`
-            : `<img src="${escapeHtml(JingleJam.domain + (JingleJam.tvPage ? '/assets/jingle-jam-logo.png' : '/assets/jingle-jam-2026-logo.webp'))}" alt="${escapeHtml(causeName)}" title="${escapeHtml(causeName)}">`;
+            ? `<img class="campaign-info-cause-logo" src="${escapeHtml(safeUrl(cause.logo || cause.borderedLogo))}" alt="${escapeHtml(causeName)}" title="${escapeHtml(causeName)}" onerror="this.remove()">`
+            : `<img class="campaign-info-cause-logo" src="${escapeHtml(JingleJam.domain + '/assets/jingle-jam-2026-logo.webp')}" alt="${escapeHtml(causeName)}" title="${escapeHtml(causeName)}">`;
         let owner = isTeamEvent ? getOwnerName(fundraiser) : fundraiser.user.name;
         //A team icon for a team event's team, otherwise a user icon (only shown in TV mode)
         let ownerIcon = `<i class="${isTeamEvent ? 'users' : 'user'} icon campaign-info-owner-icon" aria-hidden="true"></i>`;
         $('#fundraiserCause').html(`${ownerIcon}<span class="campaign-info-owner-name">${escapeHtml(owner)}</span><span class="campaign-info-separator" aria-hidden="true"></span>${causeLogo}`);
+        //TV mode shows the cause's logo beside the Jingle Jam logo instead (none for fundraisers supporting every cause)
+        if (cause) {
+            $('#headerCauseLogo').attr({ src: safeUrl(cause.logo || cause.borderedLogo), alt: causeName, title: causeName }).off('error').on('error', function () { $(this).removeAttr('src'); });
+        } else {
+            $('#headerCauseLogo').removeAttr('src');
+        }
         $('#fundraiserDonateLink').attr('href', safeUrl(fundraiser.url));
 
         //The campaign owner's page on Tiltify (a team event's team has its own card instead)
