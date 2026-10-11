@@ -22,7 +22,7 @@
         "test": "vitest run --project unit",
         "test:live": "vitest run --project live",
         "kv-trends-previous:production": "wrangler kv key put trends-previous --path=kv/trends-previous.json --namespace-id=9d285e05684c4887acb7731de7a41a4e --remote",
-        "kv-trends-previous:development": "wrangler kv key put trends-previous --path=kv/trends-previous.json --namespace-id=c9634f49deeb4618b3c3f1980f777f7a --remote"
+        "kv:development": "node scripts/kv-development.mjs"
     },
     "devDependencies": {
         "@cloudflare/workers-types": "^5.20260928.1",
