@@ -16,7 +16,8 @@
 
         <script>
             (function(){
-                const domain = './';
+                // Served at /tracker and /tracker/, so every path must be absolute
+                const domain = '/';
 
                 let element = document.querySelector('#myContainer');
 
@@ -47,11 +48,12 @@
                     createScript('https://cdnjs.cloudflare.com/ajax/libs/chartjs-adapter-moment/1.0.1/chartjs-adapter-moment.min.js');
                     
                     createStyle('https://cdnjs.cloudflare.com/ajax/libs/fomantic-ui/2.9.0/semantic.min.css');
-                    createStyle(domain + 'style.css');
+                    createStyle(domain + 'css/style.css');
 
                     await loadTracker();
 
-                    createScript(domain + 'script.js');
+                    createScript(domain + 'js/search-box.js');
+                    createScript(domain + 'js/tracker.js');
                 }
 
                 create();

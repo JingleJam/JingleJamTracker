@@ -1,5 +1,5 @@
 import { generateSlug, roundAmount, sortByKey } from "tiltify-cache/utils";
-import { getEvent, getCampaigns, getUserBySlug } from "tiltify-cache/dependencies/tiltify";
+import { getFact, getCampaigns, getUserBySlug } from "tiltify-cache/dependencies/tiltify";
 import { get as getYogscastAPI } from "tiltify-cache/dependencies/yogscast";
 import { ApiResponse } from "tiltify-cache/types/ApiResponse";
 import { Env } from "tiltify-cache/types/env";
@@ -14,7 +14,6 @@ import { TiltifyUser } from "./types/tiltify/TiltifyUser";
 const maxSim = 6; // Maximum number of simultaneous fetches
 const maxDescriptionLength = 1024;
 const maxCampaigns = (20 * 900) - 2; // Maximum number of campaigns that can be fetched
-const allCharitiesRegionId = "18749320-68eb-4c62-b800-90593bf4a16a";
 
 // Old Team Data
 // End of 2020 yogscast dollar amount = 2827226.00
@@ -37,7 +36,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
   try {
     // Perform all Tiltify and Yogscast lookups in parallel
     const results = await Promise.all([
-      getEvent(env.FUNDRAISER_PUBLIC_ID),       // Gets Yearly Event Level Data
+      getFact(env.FUNDRAISER_PUBLIC_ID),        // Gets Yearly Event Level Data
       getYogscastAPI(),                         // Gets Yogscast API Data
       getUserBySlug(env.YOGSCAST_USERNAME)      // Gets Yogscast User Data
     ]);
@@ -93,41 +92,32 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
 
     // Get the list of campaigns
     let campaigns: TiltifyMultiSearchCampaign[] = [];
-    let offset = 0;
-    let end = false;
+    const causeIds = apiResponse.causes.map(cause => cause.id);
 
     // Get all campaigns from the fundraiser
     if (env.FUNDRAISER_PUBLIC_ID) {
-      // Fetch all campaigns in parallel (chunks of 6 requests with 100 campaigns each)
-      while (offset <= maxCampaigns && !end) {
-        const requests = Array.from({ length: maxSim }, (_, i) => getCampaigns(env.FUNDRAISER_PUBLIC_ID, offset + i));
-        const regionResponses: TiltifyMultiSearchResult[] = await Promise.all(requests);
-        offset += maxSim;
+      // The search returns at most 1000 results per filter, so fetch the campaigns in 3 groups:
+      // the first half of the causes, the second half, and everything else (all charities, no region or an unknown region)
+      const half = Math.ceil(causeIds.length / 2);
+      const regionFilters = [causeIds.slice(0, half), causeIds.slice(half)]
+        .filter(ids => ids.length > 0)
+        .map(ids => `region_public_id IN [${ids.join(', ')}]`);
+      regionFilters.push(causeIds.length > 0 ? `NOT region_public_id IN [${causeIds.join(', ')}]` : '');
 
-        for (const response of regionResponses) {
-          campaigns = campaigns.concat(response.hits);
-
-          // Check if we've reached the last page
-          if (response.page >= response.totalPages) {
-            end = true;
-            break;
-          }
-        }
-      }
+      const groups = await Promise.all(regionFilters.map(filter => getCampaignGroup(env, filter)));
+      campaigns = groups.flat();
 
       // Cycle through all campaigns and calculate the amount raised for each cause
       let campaignAmountPounds = 0;
       for (const campaign of campaigns) {
-        // Skip campaigns that are part of a team events since they are included in the team event object
-        if(campaign.team_event_public_id !== null){
-          continue;
-        }
-
+        // Split the campaign across all causes if it has no region, the "All The Charities" region,
+        // or a region that isn't one of this year's causes (e.g. a stale region from a copied campaign)
         const campaignRegionId = campaign.region_public_id || null;
-        const isAllCauseCampaign = !campaignRegionId || campaignRegionId === allCharitiesRegionId;
+        const isAllCauseCampaign = !campaignRegionId || campaignRegionId === env.ALL_CHARITIES_REGION_ID || !causeIds.includes(campaignRegionId);
 
-        // Determine the cause amount
-        let raisedAmount = campaign.total_amount_raised || 0;
+        // Determine the cause amount. A team event's total includes its supporting campaigns, which are
+        // counted separately towards their own region, so only count the team event's direct donations.
+        let raisedAmount = (campaign.type === 'team_event' ? campaign.amount_raised : campaign.total_amount_raised) || 0;
         campaignAmountPounds += raisedAmount;
 
         // If the campaign donates to all charities, divide the amount by the number of causes
@@ -142,12 +132,15 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
           // If the campaign is for a specific cause or applies to all causes
           if (cause.id === campaignRegionId || isAllCauseCampaign) {
             cause.raised += causeAmount;
+            if (!isAllCauseCampaign) {
+              cause.raisedDirect += causeAmount;
+            }
           }
         }
       }
 
       // Clean up the raised amounts if the total raised amount is different from the sum of all campaign amounts
-      // This is mainly team donations that are not assigned to a specific campaign
+      // This is mainly donations made directly to the fundraising event
       const amountDifference = apiResponse.raised - campaignAmountPounds;
       if (amountDifference > 0) {
         // Fix the cause data
@@ -163,6 +156,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
           for(const apiCause of apiResponse.causes){
             if(cause.id === apiCause.id){
               apiCause.raised += cause.override;
+              apiCause.raisedDirect += cause.override;   // Moves money from the shared amount to this cause
             }
 
             apiCause.raised -= cause.override/causes.length;
@@ -173,6 +167,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
       // Round the raised amounts for each cause
       for (const cause of apiResponse.causes) {
         cause.raised = roundAmount(cause.raised);
+        cause.raisedDirect = roundAmount(cause.raisedDirect);
       }
     }
 
@@ -187,11 +182,12 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
     }
 
 
+    // Team events by id, so a supporting campaign can include its team event's details
+    const teamEvents = new Map(campaigns.filter(campaign => campaign.type === 'team_event').map(campaign => [campaign.id, campaign]));
+
     // Create and format the campaign list from the Tiltify API data
     for (const campaign of campaigns) {
-      const description = campaign.description?.length > maxDescriptionLength
-        ? `${campaign.description.slice(0, maxDescriptionLength)}...`
-        : campaign.description;
+      const description = truncateDescription(campaign.description);
 
       // Skip campaigns without a username or if not published
       if (!campaign.username) {
@@ -208,11 +204,14 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
       // Get the cause id from the campaign's region
       const causeId = apiResponse.causes.find(cause => cause.id === campaign.region_public_id)?.id;
 
-      // Increment the campaign count for the cause
+      // Increment the campaign (and live campaign) count for the cause
       if (causeId) {
         for (const cause of apiResponse.causes) {
           if (cause.id === causeId) {
             cause.campaigns++;
+            if (campaign.live === true) {
+              cause.live++;
+            }
             break;
           }
         } 
@@ -227,14 +226,18 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
         startTime: campaign.published_at_utc ? new Date(campaign.published_at_utc * 1000).toISOString(): null,
         raised: roundAmount(campaign.total_amount_raised || 0),
         goal: roundAmount(campaign.goal || 0),
+        live: campaign.live === true,
+        donationMatchMultiplier: (campaign.match_count || 0) + 1,   // match_count is the number of extra matches (1 = 2x)
         causeId: causeId || null,
-        type: campaign.type,
+        type: campaign.type === 'team_event' ? 'team_event' : 'campaign',
         team: campaign.team_public_id ? {
           name: campaign.team_name || '',
           slug: teamSlug,
           avatar: campaign.team_avatar?.src || '',
           url: `https://tiltify.com/+${teamSlug}`,
         } : null,
+        teamEvent: getTeamEvent(teamEvents.get(campaign.team_event_public_id || '')),
+        ...(campaign.type === 'team_event' ? getTeamEventBreakdown(campaign) : {}),
         user: {
           name: campaign.username,
           slug: userSlug,
@@ -246,6 +249,7 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
 
     // Sort the campaigns by the amount raised and limit the number of campaigns
     apiResponse.campaigns.count = campaignsComputed.length;
+    apiResponse.campaigns.live = campaignsComputed.filter(campaign => campaign.live).length;
     apiResponse.campaigns.list = sortByKey(campaignsComputed, 'raised');
 
   } catch (e) {
@@ -255,8 +259,75 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
   return apiResponse;
 }
 
+// Shorten a long campaign description, marking where it was cut off
+export function truncateDescription(description: string): string {
+  return description?.length > maxDescriptionLength
+    ? `${description.slice(0, maxDescriptionLength)}...`
+    : description;
+}
+
+// A team event's total, split into donations made to the team event itself and to its supporting campaigns
+function getTeamEventBreakdown(teamEvent: TiltifyMultiSearchCampaign): Pick<Campaign, 'raisedBreakdown'> {
+  const raised = roundAmount(teamEvent.total_amount_raised || 0);
+  const raisedTeamEvent = roundAmount(teamEvent.amount_raised || 0);
+
+  return {
+    raisedBreakdown: {
+      teamEvent: raisedTeamEvent,
+      campaigns: roundAmount(raised - raisedTeamEvent),
+    },
+  };
+}
+
+// The details of the team event a campaign supports, or null if it doesn't support one (or the team event isn't in this year's list)
+function getTeamEvent(teamEvent: TiltifyMultiSearchCampaign | undefined): Campaign['teamEvent'] {
+  if (!teamEvent) {
+    return null;
+  }
+
+  return {
+    id: teamEvent.id,
+    name: teamEvent.name,
+    slug: teamEvent.url?.split('/').pop() || generateSlug(teamEvent.name) || '',
+    avatar: teamEvent.fact_avatar?.src || teamEvent.team_avatar?.src || '',
+    url: teamEvent.url || '',
+  };
+}
+
+// Get every campaign matching one group filter, fetching pages in parallel (chunks of 6 requests with 100 campaigns each)
+async function getCampaignGroup(env: Env, filter: string): Promise<TiltifyMultiSearchCampaign[]> {
+  let campaigns: TiltifyMultiSearchCampaign[] = [];
+  let offset = 0;
+  let end = false;
+  let totalHits = 0;
+
+  while (offset <= maxCampaigns && !end) {
+    const requests = Array.from({ length: maxSim }, (_, i) => getCampaigns(env.FUNDRAISER_PUBLIC_ID, filter, offset + i));
+    const responses: TiltifyMultiSearchResult[] = await Promise.all(requests);
+    offset += maxSim;
+
+    for (const response of responses) {
+      campaigns = campaigns.concat(response.hits);
+      totalHits = Math.max(totalHits, response.totalHits);
+
+      // Check if we've reached the last page
+      if (response.page >= response.totalPages) {
+        end = true;
+        break;
+      }
+    }
+  }
+
+  // The search stops at 1000 results, so any campaigns past that in this group are missing
+  if (totalHits >= 1000) {
+    console.warn(`Campaign search hit the 1000 result limit for filter "${filter}", some campaigns may be missing`);
+  }
+
+  return campaigns;
+}
+
 // Get the default response data before any Tiltify or Yogscast API calls
-async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] | null = null): Promise<ApiResponse> {
+export async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] | null = null): Promise<ApiResponse> {
   let donationHistory: DonationHistory[] = [];
 
   try {
@@ -271,14 +342,18 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
 
   const causeObjects: Cause[] = causes?.map(cause => ({
     id: cause.id,
+    slug: cause.slug || generateSlug(cause.name) || cause.id,
     name: cause.name,
     logo: cause.logo,
+    borderedLogo: cause.borderedLogo || cause.logo,
     description: cause.description,
     color: cause.color,
     url: cause.url,
     donateUrl: cause.donateUrl,
     raised: 0,
+    raisedDirect: 0,
     campaigns: 0,
+    live: 0,
   })) || [];
 
   return {
@@ -299,47 +374,25 @@ async function getDefaultResponse(env: Env, date = new Date(), causes: Cause[] |
     causes: causeObjects,
     campaigns: {
       count: 0,
+      live: 0,
       list: [],
     },
   };
 }
 
 
-const debugStartDate = new Date(Date.now() + 1 * 60 * 1000);
-const debugEndDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
-
-// Create fake data for debugging purposes
-async function getDebugData(env: Env): Promise<ApiResponse> {
-  const defaultResponse = await getDefaultResponse(env);
-
-  defaultResponse.event.start = debugStartDate;
-  defaultResponse.event.end = debugEndDate;
-
-  const amount = 1 * Math.max(((new Date().getTime() - debugStartDate.getTime()) / 3.5913 % 5000000), 0);
-
-  defaultResponse.raised = amount;
-
-  defaultResponse.collections.redeemed = parseInt((amount / 40.84).toFixed(0));
-  defaultResponse.donations = defaultResponse.collections.redeemed + 945;
-
-  for (const cause of defaultResponse.causes) {
-    cause.raised = (amount / defaultResponse.causes.length);
-  }
-
-  return defaultResponse;
-}
-
-// Get the latest data from the Tiltify and Yogscast APIs
-export async function getLatestData(env: Env): Promise<ApiResponse> {
+// Variables set in .dev.vars are strings, so turn the numeric ones into numbers
+export function normalizeEnv(env: Env): void {
   env.DONATION_DIFFERENCE = parseInt(env.DONATION_DIFFERENCE.toString());
   env.DOLLAR_OFFSET = parseFloat(env.DOLLAR_OFFSET.toString());
   env.COLLECTIONS_AVAILABLE = parseInt(env.COLLECTIONS_AVAILABLE.toString());
   env.YEAR = parseInt(env.YEAR.toString());
   env.CONVERSION_RATE = parseFloat(env.CONVERSION_RATE.toString());
+}
 
-  if (env.ENABLE_DEBUG) {
-    return await getDebugData(env);
-  }
+// Get the latest data from the Tiltify and Yogscast APIs
+export async function getLatestData(env: Env): Promise<ApiResponse> {
+  normalizeEnv(env);
 
   return await getSummaryData(env);
 }

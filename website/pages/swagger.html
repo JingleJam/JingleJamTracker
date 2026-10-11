@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+
+        <link rel="icon" type="image/x-icon" href="/assets/favicon.ico">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.33.1/swagger-ui.css">
+
+        <title>Jingle Jam Tracker API</title>
+
+        <style>
+            body {
+                margin: 0;
+                background: #fff;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="swagger-ui"></div>
+
+        <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.33.1/swagger-ui-bundle.js"></script>
+        <script>
+            (function(){
+                // Served at /swagger, renders the OpenAPI spec served at /openapi.yaml
+                const ui = SwaggerUIBundle({
+                    url: '/openapi.yaml',
+                    dom_id: '#swagger-ui',
+                    presets: [SwaggerUIBundle.presets.apis],
+                    layout: 'BaseLayout',
+                    deepLinking: true,
+                    displayRequestDuration: true,
+                    onComplete: useThisSiteAsServer
+                });
+
+                // "Try it out" calls the selected server, which defaults to the first in the spec (production). Select this
+                // site instead and list it first: on the development site that's development, and locally the local server.
+                // A preview deployment that isn't in the spec is added as "This site".
+                function useThisSiteAsServer(){
+                    const spec = ui.specSelectors.specJson().toJS();
+                    const servers = spec.servers || [];
+                    const current = servers.find(server => server.url === location.origin)
+                        || { url: location.origin, description: 'This site' };
+
+                    if (servers[0] !== current) {
+                        spec.servers = [current, ...servers.filter(server => server !== current)];
+                        ui.specActions.updateJsonSpec(spec);
+                    }
+                    ui.oas3Actions.setSelectedServer({ selectedServerUrl: current.url });
+                }
+            })();
+        </script>
+    </body>
+</html>

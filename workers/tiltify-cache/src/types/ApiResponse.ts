@@ -20,6 +20,7 @@ export interface ApiResponse {
     causes: Cause[];
     campaigns: {
         count: number;
+        live: number;
         list: Campaign[];
     };
 }

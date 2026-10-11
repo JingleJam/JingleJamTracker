@@ -5,3 +5,7 @@ ADMIN_TOKEN="change-me"
 # any non-empty value (even "false") is treated as true.
 # ENABLE_REFRESH="true"
 # ENABLE_GRAPH_REFRESH="true"
+
+# Uncomment to serve generated demo data instead of Tiltify's, with the event about to start, under way, or about to end
+# when the API is first requested. Restart `npm run dev` (or run `npm run seed`) to start the demo again.
+# DEMO_MODE="starting"
