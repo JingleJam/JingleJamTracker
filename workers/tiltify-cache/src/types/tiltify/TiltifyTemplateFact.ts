@@ -57,7 +57,7 @@ export interface TiltifyTemplateFact {
     usageType: string;
     paginatedSchedules: ScheduleConnection;
     supportable: boolean;
-    donationMatches: unknown[];
+    donationMatches: DonationMatch[];
     social: Social;
 }
 
@@ -267,3 +267,16 @@ export interface Reward {
     updatedAt: string;
 }
 
+
+export interface DonationMatch {
+    __typename: "DonationMatch";
+    id: string;
+    active: boolean;
+    matchedBy: string;
+    pledgedAmount: Currency;
+    totalAmountRaised: Currency;
+    matchedAmountTotalAmountRaised: Currency;
+    startedAtAmount: Currency;
+    startsAt: string | null;
+    endsAt: string | null;
+}

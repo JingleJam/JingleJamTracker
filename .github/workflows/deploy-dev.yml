@@ -45,11 +45,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
 
       - name: Publish KV's to Development
-        run: |
-          npm run kv-trends-previous:development
-          cd ./workers/tiltify-cache
-          npm run kv-causes:development
-          npm run kv-summary:development
+        run: npm run kv:development
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

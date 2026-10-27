@@ -1,0 +1,1299 @@
+openapi: 3.1.0
+
+# Kept by hand alongside docs/API.md. Update both when an endpoint or response shape changes.
+
+info:
+  title: Jingle Jam Tracker API
+  version: 1.0.0
+  summary: Live and historical Jingle Jam fundraising data.
+  description: |
+    A free, public, read-only JSON API with live and historical Jingle Jam fundraising data. It needs no API key,
+    and CORS is enabled for every origin, so it can be called from a server, a script, a bot or straight from a web page.
+
+    All amounts are in pounds (GBP) unless the field name says otherwise.
+
+    **Usage guidelines**
+
+    - Make at most 1 request per second, counted across all of your users combined.
+    - Don't poll faster than every 10 seconds. During the event the data refreshes every 10 seconds (less often outside it).
+      Every response except the two timelines has `meta.updatedAt`, so you can schedule your next request for about
+      15 seconds after that time.
+    - Poll single campaigns (`/api/v1/campaigns/{id}`) at most every 30 seconds.
+    - If you have many users, put a cache in front of the API instead of having every client call it directly.
+    - Link back to the Jingle Jam (https://www.jinglejam.co.uk) where it makes sense, so people can donate.
+
+    The endpoints from the 2025 event (`/api/tiltify`, `/api/campaigns` and `/api/graph/*`) keep working through the
+    2026 event and will be removed before the 2027 event.
+
+    Every endpoint returns `405` with `{"error": "Method not allowed."}` for a method it doesn't support, and any `/api`
+    path that isn't an endpoint returns `404` with `{"error": "Not found."}`.
+  license:
+    name: See repository
+    url: https://github.com/JingleJam/JingleJamTracker
+
+externalDocs:
+  description: Full API reference
+  url: https://github.com/JingleJam/JingleJamTracker/blob/master/docs/API.md
+
+# Public by default. Only the admin operations need a token.
+security: []
+
+servers:
+  - url: https://dashboard.jinglejam.co.uk
+    description: Production
+  - url: https://develop.jingle-jam-tracker.pages.dev
+    description: Development. May include test data and can break without notice.
+  - url: http://127.0.0.1:8788
+    description: Local development
+
+tags:
+  - name: Event
+    description: The current event's totals
+  - name: Causes
+    description: The charities supported by the Jingle Jam
+  - name: Campaigns
+    description: Campaigns and team events on Tiltify
+  - name: Timeline
+    description: Totals over time, for graphs
+  - name: Admin
+    description: For the tracker's maintainers. Needs the secret admin token and overwrites live data.
+  - name: Legacy
+    description: Endpoints from the 2025 event, removed before the 2027 event. Move to the v1 endpoints.
+
+paths:
+  /api/v1/event:
+    get:
+      tags: [Event]
+      operationId: getEvent
+      summary: Get the current event
+      description: |
+        The total raised, donation and collection counts, a total for each cause, yearly history and the top 25 campaigns.
+        For more campaigns, use `/api/v1/campaigns`.
+
+        Refreshed every 10 seconds during the event.
+      responses:
+        '200':
+          description: The current event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags: [Admin]
+      operationId: replaceEvent
+      summary: Replace the cached summary
+      description: |
+        Replaces the cached summary with an edited `/api/v1/event` response, or a summary in the Worker's internal format
+        (the `ApiResponse` type in `workers/tiltify-cache/src/types/ApiResponse.ts`). An edited event response replaces the
+        cached top campaigns with its 25 `campaigns.items`. The summary is replaced again at the next refresh, if
+        refreshing is on.
+      security:
+        - adminToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              anyOf:
+                - $ref: '#/components/schemas/EventResponse'
+                - type: object
+                  description: A summary in the Worker's internal format (`ApiResponse`), told apart by having no `meta` field
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminSuccess'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/causes:
+    get:
+      tags: [Causes]
+      operationId: getCauses
+      summary: List every cause
+      description: |
+        Every cause in the current event, with the amount raised for each.
+
+        Refreshed every 10 seconds during the event.
+      responses:
+        '200':
+          description: Every cause
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CausesResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/causes/{cause}:
+    get:
+      tags: [Causes]
+      operationId: getCause
+      summary: Get a cause and its top campaigns
+      description: |
+        One cause and the campaigns dedicated to it, highest raised first.
+
+        Campaigns that support all causes are split equally between every cause. Their share is included in
+        `cause.raised` (as `cause.raisedBreakdown.shared`), but they are not listed in `campaigns` or counted in
+        `campaigns.total`, so `cause.raised` can be more than the sum of the listed campaigns.
+
+        Refreshed every 10 seconds during the event.
+      parameters:
+        - name: cause
+          in: path
+          required: true
+          description: |
+            The cause's `slug` or `id`, as listed in `/api/v1/causes`. Not case-sensitive. The slug is the cause name in
+            lowercase, with spaces replaced by hyphens and other punctuation removed.
+          schema:
+            type: string
+          examples:
+            slug:
+              value: war-child
+            id:
+              value: 18cb6ffd-3067-4ca8-8414-74eb733d79fd
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: The cause and a page of its campaigns
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CauseResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: The cause doesn't exist in the current event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Cause not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/campaigns:
+    get:
+      tags: [Campaigns]
+      operationId: listCampaigns
+      summary: List, filter and search campaigns
+      description: |
+        Every campaign and team event in the current event, in pages. Highest raised first, or best match first when
+        searching. An `offset` past the end returns an empty `items` array.
+
+        Refreshed every 10 seconds during the event.
+      parameters:
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Offset'
+        - name: search
+          in: query
+          description: |
+            Only campaigns whose name, owner's name or team name match. Not case-sensitive, ignores accents and
+            punctuation, and tolerates small typos (`spifing` finds TheSpiffingBrit). Every word has to match. Results
+            are sorted best match first, then by amount raised.
+          schema:
+            type: string
+            maxLength: 100
+          example: yogscast
+        - name: type
+          in: query
+          description: Only these kinds of fundraiser, comma-separated. Both kinds are returned when it is left out.
+          schema:
+            type: string
+            pattern: '^\s*(campaign|team_event)\s*(,\s*(campaign|team_event)\s*)*$'
+          examples:
+            campaigns:
+              value: campaign
+            teamEvents:
+              value: team_event
+            both:
+              value: campaign,team_event
+        - name: cause
+          in: query
+          description: |
+            Only campaigns dedicated to this cause, by its `slug` or `id`. Campaigns that support all causes are left out.
+          schema:
+            type: string
+          example: war-child
+      responses:
+        '200':
+          description: |
+            A page of campaigns. `campaigns.total` and `campaigns.live` count every campaign that matched `search`,
+            `type` and `cause`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/campaigns/{id}:
+    get:
+      tags: [Campaigns]
+      operationId: getCampaign
+      summary: Get a campaign or team event, with live data
+      description: |
+        One campaign or team event, with live data fetched from Tiltify: its social links, active donation matches, its
+        own rewards, its top donors and its latest donations. A team event also includes its team's member count and
+        every campaign supporting it.
+
+        The campaign is refreshed every 10 seconds during the event. The live data is fetched from Tiltify when requested
+        and reused for 30 seconds. If Tiltify can't be reached, the last live data fetched is returned. If none has been
+        fetched yet, `social` has every link `null` and the lists are empty.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: |
+            The campaign's or team event's `id` from `/api/v1/campaigns` or `/api/v1/event`. Not case-sensitive. Only
+            fundraisers in the current event are found.
+          schema:
+            type: string
+          example: 7a1c4f0e-0000-4000-8000-000000000001
+      responses:
+        '200':
+          description: The campaign or team event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CampaignResponse'
+        '404':
+          description: The campaign doesn't exist in the current event
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Campaign not found.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/timeline:
+    get:
+      tags: [Timeline]
+      operationId: getTimeline
+      summary: Get this year's total over time
+      description: |
+        The current event's total over time, oldest first. There is no `meta` object. The first point is always the
+        event start with a value of `0`. Before the event begins, that is the only point.
+
+        A new point is added every 10 minutes while the event is running.
+      responses:
+        '200':
+          description: The timeline points, oldest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimelinePoint'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags: [Admin]
+      operationId: replaceTimeline
+      summary: Replace this year's timeline
+      description: Replaces this year's timeline. Send `[]` to clear it.
+      security:
+        - adminToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/TimelinePoint'
+            example: []
+      responses:
+        '200':
+          $ref: '#/components/responses/AdminSuccess'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/timeline/history:
+    get:
+      tags: [Timeline]
+      operationId: getTimelineHistory
+      summary: Get previous years' totals over time
+      description: |
+        The total over time for every previous event from 2016 onwards, grouped by year, oldest first. There is no `meta`
+        object. The time between points varies from year to year.
+
+        The response is large (about 1.5 MB) and only changes once a year, after each event, so fetch it once and cache it.
+      responses:
+        '200':
+          description: The timeline points of every previous year, oldest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimelineHistoryPoint'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/tiltify:
+    get:
+      tags: [Legacy]
+      operationId: getLegacySummary
+      summary: Get the 2025 summary
+      deprecated: true
+      description: The 2025 summary response, unchanged. Removed before the 2027 event. Use `/api/v1/event` instead.
+      responses:
+        '200':
+          description: The 2025 summary
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegacySummary'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/campaigns:
+    get:
+      tags: [Legacy]
+      operationId: listLegacyCampaigns
+      summary: List campaigns in the 2025 format
+      deprecated: true
+      description: |
+        The 2025 paginated campaign list, unchanged, with no search or filters. Removed before the 2027 event. Use
+        `/api/v1/campaigns` instead.
+      parameters:
+        - name: limit
+          in: query
+          description: Number of campaigns to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 100
+        - $ref: '#/components/parameters/Offset'
+      responses:
+        '200':
+          description: A page of campaigns
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LegacyCampaignsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/graph/current:
+    get:
+      tags: [Legacy]
+      operationId: getLegacyTimeline
+      summary: Moved to /api/v1/timeline
+      deprecated: true
+      description: Permanently redirects to `/api/v1/timeline`, which has the same response. Removed before the 2027 event.
+      responses:
+        '308':
+          $ref: '#/components/responses/PermanentRedirect'
+    post:
+      tags: [Legacy]
+      operationId: replaceLegacyTimeline
+      summary: Moved to /api/v1/timeline
+      deprecated: true
+      description: |
+        Permanently redirects to `/api/v1/timeline`. A `308` keeps the method and body, so the admin `POST` still works
+        when the client follows the redirect. Removed before the 2027 event.
+      responses:
+        '308':
+          $ref: '#/components/responses/PermanentRedirect'
+
+  /api/graph/previous:
+    get:
+      tags: [Legacy]
+      operationId: getLegacyTimelineHistory
+      summary: Moved to /api/v1/timeline/history
+      deprecated: true
+      description: |
+        Permanently redirects to `/api/v1/timeline/history`, which has the same response. Removed before the 2027 event.
+      responses:
+        '308':
+          $ref: '#/components/responses/PermanentRedirect'
+
+components:
+  securitySchemes:
+    adminToken:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: The secret admin token, sent either as is or as `Bearer <token>`.
+
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      description: Number of campaigns to return
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 25
+    Offset:
+      name: offset
+      in: query
+      description: Number of campaigns to skip
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+
+  responses:
+    BadRequest:
+      description: A query parameter is invalid
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            limit:
+              value:
+                error: Invalid limit parameter. Limit must be between 1 and 100.
+            offset:
+              value:
+                error: Invalid offset parameter. Offset must be a positive number (0 or greater).
+            type:
+              value:
+                error: Invalid type parameter. Type must be one or more of campaign, team_event, separated by commas.
+            search:
+              value:
+                error: Invalid search parameter. Search must be at most 100 characters.
+            cause:
+              value:
+                error: Invalid cause parameter. Cause must be the slug or id of a cause from /api/v1/causes.
+    Unauthorized:
+      description: The admin token is missing or wrong
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Unauthorized.
+    InternalServerError:
+      description: Something went wrong on the server
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Internal server error.
+    AdminSuccess:
+      description: The data was replaced
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [success]
+            properties:
+              success:
+                type: boolean
+                const: true
+    PermanentRedirect:
+      description: Moved permanently. The query string is kept, and a `308` keeps the method and body.
+      headers:
+        Location:
+          description: The new URL
+          schema:
+            type: string
+            format: uri
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: What went wrong
+          examples: [Cause not found.]
+
+    Meta:
+      type: object
+      description: When the data was last refreshed, the current event's dates and the exchange rate.
+      required: [updatedAt, event, dollarConversionRate]
+      properties:
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the data was last refreshed from Tiltify
+          examples: ['2025-12-07T19:42:10.412Z']
+        event:
+          type: object
+          required: [year, startsAt, endsAt]
+          properties:
+            year:
+              type: integer
+              description: Event year
+              examples: [2026]
+            startsAt:
+              type: string
+              format: date-time
+              description: Event start, normally 1 December 17:00 UTC
+              examples: ['2026-12-01T17:00:00.000Z']
+            endsAt:
+              type: string
+              format: date-time
+              description: Event end, normally 15 December 08:00 UTC
+              examples: ['2026-12-15T08:00:00.000Z']
+        dollarConversionRate:
+          type: number
+          description: GBP → USD rate. Multiply a pound amount by this to get dollars.
+          examples: [1.32]
+
+    RaisedBreakdown:
+      type: object
+      description: An amount raised, split by who the money was given to. `direct + shared` always equals `raised`.
+      required: [direct, shared]
+      properties:
+        direct:
+          type: number
+          description: |
+            Given to this cause specifically, in pounds: campaigns dedicated to it, plus any manual adjustments. For the
+            event, the total given to specific causes.
+          examples: [110190.68]
+        shared:
+          type: number
+          description: |
+            This cause's equal share of money given to every cause, in pounds: campaigns that support all causes, and
+            donations made straight to the event. For the event, the total given to every cause.
+          examples: [58221.39]
+
+    Collections:
+      type: object
+      description: Jingle Jam game collections
+      required: [redeemed, total]
+      properties:
+        redeemed:
+          type: integer
+          description: Number of collections claimed
+          examples: [38210]
+        total:
+          type: integer
+          description: Number of collections available
+          examples: [98000]
+
+    Cause:
+      type: object
+      description: A charity supported by the Jingle Jam.
+      required: [id, slug, name, logo, borderedLogo, description, color, url, donateUrl, raised, raisedBreakdown, campaigns, live]
+      properties:
+        id:
+          type: string
+          description: Tiltify UUID of the cause
+          examples: [18cb6ffd-3067-4ca8-8414-74eb733d79fd]
+        slug:
+          type: string
+          description: URL-friendly name, used by `/api/v1/causes/{cause}` and the `/causes/{cause}` tracker pages
+          examples: [war-child]
+        name:
+          type: string
+          description: Display name
+          examples: [War Child]
+        logo:
+          type: string
+          format: uri
+          description: |
+            Logo image URL: the bare logo on a transparent background, trimmed to its edges (fixed height, width varies
+            with the logo)
+        borderedLogo:
+          type: string
+          format: uri
+          description: Square logo image URL with a border and background, used for thumbnails
+        description:
+          type: string
+          description: Short description of the cause
+        color:
+          type: string
+          description: Brand colour as a hex code
+          examples: ['#cc232a']
+        url:
+          type: string
+          format: uri
+          description: The cause's own website
+          examples: [https://www.warchild.org.uk/]
+        donateUrl:
+          type: string
+          format: uri
+          description: Tiltify page listing campaigns for this cause
+        raised:
+          type: number
+          description: |
+            Amount raised for this cause, in pounds, including its equal share of campaigns that support all causes
+          examples: [168412.07]
+        raisedBreakdown:
+          $ref: '#/components/schemas/RaisedBreakdown'
+        campaigns:
+          type: integer
+          description: Number of campaigns dedicated to this cause
+          examples: [49]
+        live:
+          type: integer
+          description: Number of those campaigns streaming right now
+          examples: [3]
+
+    CampaignCause:
+      type: object
+      description: The cause a campaign supports. A campaign supporting every cause has a `null` id and slug.
+      required: [id, slug, name, color]
+      properties:
+        id:
+          type: [string, 'null']
+          description: '`id` of the cause, or `null` if it supports all causes'
+          examples: [18cb6ffd-3067-4ca8-8414-74eb733d79fd]
+        slug:
+          type: [string, 'null']
+          description: '`slug` of the cause, or `null` if it supports all causes'
+          examples: [war-child]
+        name:
+          type: string
+          description: Name of the cause, or `All The Charities` if it supports all causes
+          examples: [War Child]
+        color:
+          type: string
+          description: Colour of the cause as a hex code, or Jingle Jam pink (`#e21251`) if it supports all causes
+          examples: ['#cc232a']
+
+    Owner:
+      type: object
+      description: A Tiltify user or team
+      required: [name, slug, avatar, url]
+      properties:
+        name:
+          type: string
+          description: Display name
+          examples: [ExampleStreamer]
+        slug:
+          type: string
+          description: Tiltify slug
+          examples: [examplestreamer]
+        avatar:
+          type: string
+          description: Avatar URL (may be empty)
+        url:
+          type: string
+          format: uri
+          description: Page on Tiltify
+          examples: ['https://tiltify.com/@examplestreamer']
+
+    TeamEventRef:
+      type: object
+      description: The team event a campaign supports
+      required: [id, name, slug, avatar, url]
+      properties:
+        id:
+          type: string
+          description: Tiltify UUID of the team event, for `/api/v1/campaigns/{id}`
+          examples: [05b4e0a7-ef8c-43b4-9f12-cf7f2ea89907]
+        name:
+          type: string
+          description: Team event name
+          examples: [CoreKeeper Survive-A-Thon]
+        slug:
+          type: string
+          description: Team event slug
+        avatar:
+          type: string
+          description: Team event avatar URL (may be empty)
+        url:
+          type: string
+          format: uri
+          description: Team event page on Tiltify
+
+    Campaign:
+      type: object
+      description: A fundraiser on Tiltify, either a streamer's or a team's campaign, or a team event.
+      required: [id, slug, name, description, url, cause, raised, goal, live, donationMatchMultiplier, type, team, teamEvent, user]
+      properties:
+        id:
+          type: string
+          description: Tiltify UUID of the campaign
+          examples: [7a1c4f0e-0000-4000-8000-000000000001]
+        slug:
+          type: string
+          description: Tiltify slug of the campaign
+          examples: [example-stream-for-war-child]
+        name:
+          type: string
+          description: Campaign name
+          examples: [Example Stream for War Child]
+        description:
+          type: string
+          description: Campaign description, cut to 1,024 characters (with `...` added)
+        url:
+          type: string
+          format: uri
+          description: Campaign page on Tiltify
+        cause:
+          $ref: '#/components/schemas/CampaignCause'
+        raised:
+          type: number
+          description: Amount raised, in pounds. A team event's total includes its supporting campaigns.
+          examples: [12955.5]
+        raisedBreakdown:
+          type: object
+          description: |
+            Team events only (not included for other campaigns): `raised` split into donations made to the team event
+            itself and to its supporting campaigns.
+          required: [teamEvent, campaigns]
+          properties:
+            teamEvent:
+              type: number
+              description: Donated to the team event itself, in pounds
+              examples: [1200]
+            campaigns:
+              type: number
+              description: |
+                Donated to its supporting campaigns, in pounds. This comes from Tiltify's totals, so it can differ
+                slightly from adding up the supporting campaigns that are listed.
+              examples: [29077.68]
+        goal:
+          type: number
+          description: Fundraising goal, in pounds (`0` if none)
+          examples: [10000]
+        live:
+          type: boolean
+          description: Whether the campaign is streaming right now
+        donationMatchMultiplier:
+          type: integer
+          minimum: 1
+          description: '`1` = no match, `2` = donations are currently matched 2×, `3` = 3×, and so on'
+          examples: [2]
+        type:
+          $ref: '#/components/schemas/CampaignType'
+        team:
+          description: The team the campaign belongs to, or `null`
+          anyOf:
+            - $ref: '#/components/schemas/Owner'
+            - type: 'null'
+        teamEvent:
+          description: The team event this campaign supports, or `null`
+          anyOf:
+            - $ref: '#/components/schemas/TeamEventRef'
+            - type: 'null'
+        user:
+          $ref: '#/components/schemas/Owner'
+
+    CampaignType:
+      type: string
+      enum: [campaign, team_event]
+      description: |
+        `team_event` for a team event. Everything else is `campaign`: user and team campaigns, the campaigns supporting a
+        team event, and auction houses.
+
+    CampaignCollection:
+      type: object
+      description: One page of campaigns, out of every campaign that matched.
+      required: [total, live, limit, offset, items]
+      properties:
+        total:
+          type: integer
+          description: Number of campaigns that matched, across every page
+          examples: [938]
+        live:
+          type: integer
+          description: Of those, the number streaming right now
+          examples: [27]
+        limit:
+          type: integer
+          minimum: 0
+          description: The most campaigns a page holds
+          examples: [25]
+        offset:
+          type: integer
+          minimum: 0
+          description: Number of campaigns skipped before this page
+          examples: [0]
+        items:
+          type: array
+          description: This page of campaigns
+          items:
+            $ref: '#/components/schemas/Campaign'
+
+    YearResult:
+      type: object
+      description: The final result of one previous year.
+      required: [year, event, total, donations]
+      properties:
+        year:
+          type: integer
+          description: Event year (from 2011)
+          examples: [2024]
+        event:
+          type: object
+          required: [startsAt, endsAt]
+          properties:
+            startsAt:
+              type: string
+              format: date-time
+              description: Event start
+              examples: ['2024-12-01T17:00:00.000Z']
+            endsAt:
+              type: string
+              format: date-time
+              description: Event end
+              examples: ['2024-12-15T00:00:00.000Z']
+        total:
+          $ref: '#/components/schemas/YearTotal'
+        donations:
+          type: integer
+          description: Number of donations
+          examples: [62609]
+        collections:
+          type: integer
+          description: Collections claimed (2020 onwards)
+          examples: [53341]
+        campaigns:
+          type: integer
+          description: Number of Tiltify campaigns (2021 onwards)
+          examples: [787]
+
+    YearTotal:
+      type: object
+      required: [dollars, pounds]
+      properties:
+        dollars:
+          type: number
+          description: Total raised, in dollars
+          examples: [3398349.81]
+        pounds:
+          type: number
+          description: Total raised, in pounds
+          examples: [2673906.16]
+
+    Social:
+      type: object
+      description: A campaign's or team event's social media links. Every field is a URL, or `null` if it isn't set.
+      required: [discord, facebook, instagram, linkedin, snapchat, tiktok, twitch, twitter, website, youtube]
+      properties:
+        discord:
+          type: [string, 'null']
+        facebook:
+          type: [string, 'null']
+        instagram:
+          type: [string, 'null']
+        linkedin:
+          type: [string, 'null']
+        snapchat:
+          type: [string, 'null']
+        tiktok:
+          type: [string, 'null']
+        twitch:
+          type: [string, 'null']
+          examples: [https://www.twitch.tv/examplestreamer]
+        twitter:
+          type: [string, 'null']
+        website:
+          type: [string, 'null']
+        youtube:
+          type: [string, 'null']
+          examples: ['https://www.youtube.com/@examplestreamer']
+
+    DonationMatch:
+      type: object
+      description: A sponsor matching donations, pound for pound, up to a pledged amount.
+      required: [id, matchedBy, pledged, matched, startsAt, endsAt]
+      properties:
+        id:
+          type: string
+          description: Tiltify UUID of the match
+        matchedBy:
+          type: string
+          description: Who is matching the donations
+          examples: [An Example Sponsor]
+        pledged:
+          type: number
+          description: The most the sponsor will match, in pounds
+          examples: [1000]
+        matched:
+          type: number
+          description: The amount matched so far, in pounds
+          examples: [331]
+        startsAt:
+          type: [string, 'null']
+          format: date-time
+          description: When the match started
+        endsAt:
+          type: [string, 'null']
+          format: date-time
+          description: When the match ends
+
+    Reward:
+      type: object
+      description: Something a donor gets for donating at least `amount`.
+      required: [id, name, description, image, amount, quantity, remaining, startsAt, endsAt]
+      properties:
+        id:
+          type: string
+          description: Tiltify UUID of the reward
+        name:
+          type: string
+          description: Reward name
+          examples: [Shout-out on stream]
+        description:
+          type: string
+          description: Reward description
+        image:
+          type: [string, 'null']
+          description: Image URL
+        amount:
+          type: number
+          description: Minimum donation, in pounds
+          examples: [10]
+        quantity:
+          type: [integer, 'null']
+          description: How many are available in total, or `null` if unlimited
+        remaining:
+          type: [integer, 'null']
+          description: How many are left, or `null` if unlimited
+        startsAt:
+          type: [string, 'null']
+          format: date-time
+          description: When the reward becomes available
+        endsAt:
+          type: [string, 'null']
+          format: date-time
+          description: When the reward stops being available
+
+    TopDonor:
+      type: object
+      description: One entry of a donor leaderboard. A donor's donations are added together.
+      required: [name, amount]
+      properties:
+        name:
+          type: string
+          description: Donor's name as shown on Tiltify (often `Anonymous`)
+          examples: [Darineth]
+        amount:
+          type: number
+          description: The donor's total, in pounds
+          examples: [500]
+
+    LatestDonation:
+      type: object
+      description: One donation, from the most recent donations to a campaign or team event.
+      required: [name, amount, comment]
+      properties:
+        name:
+          type: string
+          description: Donor's name as shown on Tiltify (often `Anonymous`)
+          examples: [Anonymous]
+        amount:
+          type: number
+          description: The donation, in pounds
+          examples: [35]
+        comment:
+          type: [string, 'null']
+          description: The donor's comment, or `null`
+          examples: [Good luck with the stream!]
+
+    TimelinePoint:
+      type: object
+      required: [date, p, d]
+      properties:
+        date:
+          type: integer
+          description: Time of the point, as a Unix timestamp in milliseconds
+          examples: [1764609000000]
+        p:
+          type: number
+          description: Total raised at that time, in pounds
+          examples: [51230.25]
+        d:
+          type: number
+          description: Total raised at that time, in dollars
+          examples: [67623.93]
+
+    TimelineHistoryPoint:
+      type: object
+      required: [timestamp, year, amountPounds, amountDollars]
+      properties:
+        timestamp:
+          type: string
+          description: Time of the point, ISO 8601 in UTC without a `Z` suffix
+          examples: ['2016-12-01T17:20:00']
+        year:
+          type: integer
+          description: Event year
+          examples: [2016]
+        amountPounds:
+          type: number
+          description: Total raised at that time, in pounds
+          examples: [30584.66]
+        amountDollars:
+          type: number
+          description: Total raised at that time, in dollars
+          examples: [38483.86]
+
+    EventResponse:
+      type: object
+      required: [meta, raised, raisedBreakdown, donations, collections, history, causes, campaigns]
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        raised:
+          type: number
+          description: Total raised by the whole event, in pounds
+          examples: [2415873.52]
+        raisedBreakdown:
+          $ref: '#/components/schemas/RaisedBreakdown'
+        donations:
+          type: integer
+          description: Total number of donations
+          examples: [49875]
+        collections:
+          $ref: '#/components/schemas/Collections'
+        history:
+          type: array
+          description: Final totals for every previous year, oldest first
+          items:
+            $ref: '#/components/schemas/YearResult'
+        causes:
+          type: array
+          description: Every cause, with the amount raised for it
+          items:
+            $ref: '#/components/schemas/Cause'
+        campaigns:
+          allOf:
+            - $ref: '#/components/schemas/CampaignCollection'
+          description: |
+            The top 25 campaigns, highest raised first. `total` and `live` count every campaign in the event. `limit` is
+            always `25`.
+
+    CausesResponse:
+      type: object
+      required: [meta, causes]
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        causes:
+          type: array
+          description: Every cause, the same as `causes` in `/api/v1/event`
+          items:
+            $ref: '#/components/schemas/Cause'
+
+    CauseResponse:
+      type: object
+      required: [meta, cause, campaigns]
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        cause:
+          $ref: '#/components/schemas/Cause'
+        campaigns:
+          allOf:
+            - $ref: '#/components/schemas/CampaignCollection'
+          description: Campaigns dedicated to this cause, highest raised first
+
+    CampaignsResponse:
+      type: object
+      required: [meta, campaigns]
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        campaigns:
+          $ref: '#/components/schemas/CampaignCollection'
+
+    CampaignResponse:
+      type: object
+      required: [meta, campaign, social, donationMatches, rewards, topDonors, latestDonations]
+      properties:
+        meta:
+          $ref: '#/components/schemas/Meta'
+        campaign:
+          allOf:
+            - $ref: '#/components/schemas/Campaign'
+          description: |
+            The campaign or team event. Check `campaign.type` to tell them apart. A team event's `raised` includes its
+            supporting campaigns, and its `raisedBreakdown` splits the two.
+        social:
+          $ref: '#/components/schemas/Social'
+        donationMatches:
+          type: array
+          description: Donation matches active right now
+          items:
+            $ref: '#/components/schemas/DonationMatch'
+        rewards:
+          type: array
+          description: |
+            Active rewards set up by the campaign or its team event. The Jingle Jam Games Collection, which every campaign
+            has, is left out.
+          items:
+            $ref: '#/components/schemas/Reward'
+        topDonors:
+          type: [array, 'null']
+          description: |
+            The top 25 donors, by the total each donor has given, highest first. `null` if the leaderboard is turned off
+            on Tiltify.
+          items:
+            $ref: '#/components/schemas/TopDonor'
+        latestDonations:
+          type: array
+          description: The 25 most recent donations, newest first
+          items:
+            $ref: '#/components/schemas/LatestDonation'
+        teamMemberCount:
+          type: [integer, 'null']
+          description: Team events only. Number of members of the team, or `null` if Tiltify couldn't be reached.
+          examples: [19]
+        campaigns:
+          allOf:
+            - $ref: '#/components/schemas/CampaignCollection'
+          description: |
+            Team events only. Every campaign supporting the team event, highest raised first. They are all in one page,
+            so `limit` equals `total`.
+
+    LegacySummary:
+      type: object
+      deprecated: true
+      description: The 2025 `/api/tiltify` response.
+      required: [date, event, dollarConversionRate, raised, collections, donations, history, causes, campaigns]
+      properties:
+        date:
+          type: string
+          format: date-time
+          description: Moved to `meta.updatedAt`
+        event:
+          type: object
+          required: [year, start, end]
+          properties:
+            year:
+              type: integer
+            start:
+              type: string
+              format: date-time
+            end:
+              type: string
+              format: date-time
+        dollarConversionRate:
+          type: number
+        raised:
+          type: number
+        collections:
+          $ref: '#/components/schemas/Collections'
+        donations:
+          type: integer
+        history:
+          type: array
+          items:
+            type: object
+            required: [year, event, total, donations]
+            properties:
+              year:
+                type: integer
+              event:
+                type: object
+                required: [start, end]
+                properties:
+                  start:
+                    type: string
+                    format: date-time
+                  end:
+                    type: string
+                    format: date-time
+              total:
+                $ref: '#/components/schemas/YearTotal'
+              donations:
+                type: integer
+              collections:
+                type: integer
+              campaigns:
+                type: integer
+        causes:
+          type: array
+          items:
+            type: object
+            required: [id, name, logo, description, color, url, donateUrl, raised, campaigns]
+            properties:
+              id:
+                type: string
+              name:
+                type: string
+              logo:
+                type: string
+                description: The square, bordered logo. Moved to `borderedLogo` in v1.
+              description:
+                type: string
+              color:
+                type: string
+              url:
+                type: string
+              donateUrl:
+                type: string
+              raised:
+                type: number
+              campaigns:
+                type: integer
+        campaigns:
+          type: object
+          required: [count, list]
+          properties:
+            count:
+              type: integer
+            list:
+              type: array
+              description: The top 100 campaigns
+              items:
+                $ref: '#/components/schemas/LegacyCampaign'
+
+    LegacyCampaign:
+      type: object
+      deprecated: true
+      description: A campaign in the 2025 `/api/tiltify` and `/api/campaigns` responses.
+      required: [causeId, name, description, id, slug, url, startTime, raised, goal, type, team, user]
+      properties:
+        causeId:
+          type: [string, 'null']
+        name:
+          type: string
+        description:
+          type: string
+        id:
+          type: string
+        slug:
+          type: string
+        url:
+          type: string
+        startTime:
+          type: [string, 'null']
+          format: date-time
+        raised:
+          type: number
+        goal:
+          type: number
+        type:
+          $ref: '#/components/schemas/CampaignType'
+        team:
+          anyOf:
+            - $ref: '#/components/schemas/Owner'
+            - type: 'null'
+        user:
+          $ref: '#/components/schemas/Owner'
+
+    LegacyCampaignsResponse:
+      type: object
+      deprecated: true
+      description: The 2025 `/api/campaigns` response.
+      required: [campaigns, total, limit, offset]
+      properties:
+        campaigns:
+          type: array
+          items:
+            $ref: '#/components/schemas/LegacyCampaign'
+        total:
+          type: integer
+        limit:
+          type: integer
+        offset:
+          type: integer

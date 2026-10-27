@@ -8,6 +8,9 @@ const KEYS = ["causes", "summary", "trends-previous"];
 
 const pairs = KEYS.map(key => ({ key, value: readFileSync(`kv/${key}.json`, "utf8") }));
 
+// Clears the demo clock, so the demo (DEMO_MODE) starts again on its next request
+pairs.push({ key: "demo-clock", value: "null" });
+
 const dir = mkdtempSync(join(tmpdir(), "jj-seed-"));
 const file = join(dir, "kv.json");
 try {
@@ -17,7 +20,7 @@ try {
         ["wrangler", "kv", "bulk", "put", file, "--binding=JINGLE_JAM_DATA", "--preview", "--local", "--persist-to", ".wrangler/state"],
         { stdio: "inherit", shell: process.platform === "win32" }
     );
-    console.log(`Seeded local KV: ${KEYS.join(", ")}`);
+    console.log(`Seeded local KV: ${pairs.map(pair => pair.key).join(", ")}`);
 } finally {
     rmSync(dir, { recursive: true, force: true });
 }
