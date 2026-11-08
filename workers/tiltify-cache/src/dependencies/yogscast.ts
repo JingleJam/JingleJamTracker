@@ -8,5 +8,9 @@ import { YogscastDonationData } from "tiltify-cache/types/yogscast/YogscastDonat
 */
 export async function get(): Promise<YogscastDonationData> {
     const response = await fetch('https://jinglejam.yogscast.com/api/total');
+    // Outside the event it can be down, answering with an HTML error page
+    if (!response.ok) {
+        throw new Error(`Yogscast API returned ${response.status}`);
+    }
     return await response.json();
 }

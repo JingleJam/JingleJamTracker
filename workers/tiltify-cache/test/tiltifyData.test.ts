@@ -530,13 +530,24 @@ describe("TiltifyData", () => {
             const { status, body } = await refresh(`Bearer ${ADMIN_TOKEN}`);
 
             expect(status).toBe(200);
-            expect(body).toEqual({ success: true, updatedAt: "2026-12-06T09:00:00.000Z" });
+            expect(body).toEqual({ success: true, refreshed: true, updatedAt: "2026-12-06T09:00:00.000Z" });
             expect(getLatestData).toHaveBeenCalledTimes(1);
             expect(storedSummary?.raised).toBe(9000);
 
             const event = (await get(tiltifyData, "/api/v1/event")).body;
             expect(event.raised).toBe(9000);
             expect(event.causes[0].logo).toBe(ORIGIN + "/assets/new-logo.webp");
+        });
+
+        it("says when the new data was rejected, keeping the cached data", async () => {
+            getLatestData.mockImplementation(async () => ({ ...summary(campaigns), raised: 0, date: new Date("2026-12-06T09:00:00.000Z") }));
+
+            const { status, body } = await refresh(ADMIN_TOKEN);
+
+            expect(status).toBe(200);
+            expect(body).toEqual({ success: true, refreshed: false, updatedAt: "2026-12-05T12:00:00.000Z" });
+            expect((await get(tiltifyData, "/api/v1/event")).body.raised).toBe(1000);
+            expect(storedSummary).toBeNull();
         });
 
         it("persists every manual refresh, even within the snapshot interval", async () => {
