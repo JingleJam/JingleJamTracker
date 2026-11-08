@@ -507,6 +507,63 @@ describe("TiltifyData", () => {
         });
     });
 
+    describe("admin refresh", () => {
+        const refresh = (authorization?: string) => get(tiltifyData, "/api/v1/refresh", {
+            method: "POST",
+            headers: authorization ? { Authorization: authorization } : {},
+        });
+
+        // The next refresh's data, with a new total, update time and cause logo
+        let getLatestData: ReturnType<typeof vi.fn>;
+        beforeEach(() => {
+            getLatestData = vi.fn(async () => {
+                const data = summary(campaigns);
+                data.raised = 9000;
+                data.date = new Date("2026-12-06T09:00:00.000Z");
+                data.causes[0] = { ...data.causes[0], logo: "/assets/new-logo.webp" };
+                return data;
+            });
+            (tiltifyData as unknown as { source: { getLatestData: unknown } }).source.getLatestData = getLatestData;
+        });
+
+        it("refreshes all the data even with refreshing off, and persists it straight away", async () => {
+            const { status, body } = await refresh(`Bearer ${ADMIN_TOKEN}`);
+
+            expect(status).toBe(200);
+            expect(body).toEqual({ success: true, updatedAt: "2026-12-06T09:00:00.000Z" });
+            expect(getLatestData).toHaveBeenCalledTimes(1);
+            expect(storedSummary?.raised).toBe(9000);
+
+            const event = (await get(tiltifyData, "/api/v1/event")).body;
+            expect(event.raised).toBe(9000);
+            expect(event.causes[0].logo).toBe(ORIGIN + "/assets/new-logo.webp");
+        });
+
+        it("persists every manual refresh, even within the snapshot interval", async () => {
+            await refresh(ADMIN_TOKEN);
+            storedSummary = null;
+            await refresh(ADMIN_TOKEN);
+
+            expect(getLatestData).toHaveBeenCalledTimes(2);
+            expect(storedSummary?.raised).toBe(9000);
+        });
+
+        it("rejects a missing or wrong token without refreshing", async () => {
+            for (const authorization of [undefined, "wrong", "Bearer wrong"]) {
+                const { status, body } = await refresh(authorization);
+
+                expect(status).toBe(401);
+                expect(body).toEqual({ error: "Unauthorized." });
+            }
+            expect(getLatestData).not.toHaveBeenCalled();
+            expect(storedSummary).toBeNull();
+        });
+
+        it("only accepts POST", async () => {
+            expect((await get(tiltifyData, "/api/v1/refresh")).status).toBe(405);
+        });
+    });
+
     describe("errors", () => {
         it("returns a JSON 404 for an unknown path", async () => {
             const { status, body } = await get(tiltifyData, "/api/v1/not-an-endpoint");

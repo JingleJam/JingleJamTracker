@@ -108,6 +108,41 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /api/v1/refresh:
+    post:
+      tags: [Admin]
+      operationId: refresh
+      summary: Refresh all the data now
+      description: |
+        Refreshes all the data now, as a timed refresh does: the totals and campaigns from Tiltify (or the demo), and the
+        causes from the `causes` KV value. Works even when timed refreshing is off, so use it after changing KV in an
+        environment that doesn't refresh. The result is saved straight away, so it survives a restart. The timeline
+        isn't refreshed.
+      security:
+        - adminToken: []
+      responses:
+        '200':
+          description: The data was refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, updatedAt]
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  updatedAt:
+                    type: [string, 'null']
+                    format: date-time
+                    description: |
+                      When the data now cached was fetched. Unchanged if the refresh was rejected (e.g. Tiltify returned
+                      a total of 0), so the previous data is kept.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /api/v1/causes:
     get:
       tags: [Causes]

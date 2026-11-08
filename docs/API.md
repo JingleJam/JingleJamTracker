@@ -1031,7 +1031,7 @@ Access-Control-Allow-Methods: GET, OPTIONS
 Access-Control-Max-Age: 86400
 ```
 
-`OPTIONS` preflight requests return `204 No Content`. The two endpoints with an [admin](#admin-endpoints) `POST` (`/api/v1/event` and `/api/v1/timeline`) list `GET, POST, OPTIONS` instead.
+`OPTIONS` preflight requests return `204 No Content`. The two endpoints with an [admin](#admin-endpoints) `POST` (`/api/v1/event` and `/api/v1/timeline`) list `GET, POST, OPTIONS` instead, and `/api/v1/refresh` (admin only) lists `POST, OPTIONS`.
 
 ---
 
@@ -1104,12 +1104,13 @@ interface LegacyCampaign {
 > [!CAUTION]
 > These endpoints are for the tracker's maintainers. They need the secret admin token and overwrite live data.
 
-Both endpoints need an `Authorization` header set to the admin token, either as is or as `Bearer <token>`. A missing or wrong token returns `401` with `{"error": "Unauthorized."}`. A successful call returns `200` with `{"success": true}`.
+Every admin endpoint needs an `Authorization` header set to the admin token, either as is or as `Bearer <token>`. A missing or wrong token returns `401` with `{"error": "Unauthorized."}`. A successful call returns `200` with `{"success": true}` (plus `updatedAt` for a refresh).
 
 | Endpoint | Body | Effect |
 |---|---|---|
 | `POST /api/v1/event` | An edited [`/api/v1/event`](#get-apiv1event) response, or a summary in the Worker's internal format (the `ApiResponse` type in [ApiResponse.ts](../workers/tiltify-cache/src/types/ApiResponse.ts)) | Replaces the cached summary. An edited event response replaces the cached top campaigns with its 25 `campaigns.items`. It is replaced again at the next refresh, if refreshing is on. |
 | `POST /api/v1/timeline` | An array of [timeline points](#get-apiv1timeline) | Replaces this year's timeline. Send `[]` to clear it. |
+| `POST /api/v1/refresh` | None | Refreshes all the data now, as a timed refresh does: the totals and campaigns from Tiltify (or the demo), and the causes from the `causes` KV value. Works even when `ENABLE_REFRESH` is off, so use it after changing KV in an environment that doesn't refresh. The result is saved straight away, so it survives a restart. Returns `updatedAt`, the time of the data now cached (unchanged if the refresh was rejected, e.g. Tiltify returned a total of 0). The timeline isn't refreshed. |
 
 ```bash
 # Replace the summary with an edited copy of the event
@@ -1119,6 +1120,9 @@ curl -X POST https://dashboard.jinglejam.co.uk/api/v1/event \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   --data-binary @event.json
+
+# Refresh everything now, e.g. after uploading new causes to KV
+curl -X POST https://dashboard.jinglejam.co.uk/api/v1/refresh   -H "Authorization: Bearer $ADMIN_TOKEN"
 
 # Clear the timeline at the start of a new year
 curl -X POST https://dashboard.jinglejam.co.uk/api/v1/timeline \

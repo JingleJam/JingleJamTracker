@@ -5,6 +5,7 @@ const CACHE_NAME = 'tiltify-cache-2025';
 
 export const PUBLIC_METHODS = ['GET', 'OPTIONS'];           // Methods allowed on the public endpoints
 export const ADMIN_METHODS = ['GET', 'POST', 'OPTIONS'];    // Methods allowed on the endpoints that also have an admin POST
+export const ADMIN_ONLY_METHODS = ['POST', 'OPTIONS'];      // Methods allowed on the admin-only endpoints
 
 export function getCorsHeaders(methods: string[] = PUBLIC_METHODS): Record<string, string> {
     const allowed = methods.join(', ');
