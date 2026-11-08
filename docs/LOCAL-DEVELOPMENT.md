@@ -60,7 +60,7 @@ The Pages Functions reach the Worker's Durable Objects through Wrangler's local 
 Both services share one local state directory, `.wrangler/state` in the repository root, so they see the same KV and Durable Object data.
 
 - **Static data.** `causes`, `summary` and `trends-previous` are copied from [kv/](../kv/) into local KV by `npm run seed`. This runs automatically before every `npm run dev`, so edits to those files take effect on the next start.
-- **Live data.** On the first request to `/api/v1/event` with an empty cache, the Worker fetches the current data from Tiltify. The timed refresh loops are **off** locally, so the data stays as it is until you restart or reset.
+- **Live data.** On the first request to `/api/v1/event` with an empty cache, the Worker fetches the current data from Tiltify. The timed refresh loops are **off** locally, so the data stays as it is until you restart or reset, or refresh it with [`POST /api/v1/refresh`](API.md#admin-endpoints) (e.g. after editing `kv/causes.json` and running `npm run seed`).
 - **Reset.** `npm run reset` deletes all local state and re-seeds KV.
 
 ### Turning on refresh loops

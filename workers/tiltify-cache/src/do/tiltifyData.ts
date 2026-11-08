@@ -7,6 +7,7 @@ import {
     CAUSE_API_PATH,
     LEGACY_SUMMARY_API_PATH,
     LEGACY_CAMPAIGNS_API_PATH,
+    REFRESH_API_PATH,
     SNAPSHOT_INTERVAL_MS,
     IDLE_REFRESH_TIME,
     EVENT_WINDOW_PADDING_MS
@@ -48,6 +49,9 @@ const LEGACY_CAMPAIGN_DEFAULT_LIMIT = 100; // Default page size of the 2025 camp
     - The main response (top campaigns) goes to Durable Object storage, so its fetch date stays current after a cold start
     - The full campaign list goes to a single KV value, only when it has changed
   Snapshots are only read after a cold start, until the first refresh completes.
+
+  An admin can refresh everything (totals, causes from KV, campaigns) at any time with a POST to REFRESH_API_PATH,
+  even when timed refreshing is off. That refresh's snapshots are persisted straight away.
 
   The summary is kept in its internal format and turned into each response's shape by tiltify-cache/responses.
   Single campaigns and team events add live data fetched from Tiltify on request, cached briefly by FactDetailsService.
@@ -241,6 +245,21 @@ export class TiltifyData {
             }
         );
 
+        // POST route: Refresh all the data now, even when timed refreshing is off, and persist it straight away
+        router.post(
+            REFRESH_API_PATH,
+            async (request, url) => {
+                console.log('Called ' + url.pathname);
+
+                await this.refreshNow();
+                return jsonResponse({ success: true, updatedAt: this.summary?.date ?? null });
+            },
+            {
+                requiresAuth: true,
+                authToken: this.env.ADMIN_TOKEN,
+            }
+        );
+
         // GET route: The 2025 summary response, kept until the 2027 event
         router.get(LEGACY_SUMMARY_API_PATH, async (request, url) => {
             console.log('Called ' + url.pathname);
@@ -356,16 +375,24 @@ export class TiltifyData {
     }
 
     // Fetch the latest data into memory, sharing a single in-flight fetch between concurrent callers
-    private refresh(): Promise<void> {
+    private refresh(persistNow = false): Promise<void> {
         if (!this.refreshing) {
-            this.refreshing = this.fetchLatestData().finally(() => {
+            this.refreshing = this.fetchLatestData(persistNow).finally(() => {
                 this.refreshing = null;
             });
         }
         return this.refreshing;
     }
 
-    private async fetchLatestData(): Promise<void> {
+    // A refresh that starts after any in-flight one (which may have read KV before it changed), persisted straight away
+    private async refreshNow(): Promise<void> {
+        if (this.refreshing) {
+            await this.refreshing.catch(() => {});
+        }
+        await this.refresh(true);
+    }
+
+    private async fetchLatestData(persistNow = false): Promise<void> {
         const newData = await this.source.getLatestData();
         const checkFailures = !this.source.demo;    // A demo that starts again legitimately goes back to nothing raised
 
@@ -391,16 +418,16 @@ export class TiltifyData {
         this.summary = newData;
 
         try {
-            await this.persistSnapshots();
+            await this.persistSnapshots(persistNow);
         } catch (e) {
             console.error('Failed to persist snapshots', e);
         }
     }
 
-    // Persist the in-memory data for cold starts, at most every SNAPSHOT_INTERVAL_MS
-    private async persistSnapshots(): Promise<void> {
+    // Persist the in-memory data for cold starts, at most every SNAPSHOT_INTERVAL_MS unless forced
+    private async persistSnapshots(force = false): Promise<void> {
         const now = Date.now();
-        if (this.source.demo || now - this.lastSnapshot < SNAPSHOT_INTERVAL_MS) {
+        if (this.source.demo || (!force && now - this.lastSnapshot < SNAPSHOT_INTERVAL_MS)) {
             return;
         }
         this.lastSnapshot = now;
