@@ -37,7 +37,7 @@ const CAMPAIGN_MAX_LIMIT = 100; // Maximum number of campaigns in a page of the 
 const CAMPAIGN_TYPES = ['campaign', 'team_event']; // Values accepted by the campaign list's type filter
 const SEARCH_MAX_LENGTH = 100; // Maximum length of the campaign list's search text
 const CAUSE_CAMPAIGN_DEFAULT_LIMIT = 25; // Default number of top campaigns included in a cause response
-const CAUSE_CAMPAIGN_MAX_LIMIT = 100; // Maximum number of top campaigns included in a cause response
+const CAUSE_CAMPAIGN_MAX_LIMIT = 1000; // Maximum number of top campaigns included in a cause response (the cause tracker loads them all to search and filter)
 const LEGACY_CAMPAIGN_DEFAULT_LIMIT = 100; // Default page size of the 2025 campaign list
 
 /*

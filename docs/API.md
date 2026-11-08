@@ -257,7 +257,7 @@ The slug is the cause name in lowercase, with spaces replaced by hyphens and oth
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `limit` | integer, `1`–`100` | `25` | Number of campaigns to return |
+| `limit` | integer, `1`–`1000` | `25` | Number of campaigns to return |
 | `offset` | integer, `0` or more | `0` | Number of campaigns to skip |
 
 #### Response
@@ -275,7 +275,7 @@ The slug is the cause name in lowercase, with spaces replaced by hyphens and oth
 
 | Status | Body |
 |---|---|
-| `400` | `{"error": "Invalid limit parameter. Limit must be between 1 and 100."}` |
+| `400` | `{"error": "Invalid limit parameter. Limit must be between 1 and 1000."}` |
 | `400` | `{"error": "Invalid offset parameter. Offset must be a positive number (0 or greater)."}` |
 | `404` | `{"error": "Cause not found."}` |
 

@@ -265,7 +265,14 @@ describe("TiltifyData", () => {
 
         it("rejects an invalid limit", async () => {
             expect((await get(tiltifyData, "/api/v1/causes/war-child?limit=0")).status).toBe(400);
-            expect((await get(tiltifyData, "/api/v1/causes/war-child?limit=101")).status).toBe(400);
+            expect((await get(tiltifyData, "/api/v1/causes/war-child?limit=1001")).status).toBe(400);
+        });
+
+        it("accepts a limit of up to 1000", async () => {
+            const { status, body } = await get(tiltifyData, "/api/v1/causes/war-child?limit=1000");
+
+            expect(status).toBe(200);
+            expect(body.campaigns.limit).toBe(1000);
         });
     });
 
