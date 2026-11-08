@@ -68,7 +68,7 @@ export class TiltifyData {
 
     private summary: ApiResponse | null = null;             // Totals, causes, history and top campaigns, in the internal format
     private campaigns: Campaign[] | null = null;            // Full sorted campaign list served by the Campaigns API path
-    private refreshing: Promise<void> | null = null;        // In-flight refresh, shared by concurrent callers
+    private refreshing: Promise<boolean> | null = null;        // In-flight refresh, shared by concurrent callers
     private alarmChecked = false;
     private lastSnapshot = 0;
     private campaignsHash: string | null = null;
@@ -251,8 +251,8 @@ export class TiltifyData {
             async (request, url) => {
                 console.log('Called ' + url.pathname);
 
-                await this.refreshNow();
-                return jsonResponse({ success: true, updatedAt: this.summary?.date ?? null });
+                const refreshed = await this.refreshNow();
+                return jsonResponse({ success: true, refreshed, updatedAt: this.summary?.date ?? null });
             },
             {
                 requiresAuth: true,
@@ -374,8 +374,9 @@ export class TiltifyData {
         this.storage.setAlarm(Date.now() + (refreshTime * 1000));
     }
 
-    // Fetch the latest data into memory, sharing a single in-flight fetch between concurrent callers
-    private refresh(persistNow = false): Promise<void> {
+    // Fetch the latest data into memory, sharing a single in-flight fetch between concurrent callers.
+    // Resolves to whether the new data was kept (it isn't if it looks like a failed fetch).
+    private refresh(persistNow = false): Promise<boolean> {
         if (!this.refreshing) {
             this.refreshing = this.fetchLatestData(persistNow).finally(() => {
                 this.refreshing = null;
@@ -385,21 +386,21 @@ export class TiltifyData {
     }
 
     // A refresh that starts after any in-flight one (which may have read KV before it changed), persisted straight away
-    private async refreshNow(): Promise<void> {
+    private async refreshNow(): Promise<boolean> {
         if (this.refreshing) {
-            await this.refreshing.catch(() => {});
+            await this.refreshing.catch(() => false);
         }
-        await this.refresh(true);
+        return await this.refresh(true);
     }
 
-    private async fetchLatestData(persistNow = false): Promise<void> {
+    private async fetchLatestData(persistNow = false): Promise<boolean> {
         const newData = await this.source.getLatestData();
         const checkFailures = !this.source.demo;    // A demo that starts again legitimately goes back to nothing raised
 
         // Keep the current data if the raised amount is not valid
         if (!newData || (checkFailures && this.summary && newData.raised === 0 && this.summary.raised !== 0)) {
             console.log(`Raised amount invalid... Keeping old data`);
-            return;
+            return false;
         }
 
         // Check if the campaigns failed to load, if so, keep the old campaigns
@@ -422,6 +423,8 @@ export class TiltifyData {
         } catch (e) {
             console.error('Failed to persist snapshots', e);
         }
+
+        return true;
     }
 
     // Persist the in-memory data for cold starts, at most every SNAPSHOT_INTERVAL_MS unless forced

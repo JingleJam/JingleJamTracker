@@ -127,17 +127,20 @@ paths:
             application/json:
               schema:
                 type: object
-                required: [success, updatedAt]
+                required: [success, refreshed, updatedAt]
                 properties:
                   success:
                     type: boolean
                     const: true
+                  refreshed:
+                    type: boolean
+                    description: |
+                      Whether the new data was kept. `false` if it looked like a failed fetch (e.g. a total of 0), so
+                      the cached data was kept.
                   updatedAt:
                     type: [string, 'null']
                     format: date-time
-                    description: |
-                      When the data now cached was fetched. Unchanged if the refresh was rejected (e.g. Tiltify returned
-                      a total of 0), so the previous data is kept.
+                    description: When the data now cached was fetched. Unchanged if `refreshed` is `false`.
         '401':
           $ref: '#/components/responses/Unauthorized'
         '500':

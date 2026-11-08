@@ -117,7 +117,8 @@ describe("getLatestData against Tiltify (Jingle Jam 2025)", () => {
         });
 
         it("keeps every search group under the 1000 result limit", () => {
-            expect(warnings).toEqual([]);
+            // Other warnings (e.g. the Yogscast API being down outside the event) don't matter here
+            expect(warnings.filter(call => String(call[0]).includes('1000 result limit'))).toEqual([]);
         });
     });
 

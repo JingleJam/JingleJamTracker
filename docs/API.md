@@ -1104,13 +1104,13 @@ interface LegacyCampaign {
 > [!CAUTION]
 > These endpoints are for the tracker's maintainers. They need the secret admin token and overwrite live data.
 
-Every admin endpoint needs an `Authorization` header set to the admin token, either as is or as `Bearer <token>`. A missing or wrong token returns `401` with `{"error": "Unauthorized."}`. A successful call returns `200` with `{"success": true}` (plus `updatedAt` for a refresh).
+Every admin endpoint needs an `Authorization` header set to the admin token, either as is or as `Bearer <token>`. A missing or wrong token returns `401` with `{"error": "Unauthorized."}`. A successful call returns `200` with `{"success": true}` (plus `refreshed` and `updatedAt` for a refresh).
 
 | Endpoint | Body | Effect |
 |---|---|---|
 | `POST /api/v1/event` | An edited [`/api/v1/event`](#get-apiv1event) response, or a summary in the Worker's internal format (the `ApiResponse` type in [ApiResponse.ts](../workers/tiltify-cache/src/types/ApiResponse.ts)) | Replaces the cached summary. An edited event response replaces the cached top campaigns with its 25 `campaigns.items`. It is replaced again at the next refresh, if refreshing is on. |
 | `POST /api/v1/timeline` | An array of [timeline points](#get-apiv1timeline) | Replaces this year's timeline. Send `[]` to clear it. |
-| `POST /api/v1/refresh` | None | Refreshes all the data now, as a timed refresh does: the totals and campaigns from Tiltify (or the demo), and the causes from the `causes` KV value. Works even when `ENABLE_REFRESH` is off, so use it after changing KV in an environment that doesn't refresh. The result is saved straight away, so it survives a restart. Returns `updatedAt`, the time of the data now cached (unchanged if the refresh was rejected, e.g. Tiltify returned a total of 0). The timeline isn't refreshed. |
+| `POST /api/v1/refresh` | None | Refreshes all the data now, as a timed refresh does: the totals and campaigns from Tiltify (or the demo), and the causes from the `causes` KV value. Works even when `ENABLE_REFRESH` is off, so use it after changing KV in an environment that doesn't refresh. The result is saved straight away, so it survives a restart. Returns `refreshed` (`false` if the new data looked like a failed fetch, e.g. a total of 0, so the cached data was kept) and `updatedAt`, when the data now cached was fetched. The Yogscast donation count and user lookups are optional: if they fail, the refresh still goes ahead with their fallbacks. The timeline isn't refreshed. |
 
 ```bash
 # Replace the summary with an edited copy of the event
