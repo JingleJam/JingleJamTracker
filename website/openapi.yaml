@@ -108,6 +108,44 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /api/v1/refresh:
+    post:
+      tags: [Admin]
+      operationId: refresh
+      summary: Refresh all the data now
+      description: |
+        Refreshes all the data now, as a timed refresh does: the totals and campaigns from Tiltify (or the demo), and the
+        causes from the `causes` KV value. Works even when timed refreshing is off, so use it after changing KV in an
+        environment that doesn't refresh. The result is saved straight away, so it survives a restart. The timeline
+        isn't refreshed.
+      security:
+        - adminToken: []
+      responses:
+        '200':
+          description: The data was refreshed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [success, refreshed, updatedAt]
+                properties:
+                  success:
+                    type: boolean
+                    const: true
+                  refreshed:
+                    type: boolean
+                    description: |
+                      Whether the new data was kept. `false` if it looked like a failed fetch (e.g. a total of 0), so
+                      the cached data was kept.
+                  updatedAt:
+                    type: [string, 'null']
+                    format: date-time
+                    description: When the data now cached was fetched. Unchanged if `refreshed` is `false`.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
   /api/v1/causes:
     get:
       tags: [Causes]
@@ -154,7 +192,14 @@ paths:
               value: war-child
             id:
               value: 18cb6ffd-3067-4ca8-8414-74eb733d79fd
-        - $ref: '#/components/parameters/Limit'
+        - name: limit
+          in: query
+          description: Number of campaigns to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 25
         - $ref: '#/components/parameters/Offset'
       responses:
         '200':
