@@ -96,7 +96,7 @@ export class TiltifyData {
         router.get(EVENT_API_PATH, async (request, url) => {
             console.log('Called ' + url.pathname);
 
-            return jsonResponse(getEventResponse(await this.getSummary()));
+            return jsonResponse(getEventResponse(await this.getSummary(), url.origin));
         });
 
         // GET route: Get the paginated campaign list, optionally filtered by type and cause and searched by text
@@ -140,7 +140,7 @@ export class TiltifyData {
 
             return jsonResponse({
                 meta: getMeta(summary),
-                campaigns: getCampaignCollection(campaigns, summary.causes, paging.limit, paging.offset)
+                campaigns: getCampaignCollection(campaigns, summary.causes, url.origin, paging.limit, paging.offset)
             });
         });
 
@@ -163,7 +163,7 @@ export class TiltifyData {
 
             const response = {
                 meta: getMeta(summary),
-                campaign: getCampaign(campaign, summary.causes),
+                campaign: getCampaign(campaign, summary.causes, url.origin),
                 social: details.social,
                 donationMatches: details.donationMatches,
                 rewards: details.rewards,
@@ -180,7 +180,7 @@ export class TiltifyData {
             return jsonResponse({
                 ...response,
                 teamMemberCount: details.teamMemberCount,
-                campaigns: getCampaignCollection(supportingCampaigns, summary.causes, supportingCampaigns.length)
+                campaigns: getCampaignCollection(supportingCampaigns, summary.causes, url.origin, supportingCampaigns.length)
             });
         });
 
@@ -192,7 +192,7 @@ export class TiltifyData {
 
             return jsonResponse({
                 meta: getMeta(summary),
-                causes: summary.causes.map(getCause)
+                causes: summary.causes.map(cause => getCause(cause, url.origin))
             });
         });
 
@@ -218,8 +218,8 @@ export class TiltifyData {
 
             return jsonResponse({
                 meta: getMeta(summary),
-                cause: getCause(cause),
-                campaigns: getCampaignCollection(causeCampaigns, summary.causes, paging.limit, paging.offset)
+                cause: getCause(cause, url.origin),
+                campaigns: getCampaignCollection(causeCampaigns, summary.causes, url.origin, paging.limit, paging.offset)
             });
         });
 
@@ -245,7 +245,7 @@ export class TiltifyData {
         router.get(LEGACY_SUMMARY_API_PATH, async (request, url) => {
             console.log('Called ' + url.pathname);
 
-            return jsonResponse(getLegacySummary(await this.getSummary()));
+            return jsonResponse(getLegacySummary(await this.getSummary(), url.origin));
         });
 
         // GET route: The 2025 paginated campaign list (no search or filters), kept until the 2027 event
@@ -261,7 +261,7 @@ export class TiltifyData {
             const campaigns = await this.getCampaignList();
 
             return jsonResponse({
-                campaigns: campaigns.slice(paging.offset, paging.offset + paging.limit).map(getLegacyCampaign),
+                campaigns: campaigns.slice(paging.offset, paging.offset + paging.limit).map(campaign => getLegacyCampaign(campaign, url.origin)),
                 total: campaigns.length,
                 limit: paging.limit,
                 offset: paging.offset

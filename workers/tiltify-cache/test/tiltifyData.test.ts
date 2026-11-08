@@ -15,6 +15,7 @@ import { getCampaign } from "tiltify-cache/responses";
 const YEAR = 2026;
 const CAUSE_ID = "cause-1";
 const ADMIN_TOKEN = "admin-secret";
+const ORIGIN = "http://127.0.0.1";    // The origin test requests are made to
 
 let nextId = 0;
 let tiltifyCalls: string[] = [];
@@ -147,11 +148,11 @@ async function createTiltifyData(campaigns: Campaign[], initialSummary: ApiRespo
 
 // A campaign as the v1 API shows it
 function publicCampaign(campaign: Campaign) {
-    return getCampaign(campaign, summary([]).causes);
+    return getCampaign(campaign, summary([]).causes, ORIGIN);
 }
 
-async function get(tiltifyData: TiltifyData, path: string, init?: RequestInit): Promise<{ status: number; body: any }> {
-    const response = await tiltifyData.fetch(new Request("http://127.0.0.1" + path, init));
+async function get(tiltifyData: TiltifyData, path: string, init?: RequestInit, origin = ORIGIN): Promise<{ status: number; body: any }> {
+    const response = await tiltifyData.fetch(new Request(origin + path, init));
     return { status: response.status, body: await response.json() };
 }
 
@@ -530,6 +531,48 @@ describe("TiltifyData", () => {
 
             expect(status).toBe(500);
             expect(body).toEqual({ error: "Internal server error." });
+        });
+    });
+
+    describe("asset URLs", () => {
+        const LOGO = "/assets/jingle-jam-2026/causes/war-child.webp";
+        const BORDERED = "/assets/jingle-jam-2026/causes/bordered/war-child.webp";
+        let assets: TiltifyData;
+
+        beforeEach(async () => {
+            const relative = campaign({ causeId: CAUSE_ID, user: { name: "user", slug: "user", avatar: LOGO, url: "" }, team: { name: "Team", slug: "team", avatar: "https://tiltify.example/team.webp", url: "" } });
+            const data = summary([relative]);
+            data.causes[0] = { ...data.causes[0], logo: LOGO, borderedLogo: BORDERED };
+            assets = await createTiltifyData([relative], data);
+        });
+
+        it("serves root-relative logos and avatars on the origin of each request", async () => {
+            for (const origin of ["https://dashboard.jinglejam.co.uk", "https://preview.jingle-jam-tracker.pages.dev", "http://127.0.0.1:8788"]) {
+                const { body } = await get(assets, "/api/v1/causes/war-child", undefined, origin);
+
+                expect(body.cause.logo).toBe(origin + LOGO);
+                expect(body.cause.borderedLogo).toBe(origin + BORDERED);
+                expect(body.campaigns.items[0].user.avatar).toBe(origin + LOGO);
+                expect(body.campaigns.items[0].team.avatar).toBe("https://tiltify.example/team.webp");
+            }
+        });
+
+        it("resolves them in every response that includes causes or campaigns", async () => {
+            const origin = "https://dashboard.jinglejam.co.uk";
+
+            expect((await get(assets, "/api/v1/event", undefined, origin)).body.causes[0].logo).toBe(origin + LOGO);
+            expect((await get(assets, "/api/v1/causes", undefined, origin)).body.causes[0].borderedLogo).toBe(origin + BORDERED);
+            expect((await get(assets, "/api/v1/campaigns", undefined, origin)).body.campaigns.items[0].user.avatar).toBe(origin + LOGO);
+            expect((await get(assets, "/api/tiltify", undefined, origin)).body.causes[0].logo).toBe(origin + BORDERED);
+            expect((await get(assets, "/api/tiltify", undefined, origin)).body.campaigns.list[0].user.avatar).toBe(origin + LOGO);
+            expect((await get(assets, "/api/campaigns", undefined, origin)).body.campaigns[0].user.avatar).toBe(origin + LOGO);
+        });
+
+        it("leaves URLs that aren't root-relative unchanged", async () => {
+            const { body } = await get(tiltifyData, "/api/v1/causes/war-child", undefined, "https://dashboard.jinglejam.co.uk");
+
+            expect(body.cause.logo).toBe("logo.webp");
+            expect(body.cause.borderedLogo).toBe("bordered.webp");
         });
     });
 

@@ -166,7 +166,7 @@ Swap `development` for `production` to upload to production. These need `wrangle
 
 | File | KV key | Contents |
 |---|---|---|
-| [causes.json](../kv/causes.json) | `causes` | This year's causes: Tiltify region `id`, `name`, `logo`, `borderedLogo`, `description`, `color`, `url`, `donateUrl`, and an optional `slug` and `override` |
+| [causes.json](../kv/causes.json) | `causes` | This year's causes: Tiltify region `id`, `name`, `logo`, `borderedLogo`, `description`, `color`, `url`, `donateUrl`, and an optional `slug` and `override`. A logo can be a root-relative path to a file in [website/assets/](../website/assets/), e.g. `/assets/jingle-jam-2026/causes/war-child.webp`, which the API turns into a URL on the site it was called on (so locally, `http://127.0.0.1:8788/assets/...`) |
 | [summary.json](../kv/summary.json) | `summary` | Final totals for every previous year (the `history` field of `/api/v1/event`) |
 | [trends-previous.json](../kv/trends-previous.json) | `trends-previous` | Previous years' graph points (`/api/v1/timeline/history`) |
 
