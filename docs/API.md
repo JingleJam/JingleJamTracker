@@ -137,8 +137,8 @@ curl https://dashboard.jinglejam.co.uk/api/v1/event
       "id": "18cb6ffd-3067-4ca8-8414-74eb733d79fd",
       "slug": "war-child",
       "name": "War Child",
-      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/war-child.webp",
-      "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/war-child.webp",
+      "logo": "https://dashboard.jinglejam.co.uk/assets/jingle-jam-2026/causes/war-child.webp",
+      "borderedLogo": "https://dashboard.jinglejam.co.uk/assets/jingle-jam-2026/causes/bordered/war-child.webp",
       "description": "Protecting, educating, and advocating for the rights of children impacted by the ongoing conflicts in Gaza, Ukraine and worldwide.",
       "color": "#cc232a",
       "url": "https://www.warchild.org.uk/",
@@ -218,8 +218,8 @@ curl https://dashboard.jinglejam.co.uk/api/v1/causes
       "id": "18cb6ffd-3067-4ca8-8414-74eb733d79fd",
       "slug": "war-child",
       "name": "War Child",
-      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/war-child.webp",
-      "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/war-child.webp",
+      "logo": "https://dashboard.jinglejam.co.uk/assets/jingle-jam-2026/causes/war-child.webp",
+      "borderedLogo": "https://dashboard.jinglejam.co.uk/assets/jingle-jam-2026/causes/bordered/war-child.webp",
       "description": "Protecting, educating, and advocating for the rights of children impacted by the ongoing conflicts in Gaza, Ukraine and worldwide.",
       "color": "#cc232a",
       "url": "https://www.warchild.org.uk/",
@@ -257,7 +257,7 @@ The slug is the cause name in lowercase, with spaces replaced by hyphens and oth
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `limit` | integer, `1`–`100` | `25` | Number of campaigns to return |
+| `limit` | integer, `1`–`1000` | `25` | Number of campaigns to return |
 | `offset` | integer, `0` or more | `0` | Number of campaigns to skip |
 
 #### Response
@@ -275,7 +275,7 @@ The slug is the cause name in lowercase, with spaces replaced by hyphens and oth
 
 | Status | Body |
 |---|---|
-| `400` | `{"error": "Invalid limit parameter. Limit must be between 1 and 100."}` |
+| `400` | `{"error": "Invalid limit parameter. Limit must be between 1 and 1000."}` |
 | `400` | `{"error": "Invalid offset parameter. Offset must be a positive number (0 or greater)."}` |
 | `404` | `{"error": "Cause not found."}` |
 
@@ -296,8 +296,8 @@ curl "https://dashboard.jinglejam.co.uk/api/v1/causes/war-child?limit=5"
     "id": "18cb6ffd-3067-4ca8-8414-74eb733d79fd",
     "slug": "war-child",
     "name": "War Child",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/war-child.webp",
-    "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/war-child.webp",
+    "logo": "https://dashboard.jinglejam.co.uk/assets/jingle-jam-2026/causes/war-child.webp",
+    "borderedLogo": "https://dashboard.jinglejam.co.uk/assets/jingle-jam-2026/causes/bordered/war-child.webp",
     "description": "Protecting, educating, and advocating for the rights of children impacted by the ongoing conflicts in Gaza, Ukraine and worldwide.",
     "color": "#cc232a",
     "url": "https://www.warchild.org.uk/",
@@ -713,6 +713,8 @@ A charity supported by the Jingle Jam.
 | `name` | `string` | Display name |
 | `logo` | `string` | Logo image URL: the bare logo on a transparent background, trimmed to its edges (fixed height, width varies with the logo) |
 | `borderedLogo` | `string` | Square logo image URL with a border and background, used for thumbnails |
+
+Logos hosted by the tracker are served from the same site as the API you called, so each environment (local, preview, production) links to its own copy.
 | `description` | `string` | Short description of the cause |
 | `color` | `string` | Brand colour as a hex code, e.g. `#cc232a` |
 | `url` | `string` | The cause's own website |

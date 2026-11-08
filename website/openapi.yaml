@@ -154,7 +154,14 @@ paths:
               value: war-child
             id:
               value: 18cb6ffd-3067-4ca8-8414-74eb733d79fd
-        - $ref: '#/components/parameters/Limit'
+        - name: limit
+          in: query
+          description: Number of campaigns to return
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 25
         - $ref: '#/components/parameters/Offset'
       responses:
         '200':

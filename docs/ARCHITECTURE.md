@@ -190,7 +190,7 @@ Worker variables are set in [workers/tiltify-cache/wrangler.toml](../workers/til
 ### Preparing for a new year
 
 1. Update `YEAR`, `FUNDRAISER_PUBLIC_ID`, `ALL_CHARITIES_REGION_ID` and `DOLLAR_OFFSET` for both environments in the Worker's `wrangler.toml`. The "All The Charities" region is new every year, like the charity regions.
-2. Update [kv/causes.json](../kv/causes.json) with the new causes (Tiltify region IDs, logos, colours, descriptions).
+2. Update [kv/causes.json](../kv/causes.json) with the new causes (Tiltify region IDs, logos, colours, descriptions). Put the logos in `website/assets/jingle-jam-{year}/causes/` (the bare logo) and `causes/bordered/` (the square one), and set `logo` and `borderedLogo` to their root-relative paths, e.g. `/assets/jingle-jam-2026/causes/war-child.webp`. The API serves them as absolute URLs on whichever site it was called on, so there's no domain to change between environments.
 3. Add last year's final totals to [kv/summary.json](../kv/summary.json), and last year's graph to [kv/trends-previous.json](../kv/trends-previous.json).
 4. Turn on `ENABLE_REFRESH` and `ENABLE_GRAPH_REFRESH` before the event starts.
 
