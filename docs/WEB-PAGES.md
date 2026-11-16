@@ -9,7 +9,7 @@ The tracker pages are static HTML and jQuery in [website/](../website/). They ca
 | [Home](#home) | [`/home`](https://dashboard.jinglejam.co.uk/home) | `/api/v1/causes`, `/api/v1/campaigns?search=` |
 | [Main tracker](#main-tracker) | [`/tracker`](https://dashboard.jinglejam.co.uk/tracker) | `/api/v1/event`, `/api/v1/timeline`, `/api/v1/timeline/history` |
 | [Whole-event tracker](#whole-event-tracker) | [`/jingle-jam`](https://dashboard.jinglejam.co.uk/jingle-jam) | `/api/v1/event` |
-| [Cause tracker](#cause-tracker) | [`/causes/{cause}`](https://dashboard.jinglejam.co.uk/causes/calm) | `/api/v1/causes/{cause}?limit=25` |
+| [Cause tracker](#cause-tracker) | [`/causes/{cause}`](https://dashboard.jinglejam.co.uk/causes/calm) | `/api/v1/causes/{cause}?limit=1000` (`?limit=25` in the TV view) |
 | [Campaign and team event tracker](#campaign-and-team-event-tracker) | `/campaigns/{id}` | `/api/v1/campaigns/{id}`, `/api/v1/causes` |
 | [TV view](#tv-view) | [`/tv?type={type}&id={id}`](https://dashboard.jinglejam.co.uk/tv) | The same as the page it shows |
 | [Totals only](#totals-only) | [`/total`](https://dashboard.jinglejam.co.uk/total) | `/api/v1/event` |
@@ -68,7 +68,8 @@ The tracker pages are static HTML and jQuery in [website/](../website/). They ca
 | **Campaigns** | Number of campaigns dedicated to this cause |
 | **Live now** | Number of those campaigns streaming right now |
 | **Cause details** | Logo, description, and links to donate and to the cause's website |
-| **Top campaigns** | The top 25 campaigns for this cause, with progress towards each goal and badges for **Live** and **Donation match** (e.g. 2× Match). Click a campaign to open it on Tiltify. |
+| **Campaigns** | Every campaign and team event for this cause (up to the top 1,000), with progress towards each goal and badges for **Live** and **Donation match** (e.g. 2× Match). The number is each campaign's rank by amount raised. Click a campaign to open it on Tiltify. |
+| **Search, filters and sorting** | Search by campaign, fundraiser, team or team event name (small typos are fine), filter by type (campaign or team event), goal (reached or not reached, which leaves out campaigns without a goal), **Live** and **Donation match**, and sort by amount or name. This all runs in the page over the loaded campaigns and stays applied as the list updates live. 50 campaigns are shown at a time, with **Show more** for the rest. The [`/jingle-jam`](#whole-event-tracker) page only has the top 25 campaigns, so it doesn't show these controls. |
 
 The `{cause}` part of the URL is the cause's slug or Tiltify ID, the same values that [`/api/v1/causes/{cause}`](API.md#get-apiv1causescause) accepts. New causes get a page automatically. An unknown cause shows **Cause Not Found**.
 

@@ -4,7 +4,18 @@
         oldModel: null,
         causeSlug: null,
         notFound: false,
-        campaignLimit: 25,          //Number of top campaigns to show
+        campaignLimit: 1000,        //Number of campaigns loaded for a cause, to search, filter and sort in the page
+        tvCampaignLimit: 25,        //Number of top campaigns loaded for the TV ticker
+        campaignPageSize: 50,       //Number of campaigns shown at first, and added by "Show more"
+        campaignsShown: 50,
+        campaignFilters: {
+            search: '',
+            type: 'all',            //all, campaign or team_event
+            goal: 'all',            //all, met or not-met
+            live: false,
+            match: false,           //Has an active donation match
+            sort: 'amount-desc',    //amount-desc, amount-asc, name-asc or name-desc
+        },
         refreshTime: 10000,         //How often to wait for an API refresh
         waitTime: 5000,             //How long to wait for the data on the backend to be updated
         minRefreshTime: 5000,       //Minimum refresh time for the API
@@ -248,6 +259,9 @@
         //TV mode
         setupTvMode();
 
+        //Campaign search, filters and sorting
+        setupCampaignFilters();
+
         //Handle when tabbed out of the page
         let hidden;
         let visibilityChange;
@@ -327,7 +341,7 @@
         if (!isTvMode())
             return;
 
-        let campaigns = JingleJam.model.campaigns.items;
+        let campaigns = JingleJam.model.campaigns.items.slice(0, JingleJam.tvCampaignLimit);
         let track = $('#tvTickerTrack');
 
         $('#tvTickerEmpty').toggle(campaigns.length === 0);
@@ -633,41 +647,158 @@
         formatNumberText(elem, format(target))
     }
 
-    //Creates or updates the top campaigns list
+    //Setup the campaign search, filters and sorting (only shown for a single cause)
+    function setupCampaignFilters() {
+        let searchTimeout = null;
+        $('#campaignSearch').on('input', function () {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => setCampaignFilter('search', this.value), 150);
+        }).on('keydown', function (e) {
+            if (e.key === 'Escape' && this.value) {
+                this.value = '';
+                clearTimeout(searchTimeout);
+                setCampaignFilter('search', '');
+            }
+        });
+
+        $('#campaignTypeFilter').on('change', function () { setCampaignFilter('type', this.value); });
+        $('#campaignGoalFilter').on('change', function () { setCampaignFilter('goal', this.value); });
+        $('#campaignSort').on('change', function () { setCampaignFilter('sort', this.value); });
+        $('#campaignLiveFilter').on('click', () => setCampaignFilter('live', !JingleJam.campaignFilters.live));
+        $('#campaignMatchFilter').on('click', () => setCampaignFilter('match', !JingleJam.campaignFilters.match));
+
+        $('#campaignFilterClear').on('click', () => {
+            Object.assign(JingleJam.campaignFilters, { search: '', type: 'all', goal: 'all', live: false, match: false });
+            $('#campaignSearch').val('');
+            setCampaignFilter();
+        });
+
+        $('#campaignsShowMore').on('click', () => {
+            JingleJam.campaignsShown += JingleJam.campaignPageSize;
+            updateCampaigns(true);
+        });
+    }
+
+    //Changes a campaign filter (or just refreshes the list), going back to the first page of results
+    function setCampaignFilter(key = null, value = null) {
+        if (key)
+            JingleJam.campaignFilters[key] = value;
+        JingleJam.campaignsShown = JingleJam.campaignPageSize;
+
+        let filters = JingleJam.campaignFilters;
+        $('#campaignTypeFilter').val(filters.type);
+        $('#campaignGoalFilter').val(filters.goal);
+        $('#campaignSort').val(filters.sort);
+        $('#campaignLiveFilter').toggleClass('active', filters.live).attr('aria-pressed', filters.live);
+        $('#campaignMatchFilter').toggleClass('active', filters.match).attr('aria-pressed', filters.match);
+        $('#campaignFilterClear').toggle(isFilteringCampaigns());
+
+        updateCampaigns(true);
+    }
+
+    //Whether the campaigns are being searched or filtered (sorting doesn't count)
+    function isFilteringCampaigns() {
+        let filters = JingleJam.campaignFilters;
+        return filters.search.trim() !== '' || filters.type !== 'all' || filters.goal !== 'all' || filters.live || filters.match;
+    }
+
+    //The campaigns that match the search and filters, in the selected order
+    function getFilteredCampaigns(campaigns) {
+        let filters = JingleJam.campaignFilters;
+        let query = campaignSearch.createQuery(filters.search);
+
+        //Goal filters only include campaigns that have a goal
+        let result = campaigns.filter(campaign =>
+            (filters.type === 'all' || campaign.type === filters.type) &&
+            (filters.goal === 'all' || (campaign.goal > 0 && (campaign.raised >= campaign.goal) === (filters.goal === 'met'))) &&
+            (!filters.live || campaign.live) &&
+            (!filters.match || campaign.donationMatchMultiplier > 1) &&
+            (!query || campaignSearch.matches(campaign, query)));
+
+        //The API lists the campaigns highest raised first, and the sort is stable, so ties keep that order
+        let collator = new Intl.Collator(undefined, { sensitivity: 'base', numeric: true });
+        switch (filters.sort) {
+            case 'amount-asc':
+                return result.reverse().sort((a, b) => a.raised - b.raised);
+            case 'name-asc':
+                return result.sort((a, b) => collator.compare((a.name || '').trim(), (b.name || '').trim()));
+            case 'name-desc':
+                return result.sort((a, b) => collator.compare((b.name || '').trim(), (a.name || '').trim()));
+            default:
+                return result.sort((a, b) => b.raised - a.raised);
+        }
+    }
+
+    //Shows how many campaigns match, and the empty states and "Show more" button
+    function updateCampaignSummary(loaded, matched, shown) {
+        let plural = (count) => count === 1 ? 'campaign' : 'campaigns';
+        let text = isFilteringCampaigns()
+            ? `${formatInt(matched)} of ${formatInt(loaded)} ${plural(loaded)} match`
+            : `${formatInt(loaded)} ${plural(loaded)}`;
+
+        //Only the top campaigns are loaded for a cause with more than the limit
+        let total = JingleJam.model.campaigns.total;
+        if (total > loaded)
+            text += ` (the top ${formatInt(loaded)} of ${formatInt(total)} by amount raised)`;
+
+        $('#campaignResultCount').text(text);
+        $('#campaignFilters').toggleClass('no-campaigns', loaded === 0);
+        $('#campaignsEmpty').toggle(loaded === 0);
+        $('#campaignsNoMatches').toggle(loaded > 0 && matched === 0);
+
+        let remaining = matched - shown;
+        $('#campaignsShowMore').toggle(remaining > 0).text(`Show more (${formatInt(remaining)} remaining)`);
+    }
+
+    //Creates or updates the campaign list, showing the campaigns that match the search and filters
     function updateCampaigns(instant = false) {
         let campaigns = JingleJam.model.campaigns.items;
         let conversion = JingleJam.model.meta.dollarConversionRate;
         let list = $('#campaignList');
 
-        $('#campaignsEmpty').toggle(campaigns.length === 0);
+        //Each campaign's rank is its position by amount raised, which is the order the API lists them in
+        let ranks = new Map(campaigns.map((campaign, index) => [campaign.id, index]));
+        let matching = getFilteredCampaigns(campaigns);
+        let visible = matching.slice(0, JingleJam.campaignsShown);
 
-        //Rebuild the list when the campaigns or their order changed, otherwise update the values in place
-        let ids = campaigns.map(x => x.id).join(',');
-        if (list.attr('data-ids') !== ids) {
-            //Keep the displayed amounts so moved campaigns animate from their previous value
-            let previous = {};
-            list.find('.campaign-item').each(function () {
-                previous[$(this).attr('data-id')] = $(this).find('.raised-total').data('value');
-            });
+        updateCampaignSummary(campaigns.length, matching.length, visible.length);
 
-            list.html(campaigns.map((campaign, index) => createCampaignItem(campaign, index)).join(''));
-            list.attr('data-ids', ids);
+        //Reuse each campaign's element, so its avatar stays loaded and its total animates from the previous value
+        //when the list is filtered, sorted or reordered. It's only recreated if its details changed.
+        let existing = new Map();
+        list.children('.campaign-item').each(function () {
+            existing.set(this.getAttribute('data-id'), this);
+        });
 
-            campaigns.forEach((campaign, index) => {
-                let elem = `#campaignList #campaignRaised${index}`;
-                let value = previous[campaign.id];
-                $(elem).data('value', (value === undefined || instant) ? toCurrency(campaign.raised) : value);
-            });
+        let elements = visible.map(campaign => {
+            let signature = getCampaignSignature(campaign);
+            let element = existing.get(campaign.id);
+            if (!element || element.getAttribute('data-signature') !== signature) {
+                let previous = element ? $(element).find('.raised-total').data('value') : undefined;
+                element = $(createCampaignItem(campaign).trim())[0];
+                element.setAttribute('data-signature', signature);
+                $(element).find('.raised-total').data('value', (previous === undefined || instant) ? toCurrency(campaign.raised) : previous);
+            }
+            return element;
+        });
+
+        let children = list[0].children;
+        if (elements.length !== children.length || elements.some((element, index) => children[index] !== element)) {
+            list[0].replaceChildren(...elements);
         }
 
-        campaigns.forEach((campaign, index) => {
-            let elem = `#campaignList #campaignRaised${index}`;
-            if (instant)
-                setCount(elem, toCurrency(campaign.raised), formatCurrency);
-            else
-                animateCount(elem, formatCurrency, campaign.raised, campaign.raised * conversion);
+        visible.forEach((campaign, index) => {
+            let item = $(elements[index]);
+            let rank = ranks.get(campaign.id);
+            item.attr('data-index', rank);
+            item.find('.campaign-rank').text(formatInt(rank + 1));
 
-            let item = $(`#campaignList .campaign-item[data-index="${index}"]`);
+            let raised = item.find('.raised-total');
+            if (instant)
+                setCount(raised, toCurrency(campaign.raised), formatCurrency);
+            else
+                animateCount(raised, formatCurrency, campaign.raised, campaign.raised * conversion);
+
             item.find('.campaign-badges').html(createCampaignBadges(campaign));
             if (campaign.goal > 0) {
                 let percentage = Math.min((campaign.raised / campaign.goal) * 100, 100);
@@ -689,15 +820,20 @@
         return badges;
     }
 
-    //Creates the HTML for a single campaign in the list
-    function createCampaignItem(campaign, index) {
+    //The details a campaign's element is built from, so it's recreated when one of them changes
+    function getCampaignSignature(campaign) {
+        return JSON.stringify([campaign.name, campaign.url, campaign.goal > 0, campaign.user.name, campaign.user.avatar, campaign.team && campaign.team.name, campaign.team && campaign.team.avatar]);
+    }
+
+    //Creates the HTML for a single campaign in the list (its rank, total, badges and goal are filled in by updateCampaigns)
+    function createCampaignItem(campaign) {
         let owner = escapeHtml(campaign.user.name) + (campaign.team ? ' &middot; ' + escapeHtml(campaign.team.name) : '');
         let avatar = campaign.user.avatar || (campaign.team && campaign.team.avatar) || '';
         let initial = escapeHtml((campaign.user.name || campaign.name || '?').charAt(0).toUpperCase());
 
         return `
-            <a class="campaign-item" href="${escapeHtml(safeUrl(campaign.url))}" target="_blank" rel="noopener" data-id="${escapeHtml(campaign.id)}" data-index="${index}">
-              <div class="campaign-rank">${index + 1}</div>
+            <a class="campaign-item" href="${escapeHtml(safeUrl(campaign.url))}" target="_blank" rel="noopener" data-id="${escapeHtml(campaign.id)}">
+              <div class="campaign-rank"></div>
               <div class="campaign-avatar">
                 <span class="campaign-avatar-initial">${initial}</span>
                 ${avatar ? `<img src="${escapeHtml(safeUrl(avatar))}" alt="" loading="lazy" onerror="this.remove()">` : ''}
@@ -715,7 +851,7 @@
                 <div class="campaign-goal"></div>
               </div>` : ''}
               <div class="campaign-total">
-                <span class="raised-total" id="campaignRaised${index}"></span>
+                <span class="raised-total"></span>
                 <div class="raised-label">RAISED</div>
               </div>
             </a>`;
@@ -825,11 +961,11 @@
         }, Math.max(getNextUpdateTime(), JingleJam.minRefreshTime));
     }
 
-    //Get the current cause data, or the whole event's (which includes its top 25 campaigns)
+    //Get the current cause data with its campaigns, or the whole event's (which includes its top 25 campaigns)
     async function getCause() {
         const response = await fetchWithTimeout(JingleJam.isEvent()
             ? JingleJam.domain + '/api/v1/event'
-            : JingleJam.domain + '/api/v1/causes/' + encodeURIComponent(JingleJam.causeSlug) + '?limit=' + JingleJam.campaignLimit);
+            : JingleJam.domain + '/api/v1/causes/' + encodeURIComponent(JingleJam.causeSlug) + '?limit=' + (JingleJam.tvPage ? JingleJam.tvCampaignLimit : JingleJam.campaignLimit));
 
         if (response.status === 404) {
             JingleJam.notFound = true;
@@ -879,6 +1015,116 @@
             live: data.campaigns.live,
         };
     }
+
+    /*
+        Typo-tolerant campaign search, run in the page over the loaded campaigns.
+
+        Based on the API's search (workers/tiltify-cache/src/utils/search.ts), also matching the team event's name.
+        A campaign matches if the whole query matches the start of a name (or is inside it, ignoring spaces), or if
+        every word of the query matches a word in one of the names: exactly, as the start of a word, inside a word,
+        or with a small typo.
+    */
+    const campaignSearch = (function () {
+        const MIN_SUBSTRING_LENGTH = 3;     //Shorter query words only match the start of a word
+        const MIN_INFIX_TYPO_LENGTH = 5;    //Shorter query words only allow typos in a whole word or the start of a word
+
+        //Names are normalised once per campaign object, which is replaced on every refresh
+        const nameCache = new WeakMap();
+
+        //The normalised query, or null if there's nothing to search for
+        function createQuery(text) {
+            let phrase = normalize(text || '');
+            let words = phrase.split(' ').filter(Boolean);
+            return words.length > 0 ? { phrase, words, compact: words.join('') } : null;
+        }
+
+        function matches(campaign, query) {
+            let names = getNames(campaign);
+
+            let phraseMatch = names.some(name => name.phrase.startsWith(query.phrase) ||
+                (query.compact.length >= MIN_SUBSTRING_LENGTH && name.compact.includes(query.compact)));
+
+            return phraseMatch || query.words.every(word => names.some(name => name.words.some(nameWord => wordMatches(word, nameWord))));
+        }
+
+        function wordMatches(word, nameWord) {
+            if (nameWord.startsWith(word))
+                return true;
+            if (word.length >= MIN_SUBSTRING_LENGTH && nameWord.includes(word))
+                return true;
+
+            let maxTypos = getMaxTypos(word);
+            if (maxTypos === 0)
+                return false;
+
+            //Longer words can have typos anywhere inside a name word, since names are often run together ("thespiffingbrit")
+            if (word.length >= MIN_INFIX_TYPO_LENGTH)
+                return editDistance(word, nameWord, maxTypos, true) <= maxTypos;
+
+            //Otherwise allow typos in the whole word, or in the start of a longer word (so a partly typed word still matches)
+            if (Math.abs(nameWord.length - word.length) <= maxTypos && editDistance(word, nameWord, maxTypos) <= maxTypos)
+                return true;
+            return nameWord.length > word.length && editDistance(word, nameWord.slice(0, word.length), maxTypos) <= maxTypos;
+        }
+
+        //Short words have to be spelled correctly, longer words can have more typos
+        function getMaxTypos(word) {
+            if (word.length < 4) return 0;
+            if (word.length < 8) return 1;
+            return 2;
+        }
+
+        //Edit distance counting insertions, deletions, substitutions and swaps of two neighbouring characters.
+        //With anywhere, it is the distance from a to the closest part of b (skipping the start and end of b is free).
+        //Stops early and returns max + 1 once the distance is known to be more than max.
+        function editDistance(a, b, max, anywhere = false) {
+            let previousPrevious = [];
+            let previous = Array.from({ length: b.length + 1 }, (_, j) => anywhere ? 0 : j);
+
+            for (let i = 1; i <= a.length; i++) {
+                let current = [i];
+                let rowMin = i;
+                for (let j = 1; j <= b.length; j++) {
+                    let cost = a[i - 1] === b[j - 1] ? 0 : 1;
+                    current[j] = Math.min(previous[j] + 1, current[j - 1] + 1, previous[j - 1] + cost);
+                    if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1])
+                        current[j] = Math.min(current[j], previousPrevious[j - 2] + 1);
+                    rowMin = Math.min(rowMin, current[j]);
+                }
+                if (rowMin > max)
+                    return max + 1;
+                previousPrevious = previous;
+                previous = current;
+            }
+
+            return anywhere ? Math.min(...previous) : previous[b.length];
+        }
+
+        //The campaign, fundraiser, team and team event names
+        function getNames(campaign) {
+            let names = nameCache.get(campaign);
+            if (!names) {
+                names = [campaign.name, campaign.user && campaign.user.name, campaign.team && campaign.team.name, campaign.teamEvent && campaign.teamEvent.name]
+                    .map(name => normalize(name || ''))
+                    .filter(Boolean)
+                    .map(phrase => ({ phrase, compact: phrase.replace(/ /g, ''), words: phrase.split(' ') }));
+                nameCache.set(campaign, names);
+            }
+            return names;
+        }
+
+        //Lowercase, without accents, with anything that isn't a letter or number turned into a single space
+        function normalize(text) {
+            return String(text)
+                .normalize('NFKD')
+                .replace(/[̀-ͯ]/g, '')
+                .toLowerCase()
+                .replace(/[^\p{L}\p{N}]+/gu, ' ')
+                .trim();
+        }
+
+        return { createQuery, matches };
+    })();
 
     onLoad();
 })();

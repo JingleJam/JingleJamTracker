@@ -34,11 +34,12 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
   let apiResponse = await getDefaultResponse(env, new Date(), causes);
 
   try {
-    // Perform all Tiltify and Yogscast lookups in parallel
+    // Perform all Tiltify and Yogscast lookups in parallel. The Yogscast lookups only add the donation count and the
+    // conversion rate, which have fallbacks, so if one fails the refresh carries on without it.
     const results = await Promise.all([
-      getFact(env.FUNDRAISER_PUBLIC_ID),        // Gets Yearly Event Level Data
-      getYogscastAPI(),                         // Gets Yogscast API Data
-      getUserBySlug(env.YOGSCAST_USERNAME)      // Gets Yogscast User Data
+      getFact(env.FUNDRAISER_PUBLIC_ID),                                            // Gets Yearly Event Level Data
+      getYogscastAPI().catch(e => optionalLookupFailed('Yogscast API', e)),         // Gets Yogscast API Data
+      getUserBySlug(env.YOGSCAST_USERNAME).catch(e => optionalLookupFailed('Yogscast user', e))   // Gets Yogscast User Data
     ]);
 
     const eventData: TiltifyTemplateFact | null = results[0] as TiltifyTemplateFact | null;
@@ -257,6 +258,12 @@ async function getSummaryData(env: Env): Promise<ApiResponse> {
   }
 
   return apiResponse;
+}
+
+// A lookup the refresh can do without failed, so carry on with its fallback
+function optionalLookupFailed(name: string, error: unknown): null {
+  console.warn(`${name} lookup failed, using its fallback:`, error instanceof Error ? error.message : error);
+  return null;
 }
 
 // Shorten a long campaign description, marking where it was cut off

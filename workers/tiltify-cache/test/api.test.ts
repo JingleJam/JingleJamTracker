@@ -19,6 +19,8 @@ let fundraisers: TiltifyMultiSearchCampaign[] = [];
 let eventTotal = 0;
 let searchFilters: string[] = [];
 let nextId = 0;
+let yogscastDown = false;       // The Yogscast API answers with an HTML error page, as it does outside the event
+let yogscastUserDown = false;   // Tiltify's user lookup fails
 
 // Build a search hit, with defaults for a published campaign in this year's event
 function fundraiser(overrides: Partial<TiltifyMultiSearchCampaign> = {}): TiltifyMultiSearchCampaign {
@@ -110,10 +112,16 @@ async function fakeFetch(input: RequestInfo | URL, init?: RequestInit): Promise<
     }
 
     if (url === "https://api.tiltify.com/" && body.operationName === "get_user_by_slug") {
+        if (yogscastUserDown) {
+            return new Response("Internal Server Error", { status: 500 });
+        }
         return Response.json({ data: { user: null } });
     }
 
     if (url === "https://jinglejam.yogscast.com/api/total") {
+        if (yogscastDown) {
+            return new Response("<!DOCTYPE html><html><head><title>The Yogscast</title></head></html>", { status: 503, headers: { "content-type": "text/html" } });
+        }
         return Response.json({ donations: 0 });
     }
 
@@ -165,6 +173,8 @@ describe("getLatestData", () => {
         eventTotal = 0;
         searchFilters = [];
         nextId = 0;
+        yogscastDown = false;
+        yogscastUserDown = false;
         vi.stubGlobal("fetch", vi.fn(fakeFetch));
         consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
         consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -175,6 +185,25 @@ describe("getLatestData", () => {
         expect(consoleError).not.toHaveBeenCalled();
         vi.unstubAllGlobals();
         vi.restoreAllMocks();
+    });
+
+    describe("optional lookups", () => {
+        it("still refreshes when the Yogscast API or user lookup is down, using their fallbacks", async () => {
+            for (const [api, user] of [[true, false], [false, true], [true, true]]) {
+                yogscastDown = api;
+                yogscastUserDown = user;
+                fundraisers = [fundraiser({ total_amount_raised: 600 })];
+                eventTotal = 600;
+
+                const data = await getLatestData(createEnv());
+
+                expect(data.raised).toBe(600);
+                expect(data.campaigns.count).toBe(1);
+                expect(data.donations).toBe(data.collections.redeemed);
+                expect(data.dollarConversionRate).toBe(1.33);
+            }
+            expect(consoleWarn).toHaveBeenCalledWith("Yogscast API lookup failed, using its fallback:", "Yogscast API returned 503");
+        });
     });
 
     describe("campaign search", () => {

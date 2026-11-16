@@ -7,6 +7,7 @@ import {
     CAUSE_API_PATH,
     LEGACY_SUMMARY_API_PATH,
     LEGACY_CAMPAIGNS_API_PATH,
+    REFRESH_API_PATH,
     SNAPSHOT_INTERVAL_MS,
     IDLE_REFRESH_TIME,
     EVENT_WINDOW_PADDING_MS
@@ -37,7 +38,7 @@ const CAMPAIGN_MAX_LIMIT = 100; // Maximum number of campaigns in a page of the 
 const CAMPAIGN_TYPES = ['campaign', 'team_event']; // Values accepted by the campaign list's type filter
 const SEARCH_MAX_LENGTH = 100; // Maximum length of the campaign list's search text
 const CAUSE_CAMPAIGN_DEFAULT_LIMIT = 25; // Default number of top campaigns included in a cause response
-const CAUSE_CAMPAIGN_MAX_LIMIT = 100; // Maximum number of top campaigns included in a cause response
+const CAUSE_CAMPAIGN_MAX_LIMIT = 1000; // Maximum number of top campaigns included in a cause response (the cause tracker loads them all to search and filter)
 const LEGACY_CAMPAIGN_DEFAULT_LIMIT = 100; // Default page size of the 2025 campaign list
 
 /*
@@ -48,6 +49,9 @@ const LEGACY_CAMPAIGN_DEFAULT_LIMIT = 100; // Default page size of the 2025 camp
     - The main response (top campaigns) goes to Durable Object storage, so its fetch date stays current after a cold start
     - The full campaign list goes to a single KV value, only when it has changed
   Snapshots are only read after a cold start, until the first refresh completes.
+
+  An admin can refresh everything (totals, causes from KV, campaigns) at any time with a POST to REFRESH_API_PATH,
+  even when timed refreshing is off. That refresh's snapshots are persisted straight away.
 
   The summary is kept in its internal format and turned into each response's shape by tiltify-cache/responses.
   Single campaigns and team events add live data fetched from Tiltify on request, cached briefly by FactDetailsService.
@@ -64,7 +68,7 @@ export class TiltifyData {
 
     private summary: ApiResponse | null = null;             // Totals, causes, history and top campaigns, in the internal format
     private campaigns: Campaign[] | null = null;            // Full sorted campaign list served by the Campaigns API path
-    private refreshing: Promise<void> | null = null;        // In-flight refresh, shared by concurrent callers
+    private refreshing: Promise<boolean> | null = null;        // In-flight refresh, shared by concurrent callers
     private alarmChecked = false;
     private lastSnapshot = 0;
     private campaignsHash: string | null = null;
@@ -96,7 +100,7 @@ export class TiltifyData {
         router.get(EVENT_API_PATH, async (request, url) => {
             console.log('Called ' + url.pathname);
 
-            return jsonResponse(getEventResponse(await this.getSummary()));
+            return jsonResponse(getEventResponse(await this.getSummary(), url.origin));
         });
 
         // GET route: Get the paginated campaign list, optionally filtered by type and cause and searched by text
@@ -140,7 +144,7 @@ export class TiltifyData {
 
             return jsonResponse({
                 meta: getMeta(summary),
-                campaigns: getCampaignCollection(campaigns, summary.causes, paging.limit, paging.offset)
+                campaigns: getCampaignCollection(campaigns, summary.causes, url.origin, paging.limit, paging.offset)
             });
         });
 
@@ -163,7 +167,7 @@ export class TiltifyData {
 
             const response = {
                 meta: getMeta(summary),
-                campaign: getCampaign(campaign, summary.causes),
+                campaign: getCampaign(campaign, summary.causes, url.origin),
                 social: details.social,
                 donationMatches: details.donationMatches,
                 rewards: details.rewards,
@@ -180,7 +184,7 @@ export class TiltifyData {
             return jsonResponse({
                 ...response,
                 teamMemberCount: details.teamMemberCount,
-                campaigns: getCampaignCollection(supportingCampaigns, summary.causes, supportingCampaigns.length)
+                campaigns: getCampaignCollection(supportingCampaigns, summary.causes, url.origin, supportingCampaigns.length)
             });
         });
 
@@ -192,7 +196,7 @@ export class TiltifyData {
 
             return jsonResponse({
                 meta: getMeta(summary),
-                causes: summary.causes.map(getCause)
+                causes: summary.causes.map(cause => getCause(cause, url.origin))
             });
         });
 
@@ -218,8 +222,8 @@ export class TiltifyData {
 
             return jsonResponse({
                 meta: getMeta(summary),
-                cause: getCause(cause),
-                campaigns: getCampaignCollection(causeCampaigns, summary.causes, paging.limit, paging.offset)
+                cause: getCause(cause, url.origin),
+                campaigns: getCampaignCollection(causeCampaigns, summary.causes, url.origin, paging.limit, paging.offset)
             });
         });
 
@@ -241,11 +245,26 @@ export class TiltifyData {
             }
         );
 
+        // POST route: Refresh all the data now, even when timed refreshing is off, and persist it straight away
+        router.post(
+            REFRESH_API_PATH,
+            async (request, url) => {
+                console.log('Called ' + url.pathname);
+
+                const refreshed = await this.refreshNow();
+                return jsonResponse({ success: true, refreshed, updatedAt: this.summary?.date ?? null });
+            },
+            {
+                requiresAuth: true,
+                authToken: this.env.ADMIN_TOKEN,
+            }
+        );
+
         // GET route: The 2025 summary response, kept until the 2027 event
         router.get(LEGACY_SUMMARY_API_PATH, async (request, url) => {
             console.log('Called ' + url.pathname);
 
-            return jsonResponse(getLegacySummary(await this.getSummary()));
+            return jsonResponse(getLegacySummary(await this.getSummary(), url.origin));
         });
 
         // GET route: The 2025 paginated campaign list (no search or filters), kept until the 2027 event
@@ -261,7 +280,7 @@ export class TiltifyData {
             const campaigns = await this.getCampaignList();
 
             return jsonResponse({
-                campaigns: campaigns.slice(paging.offset, paging.offset + paging.limit).map(getLegacyCampaign),
+                campaigns: campaigns.slice(paging.offset, paging.offset + paging.limit).map(campaign => getLegacyCampaign(campaign, url.origin)),
                 total: campaigns.length,
                 limit: paging.limit,
                 offset: paging.offset
@@ -355,24 +374,33 @@ export class TiltifyData {
         this.storage.setAlarm(Date.now() + (refreshTime * 1000));
     }
 
-    // Fetch the latest data into memory, sharing a single in-flight fetch between concurrent callers
-    private refresh(): Promise<void> {
+    // Fetch the latest data into memory, sharing a single in-flight fetch between concurrent callers.
+    // Resolves to whether the new data was kept (it isn't if it looks like a failed fetch).
+    private refresh(persistNow = false): Promise<boolean> {
         if (!this.refreshing) {
-            this.refreshing = this.fetchLatestData().finally(() => {
+            this.refreshing = this.fetchLatestData(persistNow).finally(() => {
                 this.refreshing = null;
             });
         }
         return this.refreshing;
     }
 
-    private async fetchLatestData(): Promise<void> {
+    // A refresh that starts after any in-flight one (which may have read KV before it changed), persisted straight away
+    private async refreshNow(): Promise<boolean> {
+        if (this.refreshing) {
+            await this.refreshing.catch(() => false);
+        }
+        return await this.refresh(true);
+    }
+
+    private async fetchLatestData(persistNow = false): Promise<boolean> {
         const newData = await this.source.getLatestData();
         const checkFailures = !this.source.demo;    // A demo that starts again legitimately goes back to nothing raised
 
         // Keep the current data if the raised amount is not valid
         if (!newData || (checkFailures && this.summary && newData.raised === 0 && this.summary.raised !== 0)) {
             console.log(`Raised amount invalid... Keeping old data`);
-            return;
+            return false;
         }
 
         // Check if the campaigns failed to load, if so, keep the old campaigns
@@ -391,16 +419,18 @@ export class TiltifyData {
         this.summary = newData;
 
         try {
-            await this.persistSnapshots();
+            await this.persistSnapshots(persistNow);
         } catch (e) {
             console.error('Failed to persist snapshots', e);
         }
+
+        return true;
     }
 
-    // Persist the in-memory data for cold starts, at most every SNAPSHOT_INTERVAL_MS
-    private async persistSnapshots(): Promise<void> {
+    // Persist the in-memory data for cold starts, at most every SNAPSHOT_INTERVAL_MS unless forced
+    private async persistSnapshots(force = false): Promise<void> {
         const now = Date.now();
-        if (this.source.demo || now - this.lastSnapshot < SNAPSHOT_INTERVAL_MS) {
+        if (this.source.demo || (!force && now - this.lastSnapshot < SNAPSHOT_INTERVAL_MS)) {
             return;
         }
         this.lastSnapshot = now;

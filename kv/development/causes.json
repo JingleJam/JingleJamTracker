@@ -14,7 +14,7 @@
   {
     "id": "1b61ce0a-d32c-4dde-bf0a-4849317cce65",
     "legacyId": "1267",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/become.webp",
+    "logo": "/assets/jingle-jam-2026/causes/become.webp",
     "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/become.webp",
     "name": "Become",
     "description": "Helping young people with experience of foster and residential care get the guidance, support, and community that everyone needs.",
@@ -26,7 +26,7 @@
   {
     "id": "3d4fb356-891f-4f1e-9374-984aa5fdfdf5",
     "legacyId": "575",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/calm.webp",
+    "logo": "/assets/jingle-jam-2026/causes/calm.webp",
     "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/calm.webp",
     "name": "CALM",
     "description": "Hosting a life-saving suicide prevention helpline and vital online mental health resources for anyone who needs them.",
@@ -50,7 +50,7 @@
   {
     "id": "5350a34a-8b94-4513-bb1d-22becc2df6e4",
     "legacyId": "1265",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/make-a-wish.webp",
+    "logo": "/assets/jingle-jam-2026/causes/make-a-wish.webp",
     "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/make-a-wish.webp",
     "name": "Make-A-Wish",
     "description": "Granting wishes to children with critical illnesses to inspire hope and celebrate culture and belonging.",
@@ -62,7 +62,7 @@
   {
     "id": "809dfb7b-faef-4e2d-b78d-d5e197975dac",
     "legacyId": "1229",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/the-trevor-project.webp",
+    "logo": "/assets/jingle-jam-2026/causes/the-trevor-project.webp",
     "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/the-trevor-project.webp",
     "name": "The Trevor Project",
     "description": "Providing 24/7 crisis intervention services to LGBTQ+ young people—backed by research, education, advocacy, and peer support.",
@@ -74,7 +74,7 @@
   {
     "id": "18cb6ffd-3067-4ca8-8414-74eb733d79fd",
     "legacyId": "588",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/war-child.webp",
+    "logo": "/assets/jingle-jam-2026/causes/war-child.webp",
     "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/war-child.webp",
     "name": "War Child",
     "description": "Protecting, educating, and advocating for the rights of children impacted by the ongoing conflicts in Gaza, Ukraine and worldwide.",
@@ -86,7 +86,7 @@
   {
     "id": "d02de896-6904-4f80-9755-253afddac343",
     "legacyId": "1266",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/wwf.webp",
+    "logo": "/assets/jingle-jam-2026/causes/wwf.webp",
     "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/wwf.webp",
     "name": "WWF",
     "description": "Leading the fight against climate change for a world where nature and wildlife can thrive for future generations.",

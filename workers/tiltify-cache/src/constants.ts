@@ -4,6 +4,7 @@ const CAMPAIGN_API_PATH = '/api/v1/campaigns/:campaign'; // API Path for a singl
 const CAUSES_API_PATH = '/api/v1/causes'; // API Path for the list of causes
 const CAUSE_API_PATH = '/api/v1/causes/:cause'; // API Path for a single cause and its top campaigns (by slug or id)
 const TIMELINE_API_PATH = '/api/v1/timeline'; // API Path for the current event's total over time
+const REFRESH_API_PATH = '/api/v1/refresh'; // API Path (admin only) to refresh all the data now
 
 // Paths from the 2025 event, which keep serving their 2025 response shape until the 2027 event
 const LEGACY_SUMMARY_API_PATH = '/api/tiltify';
@@ -27,6 +28,7 @@ export {
     CAUSES_API_PATH,
     CAUSE_API_PATH,
     TIMELINE_API_PATH,
+    REFRESH_API_PATH,
     LEGACY_SUMMARY_API_PATH,
     LEGACY_CAMPAIGNS_API_PATH,
     ALL_CAUSES_NAME,

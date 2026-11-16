@@ -15,6 +15,7 @@ import { getCampaign } from "tiltify-cache/responses";
 const YEAR = 2026;
 const CAUSE_ID = "cause-1";
 const ADMIN_TOKEN = "admin-secret";
+const ORIGIN = "http://127.0.0.1";    // The origin test requests are made to
 
 let nextId = 0;
 let tiltifyCalls: string[] = [];
@@ -147,11 +148,11 @@ async function createTiltifyData(campaigns: Campaign[], initialSummary: ApiRespo
 
 // A campaign as the v1 API shows it
 function publicCampaign(campaign: Campaign) {
-    return getCampaign(campaign, summary([]).causes);
+    return getCampaign(campaign, summary([]).causes, ORIGIN);
 }
 
-async function get(tiltifyData: TiltifyData, path: string, init?: RequestInit): Promise<{ status: number; body: any }> {
-    const response = await tiltifyData.fetch(new Request("http://127.0.0.1" + path, init));
+async function get(tiltifyData: TiltifyData, path: string, init?: RequestInit, origin = ORIGIN): Promise<{ status: number; body: any }> {
+    const response = await tiltifyData.fetch(new Request(origin + path, init));
     return { status: response.status, body: await response.json() };
 }
 
@@ -265,7 +266,14 @@ describe("TiltifyData", () => {
 
         it("rejects an invalid limit", async () => {
             expect((await get(tiltifyData, "/api/v1/causes/war-child?limit=0")).status).toBe(400);
-            expect((await get(tiltifyData, "/api/v1/causes/war-child?limit=101")).status).toBe(400);
+            expect((await get(tiltifyData, "/api/v1/causes/war-child?limit=1001")).status).toBe(400);
+        });
+
+        it("accepts a limit of up to 1000", async () => {
+            const { status, body } = await get(tiltifyData, "/api/v1/causes/war-child?limit=1000");
+
+            expect(status).toBe(200);
+            expect(body.campaigns.limit).toBe(1000);
         });
     });
 
@@ -499,6 +507,74 @@ describe("TiltifyData", () => {
         });
     });
 
+    describe("admin refresh", () => {
+        const refresh = (authorization?: string) => get(tiltifyData, "/api/v1/refresh", {
+            method: "POST",
+            headers: authorization ? { Authorization: authorization } : {},
+        });
+
+        // The next refresh's data, with a new total, update time and cause logo
+        let getLatestData: ReturnType<typeof vi.fn>;
+        beforeEach(() => {
+            getLatestData = vi.fn(async () => {
+                const data = summary(campaigns);
+                data.raised = 9000;
+                data.date = new Date("2026-12-06T09:00:00.000Z");
+                data.causes[0] = { ...data.causes[0], logo: "/assets/new-logo.webp" };
+                return data;
+            });
+            (tiltifyData as unknown as { source: { getLatestData: unknown } }).source.getLatestData = getLatestData;
+        });
+
+        it("refreshes all the data even with refreshing off, and persists it straight away", async () => {
+            const { status, body } = await refresh(`Bearer ${ADMIN_TOKEN}`);
+
+            expect(status).toBe(200);
+            expect(body).toEqual({ success: true, refreshed: true, updatedAt: "2026-12-06T09:00:00.000Z" });
+            expect(getLatestData).toHaveBeenCalledTimes(1);
+            expect(storedSummary?.raised).toBe(9000);
+
+            const event = (await get(tiltifyData, "/api/v1/event")).body;
+            expect(event.raised).toBe(9000);
+            expect(event.causes[0].logo).toBe(ORIGIN + "/assets/new-logo.webp");
+        });
+
+        it("says when the new data was rejected, keeping the cached data", async () => {
+            getLatestData.mockImplementation(async () => ({ ...summary(campaigns), raised: 0, date: new Date("2026-12-06T09:00:00.000Z") }));
+
+            const { status, body } = await refresh(ADMIN_TOKEN);
+
+            expect(status).toBe(200);
+            expect(body).toEqual({ success: true, refreshed: false, updatedAt: "2026-12-05T12:00:00.000Z" });
+            expect((await get(tiltifyData, "/api/v1/event")).body.raised).toBe(1000);
+            expect(storedSummary).toBeNull();
+        });
+
+        it("persists every manual refresh, even within the snapshot interval", async () => {
+            await refresh(ADMIN_TOKEN);
+            storedSummary = null;
+            await refresh(ADMIN_TOKEN);
+
+            expect(getLatestData).toHaveBeenCalledTimes(2);
+            expect(storedSummary?.raised).toBe(9000);
+        });
+
+        it("rejects a missing or wrong token without refreshing", async () => {
+            for (const authorization of [undefined, "wrong", "Bearer wrong"]) {
+                const { status, body } = await refresh(authorization);
+
+                expect(status).toBe(401);
+                expect(body).toEqual({ error: "Unauthorized." });
+            }
+            expect(getLatestData).not.toHaveBeenCalled();
+            expect(storedSummary).toBeNull();
+        });
+
+        it("only accepts POST", async () => {
+            expect((await get(tiltifyData, "/api/v1/refresh")).status).toBe(405);
+        });
+    });
+
     describe("errors", () => {
         it("returns a JSON 404 for an unknown path", async () => {
             const { status, body } = await get(tiltifyData, "/api/v1/not-an-endpoint");
@@ -523,6 +599,48 @@ describe("TiltifyData", () => {
 
             expect(status).toBe(500);
             expect(body).toEqual({ error: "Internal server error." });
+        });
+    });
+
+    describe("asset URLs", () => {
+        const LOGO = "/assets/jingle-jam-2026/causes/war-child.webp";
+        const BORDERED = "/assets/jingle-jam-2026/causes/bordered/war-child.webp";
+        let assets: TiltifyData;
+
+        beforeEach(async () => {
+            const relative = campaign({ causeId: CAUSE_ID, user: { name: "user", slug: "user", avatar: LOGO, url: "" }, team: { name: "Team", slug: "team", avatar: "https://tiltify.example/team.webp", url: "" } });
+            const data = summary([relative]);
+            data.causes[0] = { ...data.causes[0], logo: LOGO, borderedLogo: BORDERED };
+            assets = await createTiltifyData([relative], data);
+        });
+
+        it("serves root-relative logos and avatars on the origin of each request", async () => {
+            for (const origin of ["https://dashboard.jinglejam.co.uk", "https://preview.jingle-jam-tracker.pages.dev", "http://127.0.0.1:8788"]) {
+                const { body } = await get(assets, "/api/v1/causes/war-child", undefined, origin);
+
+                expect(body.cause.logo).toBe(origin + LOGO);
+                expect(body.cause.borderedLogo).toBe(origin + BORDERED);
+                expect(body.campaigns.items[0].user.avatar).toBe(origin + LOGO);
+                expect(body.campaigns.items[0].team.avatar).toBe("https://tiltify.example/team.webp");
+            }
+        });
+
+        it("resolves them in every response that includes causes or campaigns", async () => {
+            const origin = "https://dashboard.jinglejam.co.uk";
+
+            expect((await get(assets, "/api/v1/event", undefined, origin)).body.causes[0].logo).toBe(origin + LOGO);
+            expect((await get(assets, "/api/v1/causes", undefined, origin)).body.causes[0].borderedLogo).toBe(origin + BORDERED);
+            expect((await get(assets, "/api/v1/campaigns", undefined, origin)).body.campaigns.items[0].user.avatar).toBe(origin + LOGO);
+            expect((await get(assets, "/api/tiltify", undefined, origin)).body.causes[0].logo).toBe(origin + BORDERED);
+            expect((await get(assets, "/api/tiltify", undefined, origin)).body.campaigns.list[0].user.avatar).toBe(origin + LOGO);
+            expect((await get(assets, "/api/campaigns", undefined, origin)).body.campaigns[0].user.avatar).toBe(origin + LOGO);
+        });
+
+        it("leaves URLs that aren't root-relative unchanged", async () => {
+            const { body } = await get(tiltifyData, "/api/v1/causes/war-child", undefined, "https://dashboard.jinglejam.co.uk");
+
+            expect(body.cause.logo).toBe("logo.webp");
+            expect(body.cause.borderedLogo).toBe("bordered.webp");
         });
     });
 

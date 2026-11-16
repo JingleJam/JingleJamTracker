@@ -11,6 +11,10 @@ import { generateSlug, roundAmount } from "tiltify-cache/utils";
   The Durable Object keeps the summary in its internal format (ApiResponse). These functions turn it into:
     - the v1 API responses (/api/v1/*)
     - the 2025 responses still served at /api/tiltify and /api/campaigns until the 2027 event
+
+  Image URLs can be stored as root-relative paths (e.g. "/assets/jingle-jam-2026/causes/war-child.webp" in the causes KV
+  value), served by the website. Each response turns them into absolute URLs on the origin the request was made to, so
+  every environment (local, preview, production) links to its own copy. `origin` is that origin, e.g. "https://dashboard.jinglejam.co.uk".
 */
 
 const EVENT_CAMPAIGN_LIMIT = 25; // Number of top campaigns included in the event response
@@ -87,18 +91,26 @@ export function getMeta(summary: ApiResponse): Meta {
     };
 }
 
+// A root-relative path on the request's origin, or the URL unchanged if it's already absolute (or empty)
+export function getAbsoluteUrl(url: string, origin: string): string {
+    if (!url || !url.startsWith('/') || url.startsWith('//')) {
+        return url;
+    }
+    return origin + url;
+}
+
 // A page of campaigns from a list that's already filtered and sorted
-export function getCampaignCollection(campaigns: Campaign[], causes: Cause[], limit: number, offset = 0): CampaignCollection {
+export function getCampaignCollection(campaigns: Campaign[], causes: Cause[], origin: string, limit: number, offset = 0): CampaignCollection {
     return {
         total: campaigns.length,
         live: campaigns.filter(campaign => campaign.live).length,
         limit,
         offset,
-        items: campaigns.slice(offset, offset + limit).map(campaign => getCampaign(campaign, causes)),
+        items: campaigns.slice(offset, offset + limit).map(campaign => getCampaign(campaign, causes, origin)),
     };
 }
 
-export function getEventResponse(summary: ApiResponse): EventResponse {
+export function getEventResponse(summary: ApiResponse, origin: string): EventResponse {
     return {
         meta: getMeta(summary),
         raised: summary.raised,
@@ -109,14 +121,14 @@ export function getEventResponse(summary: ApiResponse): EventResponse {
             const { event, ...rest } = year;
             return { ...rest, event: { startsAt: event.start, endsAt: event.end } };
         }),
-        causes: summary.causes.map(getCause),
+        causes: summary.causes.map(cause => getCause(cause, origin)),
         campaigns: {
             // The summary only holds the top campaigns, but its counts cover every campaign
             total: summary.campaigns.count,
             live: summary.campaigns.live || 0,
             limit: EVENT_CAMPAIGN_LIMIT,
             offset: 0,
-            items: summary.campaigns.list.slice(0, EVENT_CAMPAIGN_LIMIT).map(campaign => getCampaign(campaign, summary.causes)),
+            items: summary.campaigns.list.slice(0, EVENT_CAMPAIGN_LIMIT).map(campaign => getCampaign(campaign, summary.causes, origin)),
         },
     };
 }
@@ -157,11 +169,13 @@ export function getSummaryFromEventResponse(event: EventResponse, cachedCampaign
 }
 
 // A cause without any internal fields, with its raised amount broken down
-export function getCause(cause: Cause): PublicCause {
+export function getCause(cause: Cause, origin: string): PublicCause {
     const { override, raisedDirect, ...rest } = cause;
     return {
         ...rest,
         slug: getCauseSlug(cause),
+        logo: getAbsoluteUrl(cause.logo, origin),
+        borderedLogo: getAbsoluteUrl(cause.borderedLogo || cause.logo, origin),
         raisedBreakdown: getRaisedBreakdown(cause.raised, raisedDirect || 0),
     };
 }
@@ -177,7 +191,7 @@ function getRaisedBreakdown(raised: number, direct: number): RaisedBreakdown {
 }
 
 // A campaign as the v1 API shows it, with the cause it supports
-export function getCampaign(campaign: Campaign, causes: Cause[]): PublicCampaign {
+export function getCampaign(campaign: Campaign, causes: Cause[], origin: string): PublicCampaign {
     const cause = causes.find(c => c.id === campaign.causeId);
 
     return {
@@ -195,10 +209,15 @@ export function getCampaign(campaign: Campaign, causes: Cause[]): PublicCampaign
         live: campaign.live,
         donationMatchMultiplier: campaign.donationMatchMultiplier,
         type: campaign.type,
-        team: campaign.team,
-        teamEvent: campaign.teamEvent,
-        user: campaign.user,
+        team: withAbsoluteAvatar(campaign.team, origin),
+        teamEvent: withAbsoluteAvatar(campaign.teamEvent, origin),
+        user: withAbsoluteAvatar(campaign.user, origin),
     };
+}
+
+// Tiltify's avatars are absolute, but the demo uses the cause logos, which can be root-relative
+function withAbsoluteAvatar<T extends { avatar: string } | null>(owner: T, origin: string): T {
+    return owner ? { ...owner, avatar: getAbsoluteUrl(owner.avatar, origin) } : owner;
 }
 
 // Campaign lists persisted before the team event breakdown was recorded count everything as donated to the campaigns until the next refresh
@@ -214,7 +233,7 @@ export function getCauseSlug(cause: Cause): string {
 }
 
 // The 2025 /api/tiltify response
-export function getLegacySummary(summary: ApiResponse) {
+export function getLegacySummary(summary: ApiResponse, origin: string) {
     return {
         date: summary.date,
         event: summary.event,
@@ -226,7 +245,7 @@ export function getLegacySummary(summary: ApiResponse) {
         causes: summary.causes.map(cause => ({
             id: cause.id,
             name: cause.name,
-            logo: cause.borderedLogo || cause.logo,     // The 2025 logo was the square, bordered one
+            logo: getAbsoluteUrl(cause.borderedLogo || cause.logo, origin),     // The 2025 logo was the square, bordered one
             description: cause.description,
             color: cause.color,
             url: cause.url,
@@ -236,13 +255,13 @@ export function getLegacySummary(summary: ApiResponse) {
         })),
         campaigns: {
             count: summary.campaigns.count,
-            list: summary.campaigns.list.map(getLegacyCampaign),
+            list: summary.campaigns.list.map(campaign => getLegacyCampaign(campaign, origin)),
         },
     };
 }
 
 // A campaign in the 2025 /api/tiltify and /api/campaigns responses
-export function getLegacyCampaign(campaign: Campaign) {
+export function getLegacyCampaign(campaign: Campaign, origin: string) {
     return {
         causeId: campaign.causeId,
         name: campaign.name,
@@ -254,7 +273,7 @@ export function getLegacyCampaign(campaign: Campaign) {
         raised: campaign.raised,
         goal: campaign.goal,
         type: campaign.type,
-        team: campaign.team,
-        user: campaign.user,
+        team: withAbsoluteAvatar(campaign.team, origin),
+        user: withAbsoluteAvatar(campaign.user, origin),
     };
 }

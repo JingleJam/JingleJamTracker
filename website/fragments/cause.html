@@ -80,13 +80,54 @@
           <label class="subtext-label right" id="labelDate"> Last Updated: N/A </label>
         </div>
         <div class="ui segment campaigns-card">
-          <div class="charities-header-text"><i class="trophy icon"></i>Top Campaigns</div>
+          <div class="charities-header-text"><i class="trophy icon"></i><span class="cause-scope-only">Campaigns</span><span class="event-scope-only">Top Campaigns</span></div>
           <div class="charities-description">
-            <span class="cause-scope-only">The top fundraisers supporting <span class="jj-cause-name"></span> in the <span class="jj-year"></span> Jingle Jam. Campaigns supporting all causes are shared equally between every cause and are not listed here.</span>
+            <span class="cause-scope-only">The fundraisers supporting <span class="jj-cause-name"></span> in the <span class="jj-year"></span> Jingle Jam. Campaigns supporting all causes are shared equally between every cause and are not listed here.</span>
             <span class="event-scope-only">The top fundraisers across every cause in the <span class="jj-year"></span> Jingle Jam.</span>
+          </div>
+          <div class="campaign-filters cause-scope-only" id="campaignFilters">
+            <div class="campaign-filter-search">
+              <i class="search icon"></i>
+              <input type="search" id="campaignSearch" placeholder="Search campaigns, fundraisers, teams and team events" autocomplete="off" spellcheck="false" aria-label="Search campaigns, fundraisers, teams and team events">
+            </div>
+            <div class="campaign-filter-row">
+              <label class="campaign-filter-select">
+                <span>Type</span>
+                <select id="campaignTypeFilter">
+                  <option value="all">All</option>
+                  <option value="campaign">Campaigns</option>
+                  <option value="team_event">Team events</option>
+                </select>
+              </label>
+              <label class="campaign-filter-select">
+                <span>Goal</span>
+                <select id="campaignGoalFilter">
+                  <option value="all">All</option>
+                  <option value="met">Goal reached</option>
+                  <option value="not-met">Goal not reached</option>
+                </select>
+              </label>
+              <label class="campaign-filter-select">
+                <span>Sort</span>
+                <select id="campaignSort">
+                  <option value="amount-desc">Amount (high to low)</option>
+                  <option value="amount-asc">Amount (low to high)</option>
+                  <option value="name-asc">Name (A to Z)</option>
+                  <option value="name-desc">Name (Z to A)</option>
+                </select>
+              </label>
+              <button type="button" class="campaign-filter-toggle" id="campaignLiveFilter" aria-pressed="false"><i class="live-icon icon circle"></i>Live</button>
+              <button type="button" class="campaign-filter-toggle" id="campaignMatchFilter" aria-pressed="false"><i class="handshake icon"></i>Donation match</button>
+            </div>
+            <div class="campaign-filter-summary">
+              <span id="campaignResultCount"></span>
+              <button type="button" class="campaign-filter-clear" id="campaignFilterClear" style="display: none;">Clear filters</button>
+            </div>
           </div>
           <div class="campaign-list" id="campaignList"></div>
           <div class="campaigns-empty" id="campaignsEmpty" style="display: none;">No campaigns have been started for this cause yet.</div>
+          <div class="campaigns-empty" id="campaignsNoMatches" style="display: none;">No campaigns match your search and filters.</div>
+          <button type="button" class="campaigns-show-more" id="campaignsShowMore" style="display: none;"></button>
         </div>
       </div>
     </div>

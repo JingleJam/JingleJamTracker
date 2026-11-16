@@ -137,8 +137,8 @@ curl https://dashboard.jinglejam.co.uk/api/v1/event
       "id": "18cb6ffd-3067-4ca8-8414-74eb733d79fd",
       "slug": "war-child",
       "name": "War Child",
-      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/war-child.webp",
-      "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/war-child.webp",
+      "logo": "https://dashboard.jinglejam.co.uk/assets/jingle-jam-2026/causes/war-child.webp",
+      "borderedLogo": "https://dashboard.jinglejam.co.uk/assets/jingle-jam-2026/causes/bordered/war-child.webp",
       "description": "Protecting, educating, and advocating for the rights of children impacted by the ongoing conflicts in Gaza, Ukraine and worldwide.",
       "color": "#cc232a",
       "url": "https://www.warchild.org.uk/",
@@ -218,8 +218,8 @@ curl https://dashboard.jinglejam.co.uk/api/v1/causes
       "id": "18cb6ffd-3067-4ca8-8414-74eb733d79fd",
       "slug": "war-child",
       "name": "War Child",
-      "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/war-child.webp",
-      "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/war-child.webp",
+      "logo": "https://dashboard.jinglejam.co.uk/assets/jingle-jam-2026/causes/war-child.webp",
+      "borderedLogo": "https://dashboard.jinglejam.co.uk/assets/jingle-jam-2026/causes/bordered/war-child.webp",
       "description": "Protecting, educating, and advocating for the rights of children impacted by the ongoing conflicts in Gaza, Ukraine and worldwide.",
       "color": "#cc232a",
       "url": "https://www.warchild.org.uk/",
@@ -257,7 +257,7 @@ The slug is the cause name in lowercase, with spaces replaced by hyphens and oth
 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `limit` | integer, `1`–`100` | `25` | Number of campaigns to return |
+| `limit` | integer, `1`–`1000` | `25` | Number of campaigns to return |
 | `offset` | integer, `0` or more | `0` | Number of campaigns to skip |
 
 #### Response
@@ -275,7 +275,7 @@ The slug is the cause name in lowercase, with spaces replaced by hyphens and oth
 
 | Status | Body |
 |---|---|
-| `400` | `{"error": "Invalid limit parameter. Limit must be between 1 and 100."}` |
+| `400` | `{"error": "Invalid limit parameter. Limit must be between 1 and 1000."}` |
 | `400` | `{"error": "Invalid offset parameter. Offset must be a positive number (0 or greater)."}` |
 | `404` | `{"error": "Cause not found."}` |
 
@@ -296,8 +296,8 @@ curl "https://dashboard.jinglejam.co.uk/api/v1/causes/war-child?limit=5"
     "id": "18cb6ffd-3067-4ca8-8414-74eb733d79fd",
     "slug": "war-child",
     "name": "War Child",
-    "logo": "https://assets.jinglejam.no1mann.com/jingle-jam-2026/causes/logos/war-child.webp",
-    "borderedLogo": "https://assets.jinglejam.no1mann.com/jingle-jam-2025/causes/war-child.webp",
+    "logo": "https://dashboard.jinglejam.co.uk/assets/jingle-jam-2026/causes/war-child.webp",
+    "borderedLogo": "https://dashboard.jinglejam.co.uk/assets/jingle-jam-2026/causes/bordered/war-child.webp",
     "description": "Protecting, educating, and advocating for the rights of children impacted by the ongoing conflicts in Gaza, Ukraine and worldwide.",
     "color": "#cc232a",
     "url": "https://www.warchild.org.uk/",
@@ -713,6 +713,8 @@ A charity supported by the Jingle Jam.
 | `name` | `string` | Display name |
 | `logo` | `string` | Logo image URL: the bare logo on a transparent background, trimmed to its edges (fixed height, width varies with the logo) |
 | `borderedLogo` | `string` | Square logo image URL with a border and background, used for thumbnails |
+
+Logos hosted by the tracker are served from the same site as the API you called, so each environment (local, preview, production) links to its own copy.
 | `description` | `string` | Short description of the cause |
 | `color` | `string` | Brand colour as a hex code, e.g. `#cc232a` |
 | `url` | `string` | The cause's own website |
@@ -1029,7 +1031,7 @@ Access-Control-Allow-Methods: GET, OPTIONS
 Access-Control-Max-Age: 86400
 ```
 
-`OPTIONS` preflight requests return `204 No Content`. The two endpoints with an [admin](#admin-endpoints) `POST` (`/api/v1/event` and `/api/v1/timeline`) list `GET, POST, OPTIONS` instead.
+`OPTIONS` preflight requests return `204 No Content`. The two endpoints with an [admin](#admin-endpoints) `POST` (`/api/v1/event` and `/api/v1/timeline`) list `GET, POST, OPTIONS` instead, and `/api/v1/refresh` (admin only) lists `POST, OPTIONS`.
 
 ---
 
@@ -1102,12 +1104,13 @@ interface LegacyCampaign {
 > [!CAUTION]
 > These endpoints are for the tracker's maintainers. They need the secret admin token and overwrite live data.
 
-Both endpoints need an `Authorization` header set to the admin token, either as is or as `Bearer <token>`. A missing or wrong token returns `401` with `{"error": "Unauthorized."}`. A successful call returns `200` with `{"success": true}`.
+Every admin endpoint needs an `Authorization` header set to the admin token, either as is or as `Bearer <token>`. A missing or wrong token returns `401` with `{"error": "Unauthorized."}`. A successful call returns `200` with `{"success": true}` (plus `refreshed` and `updatedAt` for a refresh).
 
 | Endpoint | Body | Effect |
 |---|---|---|
 | `POST /api/v1/event` | An edited [`/api/v1/event`](#get-apiv1event) response, or a summary in the Worker's internal format (the `ApiResponse` type in [ApiResponse.ts](../workers/tiltify-cache/src/types/ApiResponse.ts)) | Replaces the cached summary. An edited event response replaces the cached top campaigns with its 25 `campaigns.items`. It is replaced again at the next refresh, if refreshing is on. |
 | `POST /api/v1/timeline` | An array of [timeline points](#get-apiv1timeline) | Replaces this year's timeline. Send `[]` to clear it. |
+| `POST /api/v1/refresh` | None | Refreshes all the data now, as a timed refresh does: the totals and campaigns from Tiltify (or the demo), and the causes from the `causes` KV value. Works even when `ENABLE_REFRESH` is off, so use it after changing KV in an environment that doesn't refresh. The result is saved straight away, so it survives a restart. Returns `refreshed` (`false` if the new data looked like a failed fetch, e.g. a total of 0, so the cached data was kept) and `updatedAt`, when the data now cached was fetched. The Yogscast donation count and user lookups are optional: if they fail, the refresh still goes ahead with their fallbacks. The timeline isn't refreshed. |
 
 ```bash
 # Replace the summary with an edited copy of the event
@@ -1117,6 +1120,9 @@ curl -X POST https://dashboard.jinglejam.co.uk/api/v1/event \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H "Content-Type: application/json" \
   --data-binary @event.json
+
+# Refresh everything now, e.g. after uploading new causes to KV
+curl -X POST https://dashboard.jinglejam.co.uk/api/v1/refresh   -H "Authorization: Bearer $ADMIN_TOKEN"
 
 # Clear the timeline at the start of a new year
 curl -X POST https://dashboard.jinglejam.co.uk/api/v1/timeline \
